@@ -293,12 +293,6 @@
 
   function mapContentParts(content, mode) {
     if (typeof content === 'string') return content;
-    if (mode === 'openai') {
-      return content.map(function (p) {
-        if (p.type === 'pdf') return { type: 'file', file: { filename: p.name, file_data: 'data:application/pdf;base64,' + p.base64 } };
-        return { type: 'text', text: p.text };
-      });
-    }
     if (mode === 'anthropic') {
       return content.map(function (p) {
         if (p.type === 'pdf') return { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: p.base64 } };
@@ -377,29 +371,15 @@
     return null;
   }
 
+  // Trefelle only supports two engines right now: BYOK Claude Sonnet, or a
+  // local Qwen3-VL model via Ollama — chosen because both handle attached
+  // resume files reliably and keep results comparable across people, rather
+  // than every provider/model combination quietly producing different
+  // quality. Broader model support is a later goal, not a current one.
   function aiAvailable(ans) {
     if (ans.engine === 'local') return !!ans.serverAddress && !!ans.localModel;
-    if (ans.engine === 'byok') {
-      if (!ans.apiKey) return false;
-      return ans.provider === 'openai' || ans.provider === 'anthropic' || (ans.provider === 'other' && !!ans.byokEndpoint);
-    }
+    if (ans.engine === 'byok') return ans.provider === 'anthropic' && !!ans.apiKey;
     return false;
-  }
-
-  function callOpenAICompatible(url, apiKey, messages, signal) {
-    var headers = { 'Content-Type': 'application/json' };
-    if (apiKey) headers.Authorization = 'Bearer ' + apiKey;
-    return fetch(url, {
-      method: 'POST', headers: headers, signal: signal,
-      body: JSON.stringify({ model: answers.localModel || 'gpt-4o-mini', messages: mapMessages(messages, 'openai'), temperature: 0.4 })
-    }).then(function (res) {
-      if (!res.ok) throw new Error('http ' + res.status);
-      return res.json();
-    }).then(function (data) {
-      var text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
-      if (!text) throw new Error('empty response');
-      return text;
-    });
   }
 
   function callAnthropic(messages, signal) {
@@ -416,7 +396,7 @@
     if (hasPdf) headers['anthropic-beta'] = 'pdfs-2024-09-25';
     return fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST', signal: signal, headers: headers,
-      body: JSON.stringify({ model: 'claude-3-5-haiku-latest', max_tokens: 700, system: system, messages: rest })
+      body: JSON.stringify({ model: 'claude-sonnet-5', max_tokens: 700, system: system, messages: rest })
     }).then(function (res) {
       if (!res.ok) throw new Error('http ' + res.status);
       return res.json();
@@ -429,29 +409,22 @@
 
   function callLocal(messages, signal) {
     var base = (answers.serverAddress || '').replace(/\/+$/, '');
-    if (answers.runtime === 'ollama') {
-      return fetch(base + '/api/chat', {
-        method: 'POST', signal: signal, headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: answers.localModel, messages: mapMessages(messages, 'ollama'), stream: false, format: 'json' })
-      }).then(function (res) {
-        if (!res.ok) throw new Error('http ' + res.status);
-        return res.json();
-      }).then(function (data) {
-        var text = data.message && data.message.content;
-        if (!text) throw new Error('empty response');
-        return text;
-      });
-    }
-    return callOpenAICompatible(base + '/v1/chat/completions', null, messages, signal);
+    return fetch(base + '/api/chat', {
+      method: 'POST', signal: signal, headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: answers.localModel, messages: mapMessages(messages, 'ollama'), stream: false, format: 'json' })
+    }).then(function (res) {
+      if (!res.ok) throw new Error('http ' + res.status);
+      return res.json();
+    }).then(function (data) {
+      var text = data.message && data.message.content;
+      if (!text) throw new Error('empty response');
+      return text;
+    });
   }
 
   function callAI(messages, signal) {
     if (answers.engine === 'local' && answers.serverAddress && answers.localModel) return callLocal(messages, signal);
-    if (answers.engine === 'byok' && answers.apiKey) {
-      if (answers.provider === 'anthropic') return callAnthropic(messages, signal);
-      if (answers.provider === 'other' && answers.byokEndpoint) return callOpenAICompatible(answers.byokEndpoint, answers.apiKey, messages, signal);
-      return callOpenAICompatible('https://api.openai.com/v1/chat/completions', answers.apiKey, messages, signal);
-    }
+    if (answers.engine === 'byok' && answers.provider === 'anthropic' && answers.apiKey) return callAnthropic(messages, signal);
     return Promise.reject(new Error('No AI model connected'));
   }
 
@@ -1090,163 +1063,76 @@
     engine: {
       eyebrow: 'AI SETUP',
       question: 'How should your AI mentor run?',
+      body: 'Trefelle only supports two models right now, on purpose — Claude Sonnet and a local Qwen3-VL, chosen because both handle attached resume files reliably and give comparable results. Wider model support is a later goal, not a current one.',
       options: [
-        { label: 'Bring my own API key', hint: 'Best answer quality · pay-per-use', value: 'byok', next: 'byok_provider' },
-        { label: 'Run a small model in my browser', hint: 'WebLLM · free, needs WebGPU', value: 'webllm', next: 'webllm_size' },
-        { label: 'Connect to a local model I already run', hint: 'Ollama or LM Studio', value: 'local', next: 'local_runtime' },
-        { label: 'I’m not sure yet', hint: 'See a side-by-side comparison', value: 'unsure', next: 'unsure_info' }
+        { label: 'Bring your own key', hint: 'Anthropic · Claude Sonnet · pay-per-use', value: 'byok', next: 'byok_key' },
+        { label: 'Run it locally', hint: 'Free · Qwen3-VL via Ollama', value: 'local', next: 'local_address' }
       ],
-      onSelect: function (value) { answers.engine = value; }
-    },
-    unsure_info: {
-      eyebrow: 'AI SETUP',
-      question: 'No rush — you can decide anytime.',
-      body: 'Each option trades off cost, quality, and setup effort differently. The full comparison is one click away, or keep going and change this later.',
-      render: function (el) {
-        var actions = document.createElement('div');
-        actions.className = 'setup-actions';
-        var link = document.createElement('a');
-        link.href = '/requirements';
-        link.className = 'setup-primary';
-        link.textContent = 'See the options';
-        actions.appendChild(link);
-        actions.appendChild(button('Continue setup', 'setup-secondary', function () { go('assess_intro'); }));
-        el.appendChild(actions);
+      onSelect: function (value) {
+        answers.engine = value;
+        if (value === 'byok') answers.provider = 'anthropic';
+        if (value === 'local') answers.runtime = 'ollama';
       }
-    },
-    byok_provider: {
-      eyebrow: 'AI SETUP',
-      question: 'Which provider are you using?',
-      options: [
-        { label: 'OpenAI', value: 'openai', next: 'byok_key' },
-        { label: 'Anthropic', value: 'anthropic', next: 'byok_key' },
-        { label: 'Something else', hint: 'Custom-compatible endpoint', value: 'other', next: 'byok_endpoint' }
-      ],
-      onSelect: function (value) { answers.provider = value; }
-    },
-    byok_endpoint: {
-      eyebrow: 'AI SETUP',
-      question: 'What’s the API base URL?',
-      field: { placeholder: 'https://api.example.com/v1/chat/completions', hint: 'Must be an OpenAI-compatible chat completions endpoint.', key: 'byokEndpoint', type: 'text' },
-      next: 'byok_key'
     },
     byok_key: {
       eyebrow: 'AI SETUP',
-      question: 'Paste your API key.',
-      field: { placeholder: 'sk-...', hint: 'Stored only in your browser. Never sent to Trefelle.', key: 'apiKey', type: 'password' },
+      question: 'Paste your Anthropic API key.',
+      body: 'Trefelle only supports Claude Sonnet right now — use a key from an Anthropic account with API access.',
+      field: { placeholder: 'sk-ant-...', hint: 'Stored only in your browser. Never sent to Trefelle.', key: 'apiKey', type: 'password' },
       next: 'assess_intro'
-    },
-    webllm_size: {
-      eyebrow: 'AI SETUP',
-      question: 'Which model size fits your device?',
-      options: [
-        { label: 'Small', hint: 'Fastest · about 1GB download', value: 'small', next: 'webllm_check' },
-        { label: 'Balanced', hint: 'Recommended · about 2GB download', value: 'balanced', next: 'webllm_check' },
-        { label: 'Larger', hint: 'Best quality · about 4GB, needs a strong GPU', value: 'large', next: 'webllm_check' }
-      ],
-      onSelect: function (value) { answers.modelSize = value; }
-    },
-    webllm_check: {
-      eyebrow: 'AI SETUP',
-      question: 'Check this browser for WebGPU support?',
-      options: [
-        { label: 'Check now', value: 'check', next: 'assess_intro', action: function (done) {
-            var supported = !!(navigator.gpu);
-            answers.webgpu = supported ? 'supported' : 'unsupported';
-            done();
-          } },
-        { label: 'Skip for now', value: 'skip', next: 'assess_intro' }
-      ]
-    },
-    local_runtime: {
-      eyebrow: 'AI SETUP',
-      question: 'Which local runtime are you using?',
-      options: [
-        { label: 'Ollama', hint: 'localhost:11434', value: 'ollama', next: 'local_address' },
-        { label: 'LM Studio', hint: 'localhost:1234', value: 'lmstudio', next: 'local_address' },
-        { label: 'Something else', value: 'custom', next: 'local_address' }
-      ],
-      onSelect: function (value) { answers.runtime = value; }
     },
     local_address: {
       eyebrow: 'AI SETUP',
-      question: 'Confirm the server address.',
+      question: 'Confirm your Ollama server address.',
+      body: 'Trefelle only supports Qwen3-VL locally right now, run through Ollama.',
       field: { placeholder: 'http://localhost:11434', hint: 'Your browser will need permission to reach this address.', key: 'serverAddress', type: 'text',
-        default: function () {
-          if (answers.runtime === 'ollama') return 'http://localhost:11434';
-          if (answers.runtime === 'lmstudio') return 'http://localhost:1234';
-          return '';
-        } },
+        default: function () { return 'http://localhost:11434'; } },
       next: 'local_model'
     },
     local_model: {
       eyebrow: 'AI SETUP',
-      question: 'Which model have you pulled?',
+      question: 'Checking for Qwen3-VL.',
       render: function (el) {
         var status = document.createElement('p');
         status.className = 'step-body';
-        status.textContent = 'Checking ' + (answers.serverAddress || 'your server') + ' for available models…';
+        status.textContent = 'Checking ' + (answers.serverAddress || 'your server') + ' for qwen3-vl…';
         el.appendChild(status);
 
-        function showManualField() {
-          status.textContent = 'Couldn’t auto-detect models — type the name instead.';
-          var form = document.createElement('form');
-          form.className = 'setup-field';
-          var input = document.createElement('input');
-          input.type = 'text';
-          input.placeholder = 'e.g. llama3, qwen2.5, mistral';
-          input.autocomplete = 'off';
-          input.value = answers.localModel || '';
-          form.appendChild(input);
+        function showNotFound() {
+          status.textContent = 'Qwen3-VL isn’t available on ' + (answers.serverAddress || 'your server') + ' yet.';
+          var note = document.createElement('p');
+          note.className = 'setup-note';
+          note.textContent = 'Trefelle only supports Qwen3-VL locally right now. Run this, then check again:';
+          el.appendChild(note);
+          var pre = document.createElement('pre');
+          pre.className = 'ai-raw';
+          pre.textContent = 'ollama pull qwen3-vl';
+          el.appendChild(pre);
           var actions = document.createElement('div');
           actions.className = 'setup-actions';
-          var submit = document.createElement('button');
-          submit.type = 'submit';
-          submit.className = 'setup-primary';
-          submit.textContent = 'Continue';
-          actions.appendChild(submit);
-          form.appendChild(actions);
-          form.addEventListener('submit', function (e) {
-            e.preventDefault();
-            answers.localModel = input.value.trim();
-            go('assess_intro');
-          });
-          el.appendChild(form);
-          setTimeout(function () { input.focus(); }, 100);
+          actions.appendChild(button('Check again', 'setup-primary', function () { go('local_model', true); }));
+          actions.appendChild(button('Back', 'setup-secondary', function () { go('local_address'); }));
+          el.appendChild(actions);
         }
 
         var base = (answers.serverAddress || '').replace(/\/+$/, '');
-        if (!base) { showManualField(); return; }
+        if (!base) { showNotFound(); return; }
 
         fetch(base + '/api/tags').then(function (res) {
           if (!res.ok) throw new Error('bad response');
           return res.json();
         }).then(function (data) {
           var models = (data.models || []).map(function (m) { return m.name || m.model; }).filter(Boolean);
-          if (!models.length) throw new Error('no models');
-          status.textContent = 'Found on ' + base + ':';
-          var list = document.createElement('div');
-          list.className = 'setup-options';
-          models.forEach(function (name) {
-            var b = document.createElement('button');
-            b.type = 'button';
-            b.className = 'setup-option';
-            var span = document.createElement('span');
-            span.textContent = name;
-            var arrow = document.createElement('span');
-            arrow.className = 'arrow';
-            arrow.textContent = '→';
-            b.appendChild(span);
-            b.appendChild(arrow);
-            b.addEventListener('click', function () {
-              answers.localModel = name;
-              go('assess_intro');
-            });
-            list.appendChild(b);
-          });
-          el.appendChild(list);
+          var match = models.find(function (name) { return /qwen3[-:]?vl/i.test(name); });
+          if (!match) throw new Error('not found');
+          answers.localModel = match;
+          status.textContent = 'Found ' + match + ' on ' + base + '.';
+          var actions = document.createElement('div');
+          actions.className = 'setup-actions';
+          actions.appendChild(button('Continue', 'setup-primary', function () { go('assess_intro'); }));
+          el.appendChild(actions);
         }).catch(function () {
-          showManualField();
+          showNotFound();
         });
       }
     },
@@ -1816,9 +1702,8 @@
   };
 
   function engineLabel() {
-    if (answers.engine === 'byok') return 'Bring your own key' + (answers.provider ? ' · ' + answers.provider : '');
-    if (answers.engine === 'webllm') return 'WebLLM in-browser' + (answers.modelSize ? ' · ' + answers.modelSize : '');
-    if (answers.engine === 'local') return 'Local model' + (answers.runtime ? ' · ' + answers.runtime : '');
+    if (answers.engine === 'byok') return 'Claude Sonnet (your key)';
+    if (answers.engine === 'local') return 'Qwen3-VL (local, ' + (answers.localModel || 'Ollama') + ')';
     return 'Not chosen yet';
   }
 
