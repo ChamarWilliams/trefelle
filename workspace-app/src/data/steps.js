@@ -13,81 +13,44 @@ import { saveAnswers, clearAnswers } from '../lib/storage'
 export const steps = {
   welcome_back: { component: 'WelcomeBack' },
 
+  // Trefelle only supports two engines right now: BYOK Claude Sonnet, or a
+  // local Qwen3-VL model via Ollama — chosen because both handle attached
+  // resume files reliably and keep results comparable across people. There
+  // is no WebGPU/WebLLM option: Qwen3-VL has no WebGPU-runnable build (no
+  // WebLLM support — open, unresolved upstream request mlc-ai/web-llm#762 —
+  // and the ONNX exports that exist target Python CPU/CUDA, not the
+  // browser), so it can't be offered as a WebGPU choice.
   engine: {
     eyebrow: 'AI SETUP',
     question: 'How should your AI mentor run?',
+    body: 'Trefelle only supports two models right now, on purpose — Claude Sonnet and a local Qwen3-VL, chosen because both handle attached resume files reliably and give comparable results. Wider model support is a later goal, not a current one.',
     options: [
-      { label: 'Bring my own API key', hint: 'Best answer quality · pay-per-use', value: 'byok', next: 'byok_provider', onSelect: () => ({ engine: 'byok' }) },
-      { label: 'Run a small model in my browser', hint: 'WebLLM · free, needs WebGPU', value: 'webllm', next: 'webllm_size', onSelect: () => ({ engine: 'webllm' }) },
-      { label: 'Connect to a local model I already run', hint: 'Ollama or LM Studio', value: 'local', next: 'local_runtime', onSelect: () => ({ engine: 'local' }) },
-      { label: 'I’m not sure yet', hint: 'See a side-by-side comparison', value: 'unsure', next: 'unsure_info', onSelect: () => ({ engine: 'unsure' }) },
+      { label: 'Bring your own key', hint: 'Anthropic · Claude Sonnet · pay-per-use', value: 'byok', next: 'byok_key', onSelect: () => ({ engine: 'byok', provider: 'anthropic' }) },
+      { label: 'Run it locally', hint: 'Free · Qwen3-VL via Ollama', value: 'local', next: 'local_address', onSelect: () => ({ engine: 'local', runtime: 'ollama' }) },
     ],
   },
 
-  unsure_info: { component: 'UnsureInfo' },
-
-  byok_provider: {
-    eyebrow: 'AI SETUP',
-    question: 'Which provider are you using?',
-    options: [
-      { label: 'OpenAI', value: 'openai', next: 'byok_key', onSelect: () => ({ provider: 'openai' }) },
-      { label: 'Anthropic', value: 'anthropic', next: 'byok_key', onSelect: () => ({ provider: 'anthropic' }) },
-      { label: 'Something else', hint: 'Custom-compatible endpoint', value: 'other', next: 'byok_endpoint', onSelect: () => ({ provider: 'other' }) },
-    ],
-  },
-  byok_endpoint: {
-    eyebrow: 'AI SETUP',
-    question: 'What’s the API base URL?',
-    field: { placeholder: 'https://api.example.com/v1/chat/completions', hint: 'Must be an OpenAI-compatible chat completions endpoint.', key: 'byokEndpoint', type: 'text' },
-    next: 'byok_key',
-  },
   byok_key: {
     eyebrow: 'AI SETUP',
-    question: 'Paste your API key.',
-    field: { placeholder: 'sk-...', hint: 'Stored only in your browser. Never sent to Trefelle.', key: 'apiKey', type: 'password' },
+    question: 'Paste your Anthropic API key.',
+    body: 'Trefelle only supports Claude Sonnet right now — use a key from an Anthropic account with API access.',
+    field: { placeholder: 'sk-ant-...', hint: 'Stored only in your browser. Never sent to Trefelle.', key: 'apiKey', type: 'password' },
     next: 'assess_intro',
   },
 
-  webllm_size: {
-    eyebrow: 'AI SETUP',
-    question: 'Which model size fits your device?',
-    options: [
-      { label: 'Small', hint: 'Fastest · about 1GB download', value: 'small', next: 'webllm_check', onSelect: () => ({ modelSize: 'small' }) },
-      { label: 'Balanced', hint: 'Recommended · about 2GB download', value: 'balanced', next: 'webllm_check', onSelect: () => ({ modelSize: 'balanced' }) },
-      { label: 'Larger', hint: 'Best quality · about 4GB, needs a strong GPU', value: 'large', next: 'webllm_check', onSelect: () => ({ modelSize: 'large' }) },
-    ],
-  },
-  webllm_check: {
-    eyebrow: 'AI SETUP',
-    question: 'Check this browser for WebGPU support?',
-    options: [
-      { label: 'Check now', value: 'check', next: 'assess_intro', action: async () => ({ webgpu: navigator.gpu ? 'supported' : 'unsupported' }) },
-      { label: 'Skip for now', value: 'skip', next: 'assess_intro' },
-    ],
-  },
-
-  local_runtime: {
-    eyebrow: 'AI SETUP',
-    question: 'Which local runtime are you using?',
-    options: [
-      { label: 'Ollama', hint: 'localhost:11434', value: 'ollama', next: 'local_address', onSelect: () => ({ runtime: 'ollama' }) },
-      { label: 'LM Studio', hint: 'localhost:1234', value: 'lmstudio', next: 'local_address', onSelect: () => ({ runtime: 'lmstudio' }) },
-      { label: 'Something else', value: 'custom', next: 'local_address', onSelect: () => ({ runtime: 'custom' }) },
-    ],
-  },
   local_address: {
     eyebrow: 'AI SETUP',
-    question: 'Confirm the server address.',
+    question: 'Confirm your Ollama server address.',
+    body: 'Trefelle only supports Qwen3-VL locally right now, run through Ollama.',
     field: {
       placeholder: 'http://localhost:11434', hint: 'Your browser will need permission to reach this address.', key: 'serverAddress', type: 'text',
-      default: (answers) => {
-        if (answers.runtime === 'ollama') return 'http://localhost:11434'
-        if (answers.runtime === 'lmstudio') return 'http://localhost:1234'
-        return ''
-      },
+      default: () => 'http://localhost:11434',
     },
     next: 'local_model',
   },
+  // LocalModel component checks /api/tags on the given server and requires a
+  // model name matching /qwen3[-:]?vl/i — anything else shows the
+  // `ollama pull qwen3-vl` instructions instead of letting setup continue.
   local_model: { component: 'LocalModel' },
 
   assess_intro: { component: 'AssessIntro' },
