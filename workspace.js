@@ -248,7 +248,7 @@
   function readProfileFile(file) {
     var name = (file.name || '').toLowerCase();
     if (name.endsWith('.pdf')) {
-      var wantsImages = answers.engine === 'local' && answers.runtime === 'ollama';
+      var wantsImages = answers.engine === 'local';
       return fileToBase64(file).then(function (base64) {
         if (!wantsImages) return { kind: 'pdf', name: file.name, size: file.size, base64: base64 };
         return renderPdfPageImages(file).then(function (images) {
@@ -323,6 +323,24 @@
         var msg = { role: m.role, content: texts.join('\n\n') };
         if (images.length) msg.images = images;
         return msg;
+      }
+      if (mode === 'lmstudio' && Array.isArray(m.content)) {
+        var parts = [];
+        m.content.forEach(function (p) {
+          if (p.type === 'pdf') {
+            if (p.images && p.images.length) {
+              parts.push({ type: 'text', text: 'Attached file "' + p.name + '" — its pages follow as images for you to read directly.' });
+              p.images.forEach(function (img) {
+                parts.push({ type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + img } });
+              });
+            } else {
+              parts.push({ type: 'text', text: '[Attached file "' + p.name + '" is a PDF — not supported by this local model. Ask the person to paste its text instead if you need it.]' });
+            }
+          } else {
+            parts.push({ type: 'text', text: p.text });
+          }
+        });
+        return { role: m.role, content: parts };
       }
       return { role: m.role, content: mapContentParts(m.content, mode) };
     });
@@ -409,6 +427,19 @@
 
   function callLocal(messages, signal) {
     var base = (answers.serverAddress || '').replace(/\/+$/, '');
+    if (answers.runtime === 'lmstudio') {
+      return fetch(base + '/v1/chat/completions', {
+        method: 'POST', signal: signal, headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: answers.localModel, messages: mapMessages(messages, 'lmstudio'), temperature: 0.4 })
+      }).then(function (res) {
+        if (!res.ok) throw new Error('http ' + res.status);
+        return res.json();
+      }).then(function (data) {
+        var text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+        if (!text) throw new Error('empty response');
+        return text;
+      });
+    }
     return fetch(base + '/api/chat', {
       method: 'POST', signal: signal, headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: answers.localModel, messages: mapMessages(messages, 'ollama'), stream: false, format: 'json' })
@@ -1066,12 +1097,11 @@
       body: 'Trefelle only supports two models right now, on purpose — Claude Sonnet and a local Qwen3-VL, chosen because both handle attached resume files reliably and give comparable results. Wider model support is a later goal, not a current one.',
       options: [
         { label: 'Bring your own key', hint: 'Anthropic · Claude Sonnet · pay-per-use', value: 'byok', next: 'byok_key' },
-        { label: 'Run it locally', hint: 'Free · Qwen3-VL via Ollama', value: 'local', next: 'local_address' }
+        { label: 'Run it locally', hint: 'Free · Qwen3-VL via Ollama or LM Studio', value: 'local', next: 'local_address' }
       ],
       onSelect: function (value) {
         answers.engine = value;
         if (value === 'byok') answers.provider = 'anthropic';
-        if (value === 'local') answers.runtime = 'ollama';
       }
     },
     byok_key: {
@@ -1083,8 +1113,8 @@
     },
     local_address: {
       eyebrow: 'AI SETUP',
-      question: 'Confirm your Ollama server address.',
-      body: 'Trefelle only supports Qwen3-VL locally right now, run through Ollama.',
+      question: 'Confirm your server address.',
+      body: 'Trefelle only supports Qwen3-VL locally right now, run through Ollama (default port 11434) or LM Studio (default port 1234).',
       field: { placeholder: 'http://localhost:11434', hint: 'Your browser will need permission to reach this address.', key: 'serverAddress', type: 'text',
         default: function () { return 'http://localhost:11434'; } },
       next: 'local_model'
@@ -1098,11 +1128,21 @@
         status.textContent = 'Checking ' + (answers.serverAddress || 'your server') + ' for qwen3-vl…';
         el.appendChild(status);
 
+        function showFound(runtime, match, base) {
+          answers.runtime = runtime;
+          answers.localModel = match;
+          status.textContent = 'Found ' + match + ' on ' + base + ' (' + (runtime === 'ollama' ? 'Ollama' : 'LM Studio') + ').';
+          var actions = document.createElement('div');
+          actions.className = 'setup-actions';
+          actions.appendChild(button('Continue', 'setup-primary', function () { go('assess_intro'); }));
+          el.appendChild(actions);
+        }
+
         function showNotFound() {
           status.textContent = 'Qwen3-VL isn’t available on ' + (answers.serverAddress || 'your server') + ' yet.';
           var note = document.createElement('p');
           note.className = 'setup-note';
-          note.textContent = 'Trefelle only supports Qwen3-VL locally right now. Run this, then check again:';
+          note.textContent = 'Trefelle only supports Qwen3-VL locally right now. Pull it in Ollama, or load it in LM Studio, then check again:';
           el.appendChild(note);
           var pre = document.createElement('pre');
           pre.className = 'ai-raw';
@@ -1115,6 +1155,10 @@
           el.appendChild(actions);
         }
 
+        // Ollama and LM Studio speak different APIs on different default
+        // ports — try Ollama's native /api/tags first, then fall back to
+        // LM Studio's OpenAI-compatible /v1/models, rather than asking the
+        // person which runtime they're using.
         var base = (answers.serverAddress || '').replace(/\/+$/, '');
         if (!base) { showNotFound(); return; }
 
@@ -1125,14 +1169,19 @@
           var models = (data.models || []).map(function (m) { return m.name || m.model; }).filter(Boolean);
           var match = models.find(function (name) { return /qwen3[-:]?vl/i.test(name); });
           if (!match) throw new Error('not found');
-          answers.localModel = match;
-          status.textContent = 'Found ' + match + ' on ' + base + '.';
-          var actions = document.createElement('div');
-          actions.className = 'setup-actions';
-          actions.appendChild(button('Continue', 'setup-primary', function () { go('assess_intro'); }));
-          el.appendChild(actions);
+          showFound('ollama', match, base);
         }).catch(function () {
-          showNotFound();
+          fetch(base + '/v1/models').then(function (res) {
+            if (!res.ok) throw new Error('bad response');
+            return res.json();
+          }).then(function (data) {
+            var models = (data.data || []).map(function (m) { return m.id; }).filter(Boolean);
+            var match = models.find(function (name) { return /qwen3[-:]?vl/i.test(name); });
+            if (!match) throw new Error('not found');
+            showFound('lmstudio', match, base);
+          }).catch(function () {
+            showNotFound();
+          });
         });
       }
     },
@@ -1703,7 +1752,7 @@
 
   function engineLabel() {
     if (answers.engine === 'byok') return 'Claude Sonnet (your key)';
-    if (answers.engine === 'local') return 'Qwen3-VL (local, ' + (answers.localModel || 'Ollama') + ')';
+    if (answers.engine === 'local') return 'Qwen3-VL (local via ' + (answers.runtime === 'lmstudio' ? 'LM Studio' : 'Ollama') + ')';
     return 'Not chosen yet';
   }
 
