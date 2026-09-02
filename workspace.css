@@ -48,6 +48,8 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,Arial,s
 .setup-secondary:hover{color:var(--ink)}
 .setup-note{font-size:12px;color:#79866f;margin-top:14px}
 .setup-note.error{color:#a4553b}
+.setup-note-link{display:block;font-size:12px;color:var(--ink);margin-top:14px;text-decoration:underline;text-underline-offset:3px}
+.setup-note-link:hover{color:var(--green)}
 .ai-raw{margin:12px 0 0;padding:12px 14px;background:#f6f4ef;border:1px solid var(--line);border-radius:8px;font:11px/1.6 'DM Mono',monospace;color:#63705d;white-space:pre-wrap;word-break:break-word;max-height:180px;overflow:auto}
 .summary-list{display:grid;gap:0;border-top:1px solid var(--line);margin:0 0 30px}
 .summary-list div{display:flex;justify-content:space-between;gap:20px;padding:13px 0;border-bottom:1px solid var(--line);font-size:13px}

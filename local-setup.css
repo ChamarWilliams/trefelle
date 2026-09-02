@@ -1,0 +1,18 @@
+.guide{padding:20px clamp(22px,9vw,142px) 90px;max-width:920px}
+.guide header p.eyebrow{margin:0}
+.guide header h2{font:600 clamp(30px,3.4vw,42px)/1.1 Newsreader,Georgia,serif;letter-spacing:-1.2px;margin:14px 0 34px}
+.guide header h2 em{font-style:italic;color:#6c8061}
+.guide-steps{display:grid;gap:0;border-top:1px solid var(--line)}
+.guide-step{display:grid;grid-template-columns:52px 1fr;gap:20px;padding:30px 0;border-bottom:1px solid var(--line)}
+.guide-num{font:10px 'DM Mono',monospace;color:#8b9a82;padding-top:4px}
+.guide-body h3{font:600 20px/1.15 Newsreader,Georgia,serif;letter-spacing:-.6px;margin:0 0 10px}
+.guide-body p{font-size:13.5px;line-height:1.7;color:#576054;margin:0 0 10px;max-width:620px}
+.guide-body p:last-child{margin-bottom:0}
+.guide-body a{color:var(--ink)}
+.step-note{font-size:12.5px;color:#67725f}
+.step-note strong{color:var(--ink)}
+code{font:12px 'DM Mono',monospace;background:var(--mist);padding:2px 6px;border-radius:4px;color:#3f4a3a}
+.code-block{font:12.5px/1.6 'DM Mono',monospace;background:#1e281e;color:#d9e4cf;padding:14px 16px;border-radius:8px;margin:0 0 10px;white-space:pre-wrap;word-break:break-word;overflow-x:auto}
+@media(max-width:600px){
+  .guide-step{grid-template-columns:1fr;gap:8px}
+}

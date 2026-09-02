@@ -1148,6 +1148,13 @@
           pre.className = 'ai-raw';
           pre.textContent = 'ollama pull qwen3-vl';
           el.appendChild(pre);
+          var guideLink = document.createElement('a');
+          guideLink.href = '/local-setup';
+          guideLink.target = '_blank';
+          guideLink.rel = 'noopener';
+          guideLink.className = 'setup-note-link';
+          guideLink.textContent = 'Stuck? Full setup guide (Ollama, LM Studio, and CORS) →';
+          el.appendChild(guideLink);
           var actions = document.createElement('div');
           actions.className = 'setup-actions';
           actions.appendChild(button('Check again', 'setup-primary', function () { go('local_model', true); }));
