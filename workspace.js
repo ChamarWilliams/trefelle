@@ -1017,7 +1017,95 @@
         { label: 'OpenAI-compatible', hint: 'OpenAI, Groq, OpenRouter, Together, and most others', value: 'openai', next: 'byok_endpoint' },
         { label: 'Anthropic', hint: 'Claude models', value: 'anthropic', next: 'byok_model' }
       ],
-      onSelect: function (value) { answers.provider = value; }
+      onSelect: function (value) { answers.provider = value; },
+      render: function (el) {
+        var toggle = document.createElement('a');
+        toggle.href = '#';
+        toggle.className = 'setup-note-link';
+        toggle.textContent = 'Or import a list of keys as JSON →';
+        el.appendChild(toggle);
+
+        var panel = document.createElement('div');
+        panel.className = 'setup-field';
+        panel.style.marginTop = '14px';
+        panel.hidden = true;
+
+        var textarea = document.createElement('textarea');
+        textarea.rows = 6;
+        textarea.spellcheck = false;
+        textarea.placeholder = '[\n  { "provider": "openai", "byokEndpoint": "https://api.groq.com/openai/v1/chat/completions", "byokModel": "openai/gpt-oss-120b", "apiKey": "sk-..." },\n  { "provider": "anthropic", "byokModel": "claude-sonnet-5", "apiKey": "sk-ant-..." }\n]';
+        panel.appendChild(textarea);
+
+        var hint = document.createElement('p');
+        hint.className = 'setup-hint';
+        hint.textContent = 'A JSON array of key objects: provider ("openai" or "anthropic"), byokModel, apiKey, and byokEndpoint (openai-compatible keys only).';
+        panel.appendChild(hint);
+
+        var error = document.createElement('p');
+        error.className = 'setup-note error';
+        error.hidden = true;
+        panel.appendChild(error);
+
+        var panelActions = document.createElement('div');
+        panelActions.className = 'setup-actions';
+        panelActions.appendChild(button('Import keys', 'setup-primary', function () {
+          var entries;
+          try {
+            entries = JSON.parse(textarea.value);
+          } catch (e) {
+            error.textContent = 'That isn’t valid JSON.';
+            error.hidden = false;
+            return;
+          }
+          if (!Array.isArray(entries) || !entries.length) {
+            error.textContent = 'Expected a JSON array with at least one key.';
+            error.hidden = false;
+            return;
+          }
+          for (var i = 0; i < entries.length; i++) {
+            var entry = entries[i] || {};
+            if (entry.provider !== 'openai' && entry.provider !== 'anthropic') {
+              error.textContent = 'Entry ' + (i + 1) + ': provider must be "openai" or "anthropic".';
+              error.hidden = false;
+              return;
+            }
+            if (!entry.apiKey || !entry.byokModel) {
+              error.textContent = 'Entry ' + (i + 1) + ': needs an apiKey and byokModel.';
+              error.hidden = false;
+              return;
+            }
+            if (entry.provider === 'openai' && !entry.byokEndpoint) {
+              error.textContent = 'Entry ' + (i + 1) + ': openai-compatible keys need a byokEndpoint.';
+              error.hidden = false;
+              return;
+            }
+          }
+          error.hidden = true;
+          answers.keyStack = answers.keyStack || [];
+          entries.forEach(function (entry) {
+            answers.keyStack.push({
+              provider: entry.provider,
+              byokEndpoint: entry.byokEndpoint || '',
+              byokModel: entry.byokModel,
+              apiKey: entry.apiKey
+            });
+          });
+          answers.provider = null;
+          answers.byokEndpoint = '';
+          answers.byokModel = '';
+          answers.apiKey = '';
+          go('byok_add_another');
+        }));
+        panel.appendChild(panelActions);
+
+        toggle.addEventListener('click', function (e) {
+          e.preventDefault();
+          panel.hidden = !panel.hidden;
+          toggle.textContent = panel.hidden ? 'Or import a list of keys as JSON →' : 'Hide JSON import';
+        });
+
+        el.appendChild(panel);
+      }
     },
     byok_endpoint: {
       eyebrow: 'AI SETUP',
@@ -1043,10 +1131,11 @@
       question: 'Add a backup key?',
       body: 'When one key hits its rate limit mid-conversation, Trefelle automatically retries with the next key and keeps the same conversation going — handy if you’re stacking a few free-tier keys.',
       render: function (el) {
-        if (answers.keyStack && answers.keyStack.length) {
+        var effectiveCount = (answers.keyStack ? answers.keyStack.length : 0) + (answers.provider && answers.apiKey ? 1 : 0);
+        if (effectiveCount) {
           var summary = document.createElement('p');
           summary.className = 'setup-note';
-          summary.textContent = answers.keyStack.length + ' key' + (answers.keyStack.length === 1 ? '' : 's') + ' connected so far.';
+          summary.textContent = effectiveCount + ' key' + (effectiveCount === 1 ? '' : 's') + ' connected so far.';
           el.appendChild(summary);
         }
         var actions = document.createElement('div');
