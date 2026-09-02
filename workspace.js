@@ -446,6 +446,10 @@
       body.appendChild(eyebrow);
       var h1 = document.createElement('h1');
       h1.textContent = q.question;
+      var qLen = (q.question || '').length;
+      if (qLen > 260) h1.style.fontSize = 'clamp(19px,2.3vw,24px)';
+      else if (qLen > 180) h1.style.fontSize = 'clamp(22px,2.8vw,28px)';
+      else if (qLen > 110) h1.style.fontSize = 'clamp(25px,3.4vw,33px)';
       body.appendChild(h1);
 
       var format = q.format || 'choice';
@@ -1322,7 +1326,7 @@
         var fieldsText = chosenFieldsList.length ? chosenFieldsList.join(', ') : 'not yet known';
         context += 'Their stated field(s) of interest: "' + fieldsText + '"' + (chosenFieldsList.length > 1 ? ' — they picked more than one, so explore across all of them rather than assuming the first is primary' : '') + '. Their career stage is "' + (stageLabels[answers.stage] || answers.stage || 'not yet known') + '". These were already asked directly — never ask about either again. ';
         if (answers.profileImport) {
-          context += 'They also pasted this resume/LinkedIn content before you started: "' + answers.profileImport + '" Use it to skip questions it already answers plainly (e.g. don\'t ask what their current job title is if it says so) and to target your verification exercises at the specific skills, tools, and claims it makes — but treat every claim in it as something to verify with a real exercise, not something to take at face value, exactly as you would a spoken claim. A resume never earns "mid" or "senior" by itself. ';
+          context += 'They also pasted this resume/LinkedIn content before you started: "' + answers.profileImport + '" This is past/background context, not a declaration of what they want next — it can include old jobs, school projects, or one-off gigs in fields they have no interest in continuing. Never assume the field(s) they picked above are wrong because the resume leans a different direction, and never build a scenario around a field or role that only appears in the resume and was NOT one of the field(s) they explicitly chose — if the resume mentions something outside their stated field(s), ignore it for scenario-building purposes; it is not evidence of intent. Use it only to skip questions it already answers plainly (e.g. don\'t ask what their current job title is if it says so) and to target verification exercises at specific skills/tools/claims within their CHOSEN field(s) — but treat every claim in it as something to verify with a real exercise, not something to take at face value, exactly as you would a spoken claim. A resume never earns "mid" or "senior" by itself. ';
         }
         renderAIFlow(el, {
           eyebrow: 'FINDING YOUR FIT',
