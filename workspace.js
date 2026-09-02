@@ -1102,6 +1102,15 @@
       onSelect: function (value) {
         answers.engine = value;
         if (value === 'byok') answers.provider = 'anthropic';
+      },
+      render: function (el) {
+        var link = document.createElement('a');
+        link.href = '/requirements';
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.className = 'setup-note-link';
+        link.textContent = 'No hosted mentor yet, and who this is for right now →';
+        el.appendChild(link);
       }
     },
     byok_key: {
