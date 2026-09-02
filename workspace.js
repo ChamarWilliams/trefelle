@@ -201,17 +201,61 @@
     });
   }
 
+  var MAX_PDF_PAGE_IMAGES = 5;
+
+  // Ollama has no PDF/document content block, only per-message "images".
+  // This renders PDF pages to JPEGs with pdf.js — it never reads or
+  // interprets the text, it's just handing the local vision model a
+  // picture of each page so the model itself is the one doing the reading.
+  function renderPdfPageImages(file) {
+    return loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js').then(function () {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      return file.arrayBuffer();
+    }).then(function (buf) {
+      return window.pdfjsLib.getDocument({ data: buf }).promise;
+    }).then(function (pdf) {
+      var count = Math.min(pdf.numPages, MAX_PDF_PAGE_IMAGES);
+      var pageNums = [];
+      for (var i = 1; i <= count; i++) pageNums.push(i);
+      return pageNums.reduce(function (chain, pageNum) {
+        return chain.then(function (acc) {
+          return pdf.getPage(pageNum).then(function (page) {
+            var viewport = page.getViewport({ scale: 1.5 });
+            var canvas = document.createElement('canvas');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            return page.render({ canvasContext: canvas.getContext('2d'), viewport: viewport }).promise.then(function () {
+              var dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+              var idx = dataUrl.indexOf(',');
+              acc.push(idx > -1 ? dataUrl.slice(idx + 1) : dataUrl);
+              return acc;
+            });
+          });
+        });
+      }, Promise.resolve([]));
+    });
+  }
+
   // Reads a file into an attachment the AI itself can analyze rather than
   // something we've pre-interpreted. PDFs are kept as raw base64 and sent
   // natively (Anthropic "document" blocks, OpenAI-style "file" parts) so the
-  // model reads the real document. .docx has no such native block on any
-  // provider, so it's the one case we still read as plain text ourselves —
-  // that's a lossless 1:1 read of the file's own text, not an interpretation.
+  // model reads the real document. For a local Ollama model, which has
+  // neither of those, the pages are rendered as images instead so a
+  // vision-capable local model can read them directly too. .docx has no
+  // native block on any provider, so it's the one case still read as plain
+  // text ourselves — a lossless 1:1 read of the file's own text, not an
+  // interpretation.
   function readProfileFile(file) {
     var name = (file.name || '').toLowerCase();
     if (name.endsWith('.pdf')) {
+      var wantsImages = answers.engine === 'local' && answers.runtime === 'ollama';
       return fileToBase64(file).then(function (base64) {
-        return { kind: 'pdf', name: file.name, size: file.size, base64: base64 };
+        if (!wantsImages) return { kind: 'pdf', name: file.name, size: file.size, base64: base64 };
+        return renderPdfPageImages(file).then(function (images) {
+          return { kind: 'pdf', name: file.name, size: file.size, base64: base64, images: images };
+        }, function () {
+          return { kind: 'pdf', name: file.name, size: file.size, base64: base64 };
+        });
       });
     }
     if (name.endsWith('.txt')) {
@@ -261,15 +305,31 @@
         return { type: 'text', text: p.text };
       });
     }
-    // Plain-text fallback (local Ollama models generally can't take file/document blocks).
+    // Plain-text fallback (used when a PDF has no rendered page images either).
     return content.map(function (p) {
-      if (p.type === 'pdf') return '[Attached file "' + p.name + '" is a PDF — not supported by local models. Ask the person to paste its text instead if you need it.]';
+      if (p.type === 'pdf') return '[Attached file "' + p.name + '" is a PDF — not supported by this local model. Ask the person to paste its text instead if you need it.]';
       return p.text;
     }).join('\n\n');
   }
 
   function mapMessages(messages, mode) {
     return messages.map(function (m) {
+      if (mode === 'ollama' && Array.isArray(m.content)) {
+        var images = [];
+        var texts = m.content.map(function (p) {
+          if (p.type === 'pdf') {
+            if (p.images && p.images.length) {
+              images = images.concat(p.images);
+              return 'Attached file "' + p.name + '" — its pages are included below as images for you to read directly.';
+            }
+            return '[Attached file "' + p.name + '" is a PDF — not supported by this local model. Ask the person to paste its text instead if you need it.]';
+          }
+          return p.text;
+        });
+        var msg = { role: m.role, content: texts.join('\n\n') };
+        if (images.length) msg.images = images;
+        return msg;
+      }
       return { role: m.role, content: mapContentParts(m.content, mode) };
     });
   }
