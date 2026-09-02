@@ -28,6 +28,7 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,Arial,s
 .setup-option.selected{border-color:var(--green);background:#eef3e6}
 .setup-option.selected .arrow{opacity:1;font-weight:700}
 .setup-field{display:grid;gap:10px}
+.setup-field[hidden]{display:none}
 .setup-field input{font:14px 'DM Mono',monospace;padding:15px 16px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);width:100%}
 .setup-field input:focus{outline:2px solid var(--green);outline-offset:1px}
 .setup-hint{font-size:11px;color:#79866f;margin:0}
