@@ -1665,6 +1665,62 @@
         back.textContent = 'Back to Trefelle';
         actions.appendChild(back);
         el.appendChild(actions);
+
+        var stack = answers.keyStack || [];
+        if (stack.length) {
+          var toggle = document.createElement('a');
+          toggle.href = '#';
+          toggle.className = 'setup-note-link';
+          toggle.textContent = 'Show my keys as JSON (for backup / re-import) →';
+          el.appendChild(toggle);
+
+          var panel = document.createElement('div');
+          panel.className = 'setup-field';
+          panel.style.marginTop = '14px';
+          panel.hidden = true;
+
+          var note = document.createElement('p');
+          note.className = 'setup-note error';
+          note.textContent = 'This is rendered only in your browser — it’s never sent to Trefelle or anyone else. Only you can see it. Keep it private: anyone with these keys can spend your API credits.';
+          panel.appendChild(note);
+
+          var textarea = document.createElement('textarea');
+          textarea.rows = Math.min(12, 3 + stack.length * 2);
+          textarea.readOnly = true;
+          textarea.spellcheck = false;
+          textarea.value = JSON.stringify(stack, null, 2);
+          panel.appendChild(textarea);
+
+          var panelActions = document.createElement('div');
+          panelActions.className = 'setup-actions';
+          var copyBtn = button('Copy to clipboard', 'setup-secondary', function () {
+            var done = function () {
+              copyBtn.textContent = 'Copied';
+              setTimeout(function () { copyBtn.textContent = 'Copy to clipboard'; }, 1800);
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(textarea.value).then(done, function () {
+                textarea.select();
+                document.execCommand('copy');
+                done();
+              });
+            } else {
+              textarea.select();
+              document.execCommand('copy');
+              done();
+            }
+          });
+          panelActions.appendChild(copyBtn);
+          panel.appendChild(panelActions);
+
+          toggle.addEventListener('click', function (e) {
+            e.preventDefault();
+            panel.hidden = !panel.hidden;
+            toggle.textContent = panel.hidden ? 'Show my keys as JSON (for backup / re-import) →' : 'Hide my keys';
+          });
+
+          el.appendChild(panel);
+        }
       }
     }
   };
