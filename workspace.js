@@ -164,6 +164,63 @@
 
   var FIELDS_PROMPT_BASE = 'Your goal now is to determine which specific field(s) and roles genuinely fit this person. The scope is EVERY STEM and technical discipline, not a short list — software, data science, mechanical, electrical, civil, aerospace, biomedical, chemical, industrial, materials science, environmental engineering, robotics, nuclear, marine/ocean engineering, mining, geology and earth science, agriculture and agtech, energy systems, physics, mathematics and statistics, actuarial work, network and telecom engineering, pharma and biotech, manufacturing, and anything else STEM or technical — including ones not listed here. Never default to software unless it genuinely fits best.\nField and career stage are FACTS, not personality traits — you have already been told which broad field they\'re interested in and their career stage below; these were asked directly before you started, so never ask about either again. Use them as the fixed setting for every hypothetical you build from here on — a hypothetical for an undergrad mechanical engineering student should look nothing like one for a working professional in biomedical devices, and a scenario that assumes the wrong field wastes the question entirely.\nIf their stage is "graduated and/or working professionally," dig further with direct factual questions (job title, how many years, do they hold a degree or certifications and in what) before you rely on any exercise result to justify "mid" or "senior" — a job title and years of real experience is what earns "mid" or "senior", credentials and confidence alone are not enough. If their stage is "haven\'t started a degree yet" or "undergrad," the level is "student" or "early" respectively unless they describe real professional work on top of that — do not round up.\nWithin the given field and stage, keep narrowing toward a specific sub-field and concrete role (e.g. not just "mechanical," but which corner: thermal systems, robotics, manufacturing, automotive, aerospace structures) and keep verifying claims with small exercises scoped to that exact field and stage — never reuse a scenario you already asked about, even for a different exercise type, and never repeat the same item twice within one exercise\'s list.\nAim for around 15 to 20 questions total, but if you are still genuinely unsure after that, keep going — accuracy matters more than speed. Stop as soon as you are confident.\n' + QUESTION_FORMATS + '\nWhen confident, respond with exactly: {"type":"done","level":"student|early|mid|senior","fields":[{"name":"Field name","why":"one sentence on why this fits them","blurb":"one sentence describing the field","demand":"rough demand label","pay":"rough pay range","roles":[{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"}]}]} with up to 3 fields ranked best fit first.';
 
+  var MAX_RESUME_BYTES = 5 * 1024 * 1024;
+
+  function loadScriptOnce(src) {
+    return new Promise(function (resolve, reject) {
+      if (document.querySelector('script[src="' + src + '"]')) { resolve(); return; }
+      var s = document.createElement('script');
+      s.src = src;
+      s.onload = function () { resolve(); };
+      s.onerror = function () { reject(new Error('Couldn’t load a required library — check your connection and try again.')); };
+      document.head.appendChild(s);
+    });
+  }
+
+  function extractResumeText(file) {
+    var name = (file.name || '').toLowerCase();
+    if (name.endsWith('.txt')) {
+      return new Promise(function (resolve, reject) {
+        var reader = new FileReader();
+        reader.onload = function () { resolve(String(reader.result || '')); };
+        reader.onerror = function () { reject(new Error('Couldn’t read that file — try pasting the text instead.')); };
+        reader.readAsText(file);
+      });
+    }
+    if (name.endsWith('.pdf')) {
+      return loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js').then(function () {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        return file.arrayBuffer();
+      }).then(function (buf) {
+        return window.pdfjsLib.getDocument({ data: buf }).promise;
+      }).then(function (pdf) {
+        var pageNums = [];
+        for (var i = 1; i <= pdf.numPages; i++) pageNums.push(i);
+        return pageNums.reduce(function (chain, pageNum) {
+          return chain.then(function (acc) {
+            return pdf.getPage(pageNum).then(function (page) { return page.getTextContent(); }).then(function (content) {
+              acc.push(content.items.map(function (it) { return it.str; }).join(' '));
+              return acc;
+            });
+          });
+        }, Promise.resolve([])).then(function (pages) { return pages.join('\n'); });
+      });
+    }
+    if (name.endsWith('.docx')) {
+      return loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js').then(function () {
+        return file.arrayBuffer();
+      }).then(function (buf) {
+        return window.mammoth.extractRawText({ arrayBuffer: buf });
+      }).then(function (result) {
+        return result.value || '';
+      });
+    }
+    if (name.endsWith('.doc')) {
+      return Promise.reject(new Error('.doc files aren’t supported — save as .docx or .pdf, or paste the text instead.'));
+    }
+    return Promise.reject(new Error('Unsupported file type — use .pdf, .docx, or .txt, or paste the text instead.'));
+  }
+
   function slugify(s) {
     return (s || 'field').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'field';
   }
@@ -1088,13 +1145,79 @@
     assess_profile_import: {
       eyebrow: 'SPEED THINGS UP',
       question: 'Have a resume or LinkedIn on hand?',
-      body: 'Paste your resume text, your LinkedIn URL, or your LinkedIn About/Experience section. We\'ll use it to skip questions the answer already covers — totally optional.',
-      field: {
-        type: 'textarea',
-        key: 'profileImport',
-        placeholder: 'Paste resume text, a LinkedIn URL, or your About/Experience section…'
-      },
-      next: 'assess_personality'
+      body: 'Paste your resume text, your LinkedIn URL, or upload a resume file. We\'ll use it to skip questions the answer already covers — totally optional.',
+      render: function (el) {
+        var form = document.createElement('form');
+        form.className = 'setup-field';
+
+        var textarea = document.createElement('textarea');
+        textarea.placeholder = 'Paste resume text, a LinkedIn URL, or your About/Experience section…';
+        textarea.value = answers.profileImport || '';
+        form.appendChild(textarea);
+
+        var uploadRow = document.createElement('div');
+        uploadRow.className = 'setup-upload';
+        var uploadLabel = document.createElement('label');
+        uploadLabel.className = 'setup-upload-btn';
+        uploadLabel.textContent = 'Or upload a file (.pdf, .docx, .txt)';
+        var fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = '.pdf,.doc,.docx,.txt';
+        uploadLabel.appendChild(fileInput);
+        uploadRow.appendChild(uploadLabel);
+        var uploadStatus = document.createElement('p');
+        uploadStatus.className = 'setup-note';
+        uploadStatus.textContent = 'Max 5 MB.';
+        uploadRow.appendChild(uploadStatus);
+        form.appendChild(uploadRow);
+
+        fileInput.addEventListener('change', function () {
+          var file = fileInput.files && fileInput.files[0];
+          if (!file) return;
+          uploadStatus.classList.remove('error');
+          if (file.size > MAX_RESUME_BYTES) {
+            uploadStatus.classList.add('error');
+            uploadStatus.textContent = 'That file is over 5 MB — try a smaller file or paste the text instead.';
+            return;
+          }
+          uploadStatus.textContent = 'Reading ' + file.name + '…';
+          extractResumeText(file).then(function (text) {
+            text = (text || '').trim();
+            if (!text) {
+              uploadStatus.classList.add('error');
+              uploadStatus.textContent = 'Couldn’t find any text in that file — try pasting instead.';
+              return;
+            }
+            textarea.value = text;
+            uploadStatus.textContent = 'Loaded ' + file.name + ' (' + Math.round(file.size / 1024) + ' KB).';
+          }, function (err) {
+            uploadStatus.classList.add('error');
+            uploadStatus.textContent = (err && err.message) || 'Couldn’t read that file — try pasting instead.';
+          });
+        });
+
+        var actions = document.createElement('div');
+        actions.className = 'setup-actions';
+        var submit = document.createElement('button');
+        submit.type = 'submit';
+        submit.className = 'setup-primary';
+        submit.textContent = 'Continue';
+        actions.appendChild(submit);
+        actions.appendChild(button('Skip', 'setup-secondary', function () {
+          answers.profileImport = '';
+          go('assess_personality');
+        }));
+        form.appendChild(actions);
+
+        form.addEventListener('submit', function (e) {
+          e.preventDefault();
+          answers.profileImport = textarea.value.trim();
+          go('assess_personality');
+        });
+
+        el.appendChild(form);
+        setTimeout(function () { textarea.focus(); }, 260);
+      }
     },
     assess_personality: {
       hideHeader: true,
