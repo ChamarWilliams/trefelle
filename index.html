@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="refresh" content="0; url=landing.html" />
+    <title>Trefelle — redirecting</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="canvas">
+      <header class="topbar glass">
+        <div class="brand"><div class="traffic"><i></i><i></i><i></i></div><span class="brand-name">trefelle</span></div>
+        <div class="track-pill"><span class="pulse-dot"></span>Stripe FinTech Track <b>•</b> Ticket ENG-4082</div>
+        <div class="header-actions"><span class="offline"><span>ϟ</span> Offline AI <em>Qwen-3B</em></span><button class="icon-button" aria-label="Settings">⚙</button><button class="avatar">C</button></div>
+      </header>
+
+      <section class="workspace" id="workspace">
+        <aside class="ticket-pane glass">
+          <nav class="segmented" role="tablist">
+            <button class="segment active" data-view="spec">▣ <span>Spec</span></button>
+            <button class="segment" data-view="architecture">⌘ <span>Architecture</span></button>
+            <button class="segment" data-view="mentor">✦ <span>AI Mentor</span></button>
+          </nav>
+
+          <div class="tab-view active" id="spec">
+            <div class="ticket-meta"><span class="priority">P1 · CRITICAL</span><span class="context">FINTECH</span></div>
+            <p class="eyebrow">PAYMENTS INFRASTRUCTURE</p>
+            <h1>Prevent duplicate transactions during webhook retry storms.</h1>
+            <p class="lead">Implement a distributed lock that protects payment processing across concurrent webhook workers without creating a single point of failure.</p>
+            <div class="divider"></div>
+            <h2>Acceptance criteria</h2>
+            <label class="criterion"><input type="checkbox" checked /><span class="checkmark"></span><span>Acquire a lock with TTL expiry</span></label>
+            <label class="criterion"><input type="checkbox" /><span class="checkmark"></span><span>Release with an atomic Lua script</span></label>
+            <label class="criterion"><input type="checkbox" /><span class="checkmark"></span><span>P99 latency under 15ms at 5k concurrent requests</span></label>
+            <div class="payload"><div><span>Webhook payload</span><button aria-label="Copy payload">⧉</button></div><code>{<br>&nbsp;&nbsp;"event": "payment.succeeded",<br>&nbsp;&nbsp;"id": "evt_3Nx..."
+              <br>}</code></div>
+          </div>
+
+          <div class="tab-view" id="architecture">
+            <p class="eyebrow">SYSTEM FLOW</p><h1>Idempotency at the worker boundary.</h1>
+            <div class="flow"><div>Stripe webhook <small>retry-safe event</small></div><b>↓</b><div class="focus-node">Lock manager <small>your implementation</small></div><b>↓</b><div>Payment worker <small>exactly-once side effect</small></div></div>
+            <p class="architecture-copy">Your lock must be acquired before the worker makes any irreversible payment-provider call. Use a unique token so a stale worker cannot release a renewed lock.</p>
+          </div>
+
+          <div class="tab-view" id="mentor">
+            <p class="eyebrow">LOCAL SENIOR MENTOR</p><h1>Let’s reason about ownership first.</h1>
+            <div class="message mentor-message">What happens if worker A's TTL expires just before it calls <code>release()</code>, while worker B has acquired a new lock?</div>
+            <div class="hint-card"><span>LEVEL 1 HINT</span><p>The release operation needs to prove the caller is still the owner.</p></div>
+            <div class="ask"><input aria-label="Ask mentor" placeholder="Ask your mentor anything…" /><button>↑</button></div>
+          </div>
+        </aside>
+        <div class="splitter vertical" aria-label="Resize panes"></div>
+
+        <section class="right-column">
+          <section class="editor-pane glass">
+            <div class="editor-header"><div class="language">⌘&nbsp; Python 3.12 <span>⌄</span></div><div class="file-tab"><span class="python-dot">◆</span> idempotency_worker.py <i></i></div><button class="more">•••</button></div>
+            <div class="code-area" aria-label="Python code editor">
+              <div class="lines">1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>13</div>
+              <pre><span class="kw">import</span> redis.asyncio <span class="kw">as</span> aioredis
+<span class="kw">import</span> time
+
+<span class="kw">class</span> <span class="class">DistributedLock</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, redis_client):
+        self.redis = redis_client
+
+    <span class="kw">async def</span> <span class="fn">acquire</span>(self, key, ttl_ms):
+        <span class="comment"># Set only when the lock is not held</span>
+        token = str(time.time_ns())
+        <span class="kw">return await</span> self.redis.set(
+            key, token, nx=<span class="bool">True</span>, px=ttl_ms
+        )</pre>
+            </div>
+            <div class="editor-footer"><span><i></i> Saved just now</span><span>Ln 13, Col 10 &nbsp; Spaces: 4</span></div>
+            <div class="editor-actions"><button class="run-button" id="runTests"><span>▶</span> Run tests</button><button class="submit-button" id="submitSolution"><span>↗</span> Submit solution</button></div>
+          </section>
+          <div class="splitter horizontal" aria-label="Resize console"></div>
+          <section class="console-pane glass">
+            <div class="console-head"><div><p class="eyebrow">TELEMETRY</p><h2>Test suite</h2></div><div class="suite-summary"><span class="passed-count">2 passed</span><span class="failed-count">1 failed</span><span>11.6ms</span></div></div>
+            <div class="console-tabs"><button class="active">Tests <em>3</em></button><button>Benchmarks</button><button>Logs</button></div>
+            <div class="tests" id="tests">
+              <article class="test-card pass"><span class="status">✓</span><div><h3>test_single_lock_acquisition</h3><p>Lock is granted once to the first worker.</p></div><time>1.2ms</time></article>
+              <article class="test-card pass"><span class="status">✓</span><div><h3>test_lock_ttl_auto_expiration</h3><p>Expired lock can be safely reclaimed.</p></div><time>10.4ms</time></article>
+              <article class="test-card fail"><span class="status">!</span><div><h3>test_concurrent_race_condition</h3><p>Expected release to validate owner token.</p></div><time>failed</time></article>
+            </div>
+          </section>
+        </section>
+      </section>
+      <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+      <div class="toast" id="toast">Solution queued for review</div>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>

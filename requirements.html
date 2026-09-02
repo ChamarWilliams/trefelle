@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>AI Mentor options</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="effects.css" />
+    <link rel="stylesheet" href="trefelle-home.css" />
+  </head>
+  <body>
+    <main>
+      <header class="nav">
+        <a class="wordmark" href="landing.html"
+          ><span class="mark"><i></i><i></i><i></i></span
+          ><span>TREFELLE</span></a
+        >
+        <nav>
+          <a href="approach.html">Approach</a
+          ><a href="flow.html">How it works</a
+          ><a href="why.html">Why Trefelle</a
+          ><a class="active" href="requirements.html">AI options</a>
+        </nav>
+        <a class="nav-cta" href="workspace.html">Open workspace <b>↗</b></a>
+      </header>
+
+      <section class="plain-hero">
+        <p class="eyebrow reveal"><span></span>AI MENTOR · FOR NOW</p>
+        <h1 class="reveal-up">Choose the AI that<br />powers your mentor.</h1>
+        <p class="reveal-up reveal-d1">
+          Trefelle is unfunded, so there's no hosted AI mentor running on our
+          bill yet. Until a subscription version exists, the mentor runs on
+          an engine you choose and control—at no cost to us, and in most
+          cases no cost to you either.
+        </p>
+      </section>
+
+      <section class="proof" id="options">
+        <div class="proof-statement reveal-up">
+          <p class="eyebrow">THREE WAYS TO RUN IT</p>
+          <h2>Pick based on your<br /><em>hardware, not ours.</em></h2>
+        </div>
+        <div class="proof-list">
+          <article class="reveal-up">
+            <span>01</span>
+            <div>
+              <h3>Bring your own key</h3>
+              <p>
+                Connect an API key from a provider like OpenAI or Anthropic.
+                Requests go straight from your browser to them—we never see
+                the key or the bill.
+              </p>
+            </div>
+          </article>
+          <article class="reveal-up reveal-d1">
+            <span>02</span>
+            <div>
+              <h3>WebLLM, in your browser</h3>
+              <p>
+                A small model downloads once and runs locally via WebGPU.
+                No account, no key, no server—just your browser and your
+                device.
+              </p>
+            </div>
+          </article>
+          <article class="reveal-up reveal-d2">
+            <span>03</span>
+            <div>
+              <h3>A local model you already run</h3>
+              <p>
+                If you already have Ollama or LM Studio open, Trefelle can
+                talk to it directly for the fastest, most private option.
+              </p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="principles">
+        <header class="reveal-up">
+          <p class="eyebrow">SYSTEM REQUIREMENTS</p>
+          <p>What each option actually needs from your machine.</p>
+        </header>
+        <div class="option-grid">
+          <div class="option-card reveal-up">
+            <small>OPTION 01</small>
+            <h3>Bring your own key</h3>
+            <p>Best answer quality. Costs you per use, billed by the provider directly.</p>
+            <ul>
+              <li>An API key from OpenAI, Anthropic, or a similar provider</li>
+              <li>Any modern browser, any device</li>
+              <li>An internet connection</li>
+              <li>A card on file with the provider for usage billing</li>
+            </ul>
+            <span class="tag">Setup: ~2 minutes</span>
+          </div>
+          <div class="option-card reveal-up reveal-d1">
+            <small>OPTION 02</small>
+            <h3>WebLLM in-browser</h3>
+            <p>Free and private, with a lighter model and a one-time download.</p>
+            <ul>
+              <li>Chrome or Edge 113+ (WebGPU required—no iOS Safari)</li>
+              <li>8 GB+ RAM recommended</li>
+              <li>2–4 GB free storage for the model download</li>
+              <li>A dedicated or capable integrated GPU helps a lot</li>
+            </ul>
+            <span class="tag">Setup: one-time download</span>
+          </div>
+          <div class="option-card reveal-up reveal-d2">
+            <small>OPTION 03</small>
+            <h3>Your own local model</h3>
+            <p>Free, fast, and fully private—if you're already set up for it.</p>
+            <ul>
+              <li>Ollama or LM Studio installed and running</li>
+              <li>A pulled model (e.g. Llama 3, Qwen 2.5, Mistral)</li>
+              <li>16 GB+ RAM for comfortable 7B–8B models</li>
+              <li>Browser permission to reach localhost</li>
+            </ul>
+            <span class="tag">Setup: for existing local-AI users</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="compare">
+        <div class="reveal-up">
+          <p class="eyebrow">SIDE BY SIDE</p>
+          <h2>No option is strictly best—<em>it depends what you already have.</em></h2>
+        </div>
+        <div class="compare-scroll reveal-up reveal-d1">
+          <table>
+            <thead>
+              <tr>
+                <th>&nbsp;</th>
+                <th>Bring your own key</th>
+                <th>WebLLM</th>
+                <th>Local model</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Cost to you</td>
+                <td>Pay-per-use to provider</td>
+                <td>Free</td>
+                <td>Free</td>
+              </tr>
+              <tr>
+                <td>Answer quality</td>
+                <td>Frontier-model quality</td>
+                <td>Small-model quality</td>
+                <td>Depends on model chosen</td>
+              </tr>
+              <tr>
+                <td>Setup effort</td>
+                <td>Paste a key</td>
+                <td>None—just wait for download</td>
+                <td>Requires app already installed</td>
+              </tr>
+              <tr>
+                <td>Works offline</td>
+                <td>No</td>
+                <td>Yes, after first load</td>
+                <td>Yes</td>
+              </tr>
+              <tr>
+                <td>Privacy</td>
+                <td>Data sent to provider</td>
+                <td>Fully local</td>
+                <td>Fully local</td>
+              </tr>
+              <tr>
+                <td>Best for</td>
+                <td>Anyone wanting top quality</td>
+                <td>Anyone, zero setup</td>
+                <td>Existing local-AI users</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="roadmap">
+        <div class="reveal-up">
+          <p class="eyebrow">WHAT CHANGES LATER</p>
+          <h2>A hosted, subscription mentor<br />is the long-term plan.</h2>
+          <p>
+            Once Trefelle can sustainably cover inference costs, a hosted
+            mentor will remove the setup entirely—no key, no download, no
+            local app. Until then, these three options keep the mentor free
+            for us to offer and honest about what it costs you.
+          </p>
+          <a href="approach.html" class="primary">See the approach <b>→</b></a>
+        </div>
+      </section>
+    </main>
+    <script src="effects.js" defer></script>
+  </body>
+</html>
