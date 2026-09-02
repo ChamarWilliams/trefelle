@@ -5,6 +5,7 @@
   var answers = {};
   var history = [];
   var currentId = null;
+  var profileFiles = [];
 
   function saveAnswers() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(answers)); } catch (e) {}
@@ -165,6 +166,7 @@
   var FIELDS_PROMPT_BASE = 'Your goal now is to determine which specific field(s) and roles genuinely fit this person. The scope is EVERY STEM and technical discipline, not a short list — software, data science, mechanical, electrical, civil, aerospace, biomedical, chemical, industrial, materials science, environmental engineering, robotics, nuclear, marine/ocean engineering, mining, geology and earth science, agriculture and agtech, energy systems, physics, mathematics and statistics, actuarial work, network and telecom engineering, pharma and biotech, manufacturing, and anything else STEM or technical — including ones not listed here. Never default to software unless it genuinely fits best.\nField and career stage are FACTS, not personality traits — you have already been told which broad field they\'re interested in and their career stage below; these were asked directly before you started, so never ask about either again. Use them as the fixed setting for every hypothetical you build from here on — a hypothetical for an undergrad mechanical engineering student should look nothing like one for a working professional in biomedical devices, and a scenario that assumes the wrong field wastes the question entirely.\nIf their stage is "graduated and/or working professionally," dig further with direct factual questions (job title, how many years, do they hold a degree or certifications and in what) before you rely on any exercise result to justify "mid" or "senior" — a job title and years of real experience is what earns "mid" or "senior", credentials and confidence alone are not enough. If their stage is "haven\'t started a degree yet" or "undergrad," the level is "student" or "early" respectively unless they describe real professional work on top of that — do not round up.\nWithin the given field and stage, keep narrowing toward a specific sub-field and concrete role (e.g. not just "mechanical," but which corner: thermal systems, robotics, manufacturing, automotive, aerospace structures) and keep verifying claims with small exercises scoped to that exact field and stage — never reuse a scenario you already asked about, even for a different exercise type, and never repeat the same item twice within one exercise\'s list.\nAim for around 15 to 20 questions total, but if you are still genuinely unsure after that, keep going — accuracy matters more than speed. Stop as soon as you are confident.\n' + QUESTION_FORMATS + '\nWhen confident, respond with exactly: {"type":"done","level":"student|early|mid|senior","fields":[{"name":"Field name","why":"one sentence on why this fits them","blurb":"one sentence describing the field","demand":"rough demand label","pay":"rough pay range","roles":[{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"}]}]} with up to 3 fields ranked best fit first.';
 
   var MAX_RESUME_BYTES = 5 * 1024 * 1024;
+  var MAX_RESUME_FILES = 2;
 
   function loadScriptOnce(src) {
     return new Promise(function (resolve, reject) {
@@ -177,33 +179,44 @@
     });
   }
 
-  function extractResumeText(file) {
+  function fileToBase64(file) {
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function () {
+        var result = String(reader.result || '');
+        var idx = result.indexOf(',');
+        resolve(idx > -1 ? result.slice(idx + 1) : result);
+      };
+      reader.onerror = function () { reject(new Error('Couldn’t read that file — try pasting the text instead.')); };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function fileToText(file) {
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function () { resolve(String(reader.result || '')); };
+      reader.onerror = function () { reject(new Error('Couldn’t read that file — try pasting the text instead.')); };
+      reader.readAsText(file);
+    });
+  }
+
+  // Reads a file into an attachment the AI itself can analyze rather than
+  // something we've pre-interpreted. PDFs are kept as raw base64 and sent
+  // natively (Anthropic "document" blocks, OpenAI-style "file" parts) so the
+  // model reads the real document. .docx has no such native block on any
+  // provider, so it's the one case we still read as plain text ourselves —
+  // that's a lossless 1:1 read of the file's own text, not an interpretation.
+  function readProfileFile(file) {
     var name = (file.name || '').toLowerCase();
-    if (name.endsWith('.txt')) {
-      return new Promise(function (resolve, reject) {
-        var reader = new FileReader();
-        reader.onload = function () { resolve(String(reader.result || '')); };
-        reader.onerror = function () { reject(new Error('Couldn’t read that file — try pasting the text instead.')); };
-        reader.readAsText(file);
+    if (name.endsWith('.pdf')) {
+      return fileToBase64(file).then(function (base64) {
+        return { kind: 'pdf', name: file.name, size: file.size, base64: base64 };
       });
     }
-    if (name.endsWith('.pdf')) {
-      return loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js').then(function () {
-        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        return file.arrayBuffer();
-      }).then(function (buf) {
-        return window.pdfjsLib.getDocument({ data: buf }).promise;
-      }).then(function (pdf) {
-        var pageNums = [];
-        for (var i = 1; i <= pdf.numPages; i++) pageNums.push(i);
-        return pageNums.reduce(function (chain, pageNum) {
-          return chain.then(function (acc) {
-            return pdf.getPage(pageNum).then(function (page) { return page.getTextContent(); }).then(function (content) {
-              acc.push(content.items.map(function (it) { return it.str; }).join(' '));
-              return acc;
-            });
-          });
-        }, Promise.resolve([])).then(function (pages) { return pages.join('\n'); });
+    if (name.endsWith('.txt')) {
+      return fileToText(file).then(function (text) {
+        return { kind: 'text-file', name: file.name, size: file.size, text: text };
       });
     }
     if (name.endsWith('.docx')) {
@@ -212,13 +225,53 @@
       }).then(function (buf) {
         return window.mammoth.extractRawText({ arrayBuffer: buf });
       }).then(function (result) {
-        return result.value || '';
+        return { kind: 'text-file', name: file.name, size: file.size, text: result.value || '' };
       });
     }
     if (name.endsWith('.doc')) {
       return Promise.reject(new Error('.doc files aren’t supported — save as .docx or .pdf, or paste the text instead.'));
     }
     return Promise.reject(new Error('Unsupported file type — use .pdf, .docx, or .txt, or paste the text instead.'));
+  }
+
+  // Turns resolved profileFiles into a provider-agnostic list of message
+  // content parts; each call* function below maps these to its own wire
+  // format immediately before sending, so the rest of the app never has to
+  // know about OpenAI/Anthropic content-block differences.
+  function buildAttachmentParts(introText, files) {
+    var parts = [{ type: 'text', text: introText }];
+    files.forEach(function (f) {
+      if (f.kind === 'pdf') parts.push({ type: 'pdf', name: f.name, base64: f.base64 });
+      else parts.push({ type: 'text', text: 'Attached file "' + f.name + '":\n' + f.text });
+    });
+    return parts;
+  }
+
+  function mapContentParts(content, mode) {
+    if (typeof content === 'string') return content;
+    if (mode === 'openai') {
+      return content.map(function (p) {
+        if (p.type === 'pdf') return { type: 'file', file: { filename: p.name, file_data: 'data:application/pdf;base64,' + p.base64 } };
+        return { type: 'text', text: p.text };
+      });
+    }
+    if (mode === 'anthropic') {
+      return content.map(function (p) {
+        if (p.type === 'pdf') return { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: p.base64 } };
+        return { type: 'text', text: p.text };
+      });
+    }
+    // Plain-text fallback (local Ollama models generally can't take file/document blocks).
+    return content.map(function (p) {
+      if (p.type === 'pdf') return '[Attached file "' + p.name + '" is a PDF — not supported by local models. Ask the person to paste its text instead if you need it.]';
+      return p.text;
+    }).join('\n\n');
+  }
+
+  function mapMessages(messages, mode) {
+    return messages.map(function (m) {
+      return { role: m.role, content: mapContentParts(m.content, mode) };
+    });
   }
 
   function slugify(s) {
@@ -278,7 +331,7 @@
     if (apiKey) headers.Authorization = 'Bearer ' + apiKey;
     return fetch(url, {
       method: 'POST', headers: headers, signal: signal,
-      body: JSON.stringify({ model: answers.localModel || 'gpt-4o-mini', messages: messages, temperature: 0.4 })
+      body: JSON.stringify({ model: answers.localModel || 'gpt-4o-mini', messages: mapMessages(messages, 'openai'), temperature: 0.4 })
     }).then(function (res) {
       if (!res.ok) throw new Error('http ' + res.status);
       return res.json();
@@ -290,16 +343,19 @@
   }
 
   function callAnthropic(messages, signal) {
-    var system = messages.filter(function (m) { return m.role === 'system'; }).map(function (m) { return m.content; }).join('\n');
-    var rest = messages.filter(function (m) { return m.role !== 'system'; }).map(function (m) { return { role: m.role, content: m.content }; });
+    var mapped = mapMessages(messages, 'anthropic');
+    var system = mapped.filter(function (m) { return m.role === 'system'; }).map(function (m) { return m.content; }).join('\n');
+    var rest = mapped.filter(function (m) { return m.role !== 'system'; }).map(function (m) { return { role: m.role, content: m.content }; });
+    var hasPdf = messages.some(function (m) { return Array.isArray(m.content) && m.content.some(function (p) { return p.type === 'pdf'; }); });
+    var headers = {
+      'Content-Type': 'application/json',
+      'x-api-key': answers.apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    };
+    if (hasPdf) headers['anthropic-beta'] = 'pdfs-2024-09-25';
     return fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST', signal: signal,
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': answers.apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
+      method: 'POST', signal: signal, headers: headers,
       body: JSON.stringify({ model: 'claude-3-5-haiku-latest', max_tokens: 700, system: system, messages: rest })
     }).then(function (res) {
       if (!res.ok) throw new Error('http ' + res.status);
@@ -316,7 +372,7 @@
     if (answers.runtime === 'ollama') {
       return fetch(base + '/api/chat', {
         method: 'POST', signal: signal, headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: answers.localModel, messages: messages, stream: false, format: 'json' })
+        body: JSON.stringify({ model: answers.localModel, messages: mapMessages(messages, 'ollama'), stream: false, format: 'json' })
       }).then(function (res) {
         if (!res.ok) throw new Error('http ' + res.status);
         return res.json();
@@ -913,7 +969,11 @@
       var msgs = conversation.slice();
       if (atHard) msgs.push({ role: 'user', content: 'You are well past the target question count — you must conclude now with your final "done" response.' });
       else if (atSoft) msgs.push({ role: 'user', content: 'You have reached the target question count. If you are reasonably confident, conclude now with "done". Otherwise ask at most a few more.' });
-      else if (count === 0) msgs.push({ role: 'user', content: 'Begin.' });
+      else if (count === 0) {
+        msgs.push(cfg.attachmentFiles && cfg.attachmentFiles.length
+          ? { role: 'user', content: buildAttachmentParts('Begin.', cfg.attachmentFiles) }
+          : { role: 'user', content: 'Begin.' });
+      }
       attempt(msgs, atHard, 0);
     }
 
@@ -1145,7 +1205,7 @@
     assess_profile_import: {
       eyebrow: 'SPEED THINGS UP',
       question: 'Have a resume or LinkedIn on hand?',
-      body: 'Paste your resume text, your LinkedIn URL, or upload a resume file. We\'ll use it to skip questions the answer already covers — totally optional.',
+      body: 'Paste your resume text or LinkedIn URL, and/or attach up to 2 resume files — your AI mentor reads them directly. Totally optional.',
       render: function (el) {
         var form = document.createElement('form');
         form.className = 'setup-field';
@@ -1159,7 +1219,6 @@
         uploadRow.className = 'setup-upload';
         var uploadLabel = document.createElement('label');
         uploadLabel.className = 'setup-upload-btn';
-        uploadLabel.textContent = 'Or upload a file (.pdf, .docx, .txt)';
         var fileInput = document.createElement('input');
         fileInput.type = 'file';
         fileInput.accept = '.pdf,.doc,.docx,.txt';
@@ -1167,13 +1226,54 @@
         uploadRow.appendChild(uploadLabel);
         var uploadStatus = document.createElement('p');
         uploadStatus.className = 'setup-note';
-        uploadStatus.textContent = 'Max 5 MB.';
-        uploadRow.appendChild(uploadStatus);
         form.appendChild(uploadRow);
+        form.appendChild(uploadStatus);
+
+        var chipList = document.createElement('div');
+        chipList.className = 'setup-upload-chips';
+        form.appendChild(chipList);
+
+        function renderChips() {
+          chipList.innerHTML = '';
+          profileFiles.forEach(function (f, idx) {
+            var chip = document.createElement('span');
+            chip.className = 'setup-upload-chip';
+            var label = document.createElement('span');
+            label.textContent = f.name + ' (' + Math.round(f.size / 1024) + ' KB)';
+            var remove = document.createElement('button');
+            remove.type = 'button';
+            remove.setAttribute('aria-label', 'Remove ' + f.name);
+            remove.textContent = '×';
+            remove.addEventListener('click', function () {
+              profileFiles.splice(idx, 1);
+              renderChips();
+              updateUploadState();
+            });
+            chip.appendChild(label);
+            chip.appendChild(remove);
+            chipList.appendChild(chip);
+          });
+        }
+
+        function updateUploadState() {
+          var atLimit = profileFiles.length >= MAX_RESUME_FILES;
+          fileInput.disabled = atLimit;
+          uploadLabel.classList.toggle('disabled', atLimit);
+          uploadLabel.textContent = atLimit
+            ? MAX_RESUME_FILES + ' files attached (max)'
+            : 'Attach a resume file (.pdf, .docx, .txt)';
+          uploadLabel.appendChild(fileInput);
+          if (!uploadStatus.classList.contains('error')) uploadStatus.textContent = 'Up to ' + MAX_RESUME_FILES + ' files, 5 MB each.';
+        }
+
+        renderChips();
+        updateUploadState();
 
         fileInput.addEventListener('change', function () {
           var file = fileInput.files && fileInput.files[0];
+          fileInput.value = '';
           if (!file) return;
+          if (profileFiles.length >= MAX_RESUME_FILES) return;
           uploadStatus.classList.remove('error');
           if (file.size > MAX_RESUME_BYTES) {
             uploadStatus.classList.add('error');
@@ -1181,15 +1281,11 @@
             return;
           }
           uploadStatus.textContent = 'Reading ' + file.name + '…';
-          extractResumeText(file).then(function (text) {
-            text = (text || '').trim();
-            if (!text) {
-              uploadStatus.classList.add('error');
-              uploadStatus.textContent = 'Couldn’t find any text in that file — try pasting instead.';
-              return;
-            }
-            textarea.value = text;
-            uploadStatus.textContent = 'Loaded ' + file.name + ' (' + Math.round(file.size / 1024) + ' KB).';
+          readProfileFile(file).then(function (resolved) {
+            profileFiles.push(resolved);
+            renderChips();
+            updateUploadState();
+            uploadStatus.textContent = 'Attached ' + resolved.name + '.';
           }, function (err) {
             uploadStatus.classList.add('error');
             uploadStatus.textContent = (err && err.message) || 'Couldn’t read that file — try pasting instead.';
@@ -1205,6 +1301,7 @@
         actions.appendChild(submit);
         actions.appendChild(button('Skip', 'setup-secondary', function () {
           answers.profileImport = '';
+          profileFiles = [];
           go('assess_personality');
         }));
         form.appendChild(actions);
@@ -1225,12 +1322,16 @@
         var profileContext = answers.profileImport
           ? ('The person pasted this resume/LinkedIn content before you started — use it for background color if relevant, but it says nothing reliable about how they think or learn, so still infer personality and learning style entirely through your own exercises: "' + answers.profileImport + '" ')
           : '';
+        if (profileFiles.length) {
+          profileContext += 'The person also attached ' + profileFiles.length + ' resume file(s) in their first message below — read them for background, but the same rule applies: a resume says nothing reliable about how someone thinks or learns, so still infer personality and learning style entirely through your own exercises. ';
+        }
         renderAIFlow(el, {
           eyebrow: 'GETTING TO KNOW YOU',
           systemPrompt: profileContext + PERSONALITY_PROMPT,
           softTarget: 10,
           hardCap: 16,
           fallbackStepId: 'assess_bug',
+          attachmentFiles: profileFiles,
           onDone: function (doneObj) {
             answers.personalitySummary = doneObj.summary || '';
             answers.learningStyleLabel = doneObj.learningStyle || '';
@@ -1289,12 +1390,16 @@
         if (answers.profileImport) {
           context += 'They also pasted this resume/LinkedIn content before you started: "' + answers.profileImport + '" Use it to skip questions it already answers plainly (e.g. don\'t ask what their current job title is if it says so) and to target your verification exercises at the specific skills, tools, and claims it makes — but treat every claim in it as something to verify with a real exercise, not something to take at face value, exactly as you would a spoken claim. A resume never earns "mid" or "senior" by itself. ';
         }
+        if (profileFiles.length) {
+          context += 'They also attached ' + profileFiles.length + ' resume file(s) in their first message below — read them directly and use the same rule as above: they narrow what to verify, but every claim in them still needs a real exercise before it counts toward level or fit. ';
+        }
         renderAIFlow(el, {
           eyebrow: 'FINDING YOUR FIT',
           systemPrompt: context + FIELDS_PROMPT_BASE,
           softTarget: 17,
           hardCap: 26,
           fallbackStepId: 'assess_level',
+          attachmentFiles: profileFiles,
           onDone: function (doneObj) {
             if (doneObj.level && LEVEL_PREFIX[doneObj.level] !== undefined) answers.level = doneObj.level;
             answers.aiFieldRecs = (doneObj.fields || []).slice(0, 3).map(function (f) {
