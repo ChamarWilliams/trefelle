@@ -285,12 +285,7 @@
   // removes one more axis models could quietly disagree on.
   var CALL_TEMPERATURE = 0.4;
 
-  function markRateLimited(res) {
-    if (res.status === 429) {
-      var e = new Error('rate limited');
-      e.rateLimited = true;
-      throw e;
-    }
+  function checkResponse(res) {
     if (!res.ok) throw new Error('http ' + res.status);
     return res;
   }
@@ -307,7 +302,7 @@
         'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({ model: entry.byokModel, max_tokens: 700, temperature: CALL_TEMPERATURE, system: system, messages: rest })
-    }).then(markRateLimited).then(function (res) { return res.json(); }).then(function (data) {
+    }).then(checkResponse).then(function (res) { return res.json(); }).then(function (data) {
       var text = data.content && data.content[0] && data.content[0].text;
       if (!text) throw new Error('empty response');
       return text;
@@ -320,7 +315,7 @@
     return fetch(entry.byokEndpoint, {
       method: 'POST', signal: signal, headers: headers,
       body: JSON.stringify({ model: entry.byokModel, messages: messages, temperature: CALL_TEMPERATURE })
-    }).then(markRateLimited).then(function (res) { return res.json(); }).then(function (data) {
+    }).then(checkResponse).then(function (res) { return res.json(); }).then(function (data) {
       var text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
       if (!text) throw new Error('empty response');
       return text;
@@ -334,11 +329,11 @@
   function callAI(messages, signal) {
     var stack = answers.keyStack || [];
     if (!stack.length) return Promise.reject(new Error('No AI model connected'));
-    function tryIndex(i) {
-      if (i >= stack.length) return Promise.reject(new Error('every connected key is rate-limited or unavailable'));
+    function tryIndex(i, lastErr) {
+      if (i >= stack.length) return Promise.reject(lastErr || new Error('every connected key failed'));
       return callWithEntry(stack[i], messages, signal).catch(function (err) {
-        if (err && err.rateLimited && i + 1 < stack.length) return tryIndex(i + 1);
-        throw err;
+        if (err && err.name === 'AbortError') throw err;
+        return tryIndex(i + 1, err);
       });
     }
     return tryIndex(0);
