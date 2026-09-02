@@ -1,0 +1,1 @@
+Website that does a assessment of start and finds out what roles and job categories your good at. Find out what skills you need and teach you those skills and gives you fake jobs for those projects in preperation for the workforce
