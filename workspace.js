@@ -440,14 +440,22 @@
         return text;
       });
     }
+    // num_ctx: Ollama's default context window is much smaller than what
+    // Qwen3-VL supports, and this app's system prompts plus a "thinking"
+    // model's own reasoning easily exceed it — the model then gets cut off
+    // mid-thought and never writes anything to `content` at all. Requesting
+    // a generous window here fixes that instead of just working around it.
     return fetch(base + '/api/chat', {
       method: 'POST', signal: signal, headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: answers.localModel, messages: mapMessages(messages, 'ollama'), stream: false, format: 'json' })
+      body: JSON.stringify({ model: answers.localModel, messages: mapMessages(messages, 'ollama'), stream: false, format: 'json', options: { num_ctx: 32768 } })
     }).then(function (res) {
       if (!res.ok) throw new Error('http ' + res.status);
       return res.json();
     }).then(function (data) {
-      var text = data.message && data.message.content;
+      // Some Ollama/Qwen3-VL builds route the real answer into `thinking`
+      // instead of `content` even with reasoning "finished" — fall back to
+      // it rather than treat that as a hard failure.
+      var text = (data.message && (data.message.content || data.message.thinking)) || '';
       if (!text) throw new Error('empty response');
       return text;
     });
