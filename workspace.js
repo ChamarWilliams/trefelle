@@ -1080,17 +1080,31 @@
       render: function (el) {
         var actions = document.createElement('div');
         actions.className = 'setup-actions';
-        actions.appendChild(button('Start', 'setup-primary', function () { go('assess_personality'); }));
+        actions.appendChild(button('Start', 'setup-primary', function () { go('assess_profile_import'); }));
         actions.appendChild(button('Skip for now', 'setup-secondary', function () { go('voice_ask'); }));
         el.appendChild(actions);
       }
     },
+    assess_profile_import: {
+      eyebrow: 'SPEED THINGS UP',
+      question: 'Have a resume or LinkedIn on hand?',
+      body: 'Paste your resume text, your LinkedIn URL, or your LinkedIn About/Experience section. We\'ll use it to skip questions the answer already covers — totally optional.',
+      field: {
+        type: 'textarea',
+        key: 'profileImport',
+        placeholder: 'Paste resume text, a LinkedIn URL, or your About/Experience section…'
+      },
+      next: 'assess_personality'
+    },
     assess_personality: {
       hideHeader: true,
       render: function (el) {
+        var profileContext = answers.profileImport
+          ? ('The person pasted this resume/LinkedIn content before you started — use it for background color if relevant, but it says nothing reliable about how they think or learn, so still infer personality and learning style entirely through your own exercises: "' + answers.profileImport + '" ')
+          : '';
         renderAIFlow(el, {
           eyebrow: 'GETTING TO KNOW YOU',
-          systemPrompt: PERSONALITY_PROMPT,
+          systemPrompt: profileContext + PERSONALITY_PROMPT,
           softTarget: 10,
           hardCap: 16,
           fallbackStepId: 'assess_bug',
@@ -1149,6 +1163,9 @@
           ? ('Here is what you already learned about how this person thinks and learns: "' + answers.personalitySummary + '" Use it — do not re-ask about personality or learning style. ')
           : '';
         context += 'Their stated field of interest is "' + (answers.chosenField || 'not yet known') + '" and their career stage is "' + (stageLabels[answers.stage] || answers.stage || 'not yet known') + '". These were already asked directly — never ask about either again. ';
+        if (answers.profileImport) {
+          context += 'They also pasted this resume/LinkedIn content before you started: "' + answers.profileImport + '" Use it to skip questions it already answers plainly (e.g. don\'t ask what their current job title is if it says so) and to target your verification exercises at the specific skills, tools, and claims it makes — but treat every claim in it as something to verify with a real exercise, not something to take at face value, exactly as you would a spoken claim. A resume never earns "mid" or "senior" by itself. ';
+        }
         renderAIFlow(el, {
           eyebrow: 'FINDING YOUR FIT',
           systemPrompt: context + FIELDS_PROMPT_BASE,
@@ -1680,8 +1697,9 @@
     if (step.field) {
       var form = document.createElement('form');
       form.className = 'setup-field';
-      var input = document.createElement('input');
-      input.type = step.field.type === 'password' ? 'password' : 'text';
+      var isTextarea = step.field.type === 'textarea';
+      var input = document.createElement(isTextarea ? 'textarea' : 'input');
+      if (!isTextarea) input.type = step.field.type === 'password' ? 'password' : 'text';
       input.placeholder = step.field.placeholder || '';
       input.autocomplete = 'off';
       input.spellcheck = false;
