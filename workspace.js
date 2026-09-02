@@ -1068,6 +1068,14 @@
         renderQuestion(data);
       }).catch(function (err) {
         if (err && err.name === 'AbortError') return;
+        // A local model can occasionally run out of room mid-turn (long
+        // system prompt + its own reasoning) and come back empty — that's
+        // transient, not a real connection problem, so retry a couple of
+        // times before giving up rather than hard-failing on the first blip.
+        if (retryNum < 2) {
+          attempt(msgs, atHard, retryNum + 1);
+          return;
+        }
         clearSlowTimer();
         renderError('Couldn’t reach your AI model (' + (err && err.message ? err.message : 'unknown error') + ').');
       });
