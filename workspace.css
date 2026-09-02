@@ -31,6 +31,10 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,Arial,s
 .setup-field input{font:14px 'DM Mono',monospace;padding:15px 16px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);width:100%}
 .setup-field input:focus{outline:2px solid var(--green);outline-offset:1px}
 .setup-hint{font-size:11px;color:#79866f;margin:0}
+.setup-upload{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.setup-upload-btn{display:inline-block;padding:10px 16px;border:1px solid var(--line);border-radius:6px;font-size:12px;color:var(--ink);cursor:pointer;transition:border-color .2s ease,background .2s ease}
+.setup-upload-btn:hover{border-color:var(--green);background:#f4f7ef}
+.setup-upload-btn input{display:none}
 .setup-actions{display:flex;align-items:center;gap:18px;margin-top:22px}
 .setup-primary{display:inline-block;background:var(--ink);color:#fff;text-decoration:none;font-weight:600;font-size:12px;padding:14px 20px;border-radius:6px;border:0;cursor:pointer;transition:transform .2s ease,box-shadow .2s ease}
 .setup-primary:hover{transform:translateY(-2px);box-shadow:0 9px 17px #59654b45}
