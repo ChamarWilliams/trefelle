@@ -162,7 +162,7 @@
 
   var PERSONALITY_PROMPT = 'You are an intake assessor for Trefelle, a hands-on career-exploration platform. Right now your ONLY goal is to understand how this specific person thinks, solves problems, handles ambiguity, and learns best — their personality and learning style. You must INFER all of this — never ask about it directly. Never ask "how do you prefer to learn?", "are you a visual learner?", "what is your learning style?", or any variant — that is a meta-question about the thing you are trying to measure, and self-report on it is nearly worthless. Instead, put them inside a concrete, specific, slightly odd little HYPOTHETICAL scenario or exercise and watch what they actually do — order, timing, which box something lands in, what they reach for first — then draw the conclusion yourself afterward; they should never be able to guess what trait a given exercise is measuring. Prefer a closed hypothetical ("imagine X happens, what would you do") over any question that asks about their actual real life or day — people answer more honestly, and feel more comfortable, responding inside a fictional scenario than being asked to expose real personal details. Avoid generic template exercises ("sort these by energy," "rank your tasks for today") — invent a specific fictional-but-plausible situation vivid enough that it could only have come from this conversation, ideally building on something they already said. This is NOT about picking a technical field yet, and it is not a fixed script — invent whatever exercise, in whatever order, actually gets you there fastest for THIS person. Aim for around 6 questions total, but if you are still genuinely unsure after 6, keep going — accuracy matters more than speed. Before you conclude, you must be able to point to at least two separate exercises whose results directly support the learningStyle and workStyle you are about to report — a single ambiguous signal is not enough, ask another question instead of concluding early on a guess. This check matters more than it looks: it is what keeps your read of this person consistent with what a different AI model would have concluded from the same conversation, rather than each model settling on a different guess. Stop as soon as you have that evidence, not before.\n' + QUESTION_FORMATS + '\nWhen confident, respond with exactly: {"type":"done","summary":"2-3 sentence summary of how they think, solve problems, and learn — written as your own inference, not as if they told you","learningStyle":"short label","workStyle":"short label"}';
 
-  var FIELDS_PROMPT_BASE = 'Your goal now is to determine which specific field(s) and roles genuinely fit this person. The scope is EVERY STEM and technical discipline, not a short list — software, data science, mechanical, electrical, civil, aerospace, biomedical, chemical, industrial, materials science, environmental engineering, robotics, nuclear, marine/ocean engineering, mining, geology and earth science, agriculture and agtech, energy systems, physics, mathematics and statistics, actuarial work, network and telecom engineering, pharma and biotech, manufacturing, and anything else STEM or technical — including ones not listed here. Never default to software unless it genuinely fits best.\nField and career stage are FACTS, not personality traits — you have already been told which broad field they\'re interested in and their career stage below; these were asked directly before you started, so never ask about either again. Use them as the fixed setting for every hypothetical you build from here on — a hypothetical for an undergrad mechanical engineering student should look nothing like one for a working professional in biomedical devices, and a scenario that assumes the wrong field wastes the question entirely.\nIf their stage is "graduated and/or working professionally," dig further with direct factual questions (job title, how many years, do they hold a degree or certifications and in what) before you rely on any exercise result to justify "mid" or "senior" — a job title and years of real experience is what earns "mid" or "senior", credentials and confidence alone are not enough. If their stage is "haven\'t started a degree yet" or "undergrad," the level is "student" or "early" respectively unless they describe real professional work on top of that — do not round up.\nUse this as a checkable rubric, not a vibe — before you assign a level, name the specific fact that earns it: "student" = no professional work in the field yet; "early" = professional role held, but under ~2 years and no independently-owned production work; "mid" = roughly 3–6 years of professional work, or clearly demonstrated independent ownership of real systems; "senior" = 7+ years, or demonstrated technical leadership/mentorship of others. If you cannot name the one fact that justifies the level, you are not ready to conclude — ask one more direct question instead of rounding up on confidence or credentials alone. The same goes for each field recommendation: it must trace to a specific answer or exercise result, not to what sounds like a safe, popular default. This discipline is what keeps different AI models landing on the same conclusion from the same conversation, rather than each one drifting to its own guess.\nWithin the given field and stage, keep narrowing toward a specific sub-field and concrete role (e.g. not just "mechanical," but which corner: thermal systems, robotics, manufacturing, automotive, aerospace structures) and keep verifying claims with small exercises scoped to that exact field and stage — never reuse a scenario you already asked about, even for a different exercise type, and never repeat the same item twice within one exercise\'s list.\nAim for around 8 to 10 questions total, but if you are still genuinely unsure after that, keep going — accuracy matters more than speed. Stop as soon as you are confident.\n' + QUESTION_FORMATS + '\nWhen confident, respond with exactly: {"type":"done","level":"student|early|mid|senior","fields":[{"name":"Field name","why":"one sentence on why this fits them","blurb":"one sentence describing the field","demand":"rough demand label","pay":"rough pay range","roles":[{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"}]}]} with up to 3 fields ranked best fit first.';
+  var FIELDS_PROMPT_BASE = 'Your goal now is to determine which specific field(s) and roles genuinely fit this person. The scope is EVERY STEM and technical discipline, not a short list — software, data science, mechanical, electrical, civil, aerospace, biomedical, chemical, industrial, materials science, environmental engineering, robotics, nuclear, marine/ocean engineering, mining, geology and earth science, agriculture and agtech, energy systems, physics, mathematics and statistics, actuarial work, network and telecom engineering, pharma and biotech, manufacturing, and anything else STEM or technical — including ones not listed here. Never default to software unless it genuinely fits best.\nField(s) and career stage are FACTS, not personality traits — you have already been told which broad field(s) they\'re interested in (sometimes more than one) and their career stage below; these were asked directly before you started, so never ask about either again. Use them as the fixed setting for every hypothetical you build from here on — a hypothetical for an undergrad mechanical engineering student should look nothing like one for a working professional in biomedical devices, and a scenario that assumes the wrong field wastes the question entirely. If they named multiple fields, explore across all of them rather than silently picking one as primary — the point is to find out which actually fits best, not to assume you already know.\nIf their stage is "graduated and/or working professionally," dig further with direct factual questions (job title, how many years, do they hold a degree or certifications and in what) before you rely on any exercise result to justify "mid" or "senior" — a job title and years of real experience is what earns "mid" or "senior", credentials and confidence alone are not enough. If their stage is "haven\'t started a degree yet" or "undergrad," the level is "student" or "early" respectively unless they describe real professional work on top of that — do not round up.\nUse this as a checkable rubric, not a vibe — before you assign a level, name the specific fact that earns it: "student" = no professional work in the field yet; "early" = professional role held, but under ~2 years and no independently-owned production work; "mid" = roughly 3–6 years of professional work, or clearly demonstrated independent ownership of real systems; "senior" = 7+ years, or demonstrated technical leadership/mentorship of others. If you cannot name the one fact that justifies the level, you are not ready to conclude — ask one more direct question instead of rounding up on confidence or credentials alone. The same goes for each field recommendation: it must trace to a specific answer or exercise result, not to what sounds like a safe, popular default. This discipline is what keeps different AI models landing on the same conclusion from the same conversation, rather than each one drifting to its own guess.\nWithin the given field and stage, keep narrowing toward a specific sub-field and concrete role (e.g. not just "mechanical," but which corner: thermal systems, robotics, manufacturing, automotive, aerospace structures) and keep verifying claims with small exercises scoped to that exact field and stage — never reuse a scenario you already asked about, even for a different exercise type, and never repeat the same item twice within one exercise\'s list.\nAim for around 8 to 10 questions total, but if you are still genuinely unsure after that, keep going — accuracy matters more than speed. Stop as soon as you are confident.\n' + QUESTION_FORMATS + '\nWhen confident, respond with exactly: {"type":"done","level":"student|early|mid|senior","fields":[{"name":"Field name","why":"one sentence on why this fits them","blurb":"one sentence describing the field","demand":"rough demand label","pay":"rough pay range","roles":[{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"}]}]} with up to 3 fields ranked best fit first.';
 
   var MAX_RESUME_BYTES = 5 * 1024 * 1024;
 
@@ -1179,31 +1179,21 @@
     },
     assess_field_choice: {
       eyebrow: 'YOUR FIELD',
-      question: 'Which broad field pulls you in most right now?',
-      options: [
-        { label: 'Software & Computer Science', value: 'Software & Computer Science', next: 'assess_stage_choice' },
-        { label: 'Data Science, AI & ML', value: 'Data Science, AI & ML', next: 'assess_stage_choice' },
-        { label: 'Mechanical Engineering', value: 'Mechanical Engineering', next: 'assess_stage_choice' },
-        { label: 'Electrical / Computer Engineering', value: 'Electrical / Computer Engineering', next: 'assess_stage_choice' },
-        { label: 'Civil / Structural Engineering', value: 'Civil / Structural Engineering', next: 'assess_stage_choice' },
-        { label: 'Aerospace Engineering', value: 'Aerospace Engineering', next: 'assess_stage_choice' },
-        { label: 'Biomedical / Health Tech', value: 'Biomedical / Health Tech', next: 'assess_stage_choice' },
-        { label: 'Chemical / Materials / Process', value: 'Chemical / Materials / Process', next: 'assess_stage_choice' },
-        { label: 'Industrial / Manufacturing / Robotics', value: 'Industrial / Manufacturing / Robotics', next: 'assess_stage_choice' },
-        { label: 'Environmental / Energy / Earth Science', value: 'Environmental / Energy / Earth Science', next: 'assess_stage_choice' },
-        { label: 'Math, Physics, or Actuarial / Quant', value: 'Math, Physics, or Actuarial / Quant', next: 'assess_stage_choice' },
-        { label: 'Not sure yet / something else', hint: 'Tell us a bit more', value: 'other', next: 'assess_field_custom' }
-      ],
-      onSelect: function (value) { if (value !== 'other') answers.chosenField = value; }
-    },
-    assess_field_custom: {
-      eyebrow: 'YOUR FIELD',
-      question: 'What field are you curious about, or what would you add?',
-      field: {
-        placeholder: 'e.g. Robotics, Neuroscience, or "not sure yet — open to anything technical"', key: 'chosenFieldCustom', type: 'text',
-        onSubmit: function (value) { answers.chosenField = value || 'Not sure yet — open to anything technical'; }
-      },
-      next: 'assess_stage_choice'
+      question: 'Which broad fields pull you in right now?',
+      body: 'Pick as many as genuinely interest you — plenty of people are drawn to more than one.',
+      multi: {
+        key: 'chosenFields',
+        next: 'assess_stage_choice',
+        custom: true,
+        customKey: 'chosenFieldsCustom',
+        customPlaceholder: 'Or type one not listed (optional)',
+        options: [
+          'Software & Computer Science', 'Data Science, AI & ML', 'Mechanical Engineering',
+          'Electrical / Computer Engineering', 'Civil / Structural Engineering', 'Aerospace Engineering',
+          'Biomedical / Health Tech', 'Chemical / Materials / Process', 'Industrial / Manufacturing / Robotics',
+          'Environmental / Energy / Earth Science', 'Math, Physics, or Actuarial / Quant'
+        ]
+      }
     },
     assess_stage_choice: {
       eyebrow: 'YOUR STAGE',
@@ -1222,7 +1212,10 @@
         var context = answers.personalitySummary
           ? ('Here is what you already learned about how this person thinks and learns: "' + answers.personalitySummary + '" Use it — do not re-ask about personality or learning style. ')
           : '';
-        context += 'Their stated field of interest is "' + (answers.chosenField || 'not yet known') + '" and their career stage is "' + (stageLabels[answers.stage] || answers.stage || 'not yet known') + '". These were already asked directly — never ask about either again. ';
+        var chosenFieldsList = (answers.chosenFields || []).slice();
+        if (answers.chosenFieldsCustom) chosenFieldsList.push(answers.chosenFieldsCustom);
+        var fieldsText = chosenFieldsList.length ? chosenFieldsList.join(', ') : 'not yet known';
+        context += 'Their stated field(s) of interest: "' + fieldsText + '"' + (chosenFieldsList.length > 1 ? ' — they picked more than one, so explore across all of them rather than assuming the first is primary' : '') + '. Their career stage is "' + (stageLabels[answers.stage] || answers.stage || 'not yet known') + '". These were already asked directly — never ask about either again. ';
         if (answers.profileImport) {
           context += 'They also pasted this resume/LinkedIn content before you started: "' + answers.profileImport + '" Use it to skip questions it already answers plainly (e.g. don\'t ask what their current job title is if it says so) and to target your verification exercises at the specific skills, tools, and claims it makes — but treat every claim in it as something to verify with a real exercise, not something to take at face value, exactly as you would a spoken claim. A resume never earns "mid" or "senior" by itself. ';
         }
@@ -1729,14 +1722,15 @@
       });
       wrap.appendChild(multiList);
 
+      var customKey = step.multi.customKey || 'customInterest';
       if (step.multi.custom) {
         var customWrap = document.createElement('div');
         customWrap.className = 'setup-field';
         customInput = document.createElement('input');
         customInput.type = 'text';
-        customInput.placeholder = 'Or type a field not listed (optional)';
+        customInput.placeholder = step.multi.customPlaceholder || 'Or type one not listed (optional)';
         customInput.autocomplete = 'off';
-        customInput.value = answers.customInterest || '';
+        customInput.value = answers[customKey] || '';
         customInput.addEventListener('input', updateContinueState);
         customWrap.appendChild(customInput);
         wrap.appendChild(customWrap);
@@ -1746,7 +1740,7 @@
       multiActions.className = 'setup-actions';
       continueBtn = button('Continue', 'setup-primary', function () {
         answers[step.multi.key] = Array.from(selected);
-        if (step.multi.custom) answers.customInterest = customInput.value.trim();
+        if (step.multi.custom) answers[customKey] = customInput.value.trim();
         go(step.multi.next);
       });
       multiActions.appendChild(continueBtn);
