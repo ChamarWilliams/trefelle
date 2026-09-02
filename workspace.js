@@ -1036,6 +1036,22 @@
         textarea.placeholder = '[\n  { "provider": "openai", "byokEndpoint": "https://api.groq.com/openai/v1/chat/completions", "byokModel": "openai/gpt-oss-120b", "apiKey": "sk-..." },\n  { "provider": "anthropic", "byokModel": "claude-sonnet-5", "apiKey": "sk-ant-..." }\n]';
         panel.appendChild(textarea);
 
+        var uploadLabel = document.createElement('label');
+        uploadLabel.className = 'setup-upload-btn';
+        uploadLabel.textContent = 'Or choose a .json file';
+        var fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'application/json,.json';
+        fileInput.addEventListener('change', function () {
+          var file = fileInput.files && fileInput.files[0];
+          if (!file) return;
+          var reader = new FileReader();
+          reader.onload = function () { textarea.value = String(reader.result || ''); };
+          reader.readAsText(file);
+        });
+        uploadLabel.appendChild(fileInput);
+        panel.appendChild(uploadLabel);
+
         var hint = document.createElement('p');
         hint.className = 'setup-hint';
         hint.textContent = 'A JSON array of key objects: provider ("openai" or "anthropic"), byokModel, apiKey, and byokEndpoint (openai-compatible keys only).';
@@ -1711,6 +1727,17 @@
             }
           });
           panelActions.appendChild(copyBtn);
+          panelActions.appendChild(button('Download .json', 'setup-secondary', function () {
+            var blob = new Blob([textarea.value], { type: 'application/json' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'trefelle-keys.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }));
           panel.appendChild(panelActions);
 
           toggle.addEventListener('click', function (e) {
