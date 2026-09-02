@@ -929,7 +929,7 @@
         var actions = document.createElement('div');
         actions.className = 'setup-actions';
         var link = document.createElement('a');
-        link.href = 'requirements.html';
+        link.href = '/requirements';
         link.className = 'setup-primary';
         link.textContent = 'See the options';
         actions.appendChild(link);
@@ -1501,7 +1501,7 @@
         actions.className = 'setup-actions';
         actions.appendChild(button('Edit setup', 'setup-secondary', function () { go('engine'); }));
         var back = document.createElement('a');
-        back.href = 'landing.html';
+        back.href = '/';
         back.className = 'setup-primary';
         back.textContent = 'Back to Trefelle';
         actions.appendChild(back);
