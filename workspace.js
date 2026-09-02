@@ -510,9 +510,14 @@
         stackList.className = 'stack-list';
         var rowMap = {};
 
+        var stackPlaceholder = document.createElement('div');
+        stackPlaceholder.className = 'stack-placeholder';
+        stackPlaceholder.textContent = 'Drop here';
+
         function buildRow(stackItem) {
           var row = document.createElement('div');
           row.className = 'stack-item';
+          row.dataset.item = stackItem;
           var badge = document.createElement('span');
           badge.className = 'stack-badge';
           var label = document.createElement('span');
@@ -592,12 +597,41 @@
         }
 
         function renderStack(draggingItem) {
+          var prevRects = {};
+          Array.prototype.forEach.call(stackList.children, function (child) {
+            if (child.dataset && child.dataset.item) prevRects[child.dataset.item] = child.getBoundingClientRect();
+          });
+
           stackList.innerHTML = '';
           stackOrder.forEach(function (stackItem, idx) {
-            if (stackItem === draggingItem) return;
+            if (stackItem === draggingItem) {
+              stackList.appendChild(stackPlaceholder);
+              return;
+            }
             var row = rowMap[stackItem] || (rowMap[stackItem] = buildRow(stackItem));
-            row.querySelector('.stack-badge').textContent = idx + 1;
+            var badge = row.querySelector('.stack-badge');
+            if (badge.textContent && badge.textContent !== String(idx + 1)) {
+              badge.classList.add('bump');
+              setTimeout(function () { badge.classList.remove('bump'); }, 220);
+            }
+            badge.textContent = idx + 1;
             stackList.appendChild(row);
+          });
+
+          Array.prototype.forEach.call(stackList.children, function (child) {
+            if (!child.dataset || !child.dataset.item) return;
+            var prev = prevRects[child.dataset.item];
+            if (!prev) return;
+            var next = child.getBoundingClientRect();
+            var deltaY = prev.top - next.top;
+            if (deltaY) {
+              child.style.transition = 'none';
+              child.style.transform = 'translateY(' + deltaY + 'px)';
+              requestAnimationFrame(function () {
+                child.style.transition = '';
+                child.style.transform = '';
+              });
+            }
           });
         }
         renderStack(null);
@@ -636,7 +670,8 @@
           tile.addEventListener('click', function () {
             if (tile.classList.contains('picked')) return;
             order.push(item);
-            tile.classList.add('picked');
+            tile.classList.add('picked', 'pop');
+            setTimeout(function () { tile.classList.remove('pop'); }, 260);
             badge.textContent = order.length;
             if (order.length === tiles.length) {
               setTimeout(function () {
@@ -696,9 +731,11 @@
         function placeChip(chip, item, zone) {
           if (!placement[item]) moveOrder.push(item);
           placement[item] = zone;
-          chip.classList.remove('drag-a', 'drag-b');
+          chip.classList.remove('drag-a', 'drag-b', 'landed');
           chip.classList.add(zone === 'A' ? 'drag-a' : 'drag-b');
           (zone === 'A' ? boxA : boxB).appendChild(chip);
+          chip.classList.add('landed');
+          setTimeout(function () { chip.classList.remove('landed'); }, 300);
           doneBtn.disabled = Object.keys(placement).length < total;
         }
 
@@ -824,11 +861,28 @@
           var label = document.createElement('span');
           label.className = 'rank-label';
           label.textContent = item;
+          var tBadge = document.createElement('span');
+          tBadge.className = 'rank-badge';
+          tile.appendChild(tBadge);
           tile.appendChild(label);
+          function refreshBadges() {
+            tGrid.querySelectorAll('.rank-tile.picked').forEach(function (t) {
+              t.querySelector('.rank-badge').textContent = tOrder.indexOf(t.dataset.item) + 1;
+            });
+          }
+          tile.dataset.item = item;
           tile.addEventListener('click', function () {
             var idx = tOrder.indexOf(item);
-            if (idx > -1) { tOrder.splice(idx, 1); tile.classList.remove('picked'); }
-            else { tOrder.push(item); tile.classList.add('picked'); }
+            if (idx > -1) {
+              tOrder.splice(idx, 1);
+              tile.classList.remove('picked');
+              tBadge.textContent = '';
+            } else {
+              tOrder.push(item);
+              tile.classList.add('picked', 'pop');
+              setTimeout(function () { tile.classList.remove('pop'); }, 260);
+            }
+            refreshBadges();
           });
           tGrid.appendChild(tile);
         });
@@ -860,20 +914,28 @@
           var label = document.createElement('span');
           label.className = 'allocate-label';
           label.textContent = bLabel;
+          var fill = document.createElement('span');
+          fill.className = 'allocate-fill';
           var val = document.createElement('span');
           val.className = 'allocate-value';
           val.textContent = '0';
+          function bump() { val.classList.remove('pop'); void val.offsetWidth; val.classList.add('pop'); }
+          function updateFill() { fill.style.width = (totalPoints ? (values[i] / totalPoints * 100) : 0) + '%'; }
           var minus = button('–', 'allocate-btn', function () {
-            if (values[i] > 0) { values[i]--; val.textContent = values[i]; updateRemaining(); }
+            if (values[i] > 0) { values[i]--; val.textContent = values[i]; bump(); updateFill(); updateRemaining(); }
           });
           var plus = button('+', 'allocate-btn', function () {
             var used = values.reduce(function (a, c) { return a + c; }, 0);
-            if (used < totalPoints) { values[i]++; val.textContent = values[i]; updateRemaining(); }
+            if (used < totalPoints) { values[i]++; val.textContent = values[i]; bump(); updateFill(); updateRemaining(); }
           });
           row.appendChild(label);
           row.appendChild(minus);
           row.appendChild(val);
           row.appendChild(plus);
+          var track = document.createElement('span');
+          track.className = 'allocate-track';
+          track.appendChild(fill);
+          row.appendChild(track);
           aGrid.appendChild(row);
         });
         var aActions = document.createElement('div');
