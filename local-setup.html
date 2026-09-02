@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <title>Set up a local model</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="effects.css" />
+    <link rel="stylesheet" href="trefelle-home.css" />
+    <link rel="stylesheet" href="local-setup.css" />
+  </head>
+  <body>
+    <main>
+      <header class="nav">
+        <a class="wordmark" href="/"
+          ><span class="mark"><svg viewBox="213 119 626 626" aria-hidden="true"><circle cx="526" cy="432" r="300" fill="none" stroke="#1d241e" stroke-width="26"/><path fill="#1d241e" d="M578,296 L621,296 L739,535 L676,535 L599,380 L495,586 L432,586 Z"/><path fill="#1d241e" d="M429,334 L470,333 L505,401 L475,467 L449,419 L391,535 L328,535 Z"/></svg></span
+          ><span>TREFELLE</span></a
+        >
+        <nav>
+          <a href="/approach">Approach</a
+          ><a href="/flow">How it works</a
+          ><a href="/why">Why Trefelle</a
+          ><a href="/requirements">AI options</a>
+        </nav>
+        <a class="nav-cta" href="/workspace">Open workspace <b>↗</b></a>
+      </header>
+
+      <section class="plain-hero">
+        <p class="eyebrow reveal"><span></span>LOCAL SETUP GUIDE</p>
+        <h1 class="reveal-up">Get Qwen3-VL running<br />in about 10 minutes.</h1>
+        <p class="reveal-up reveal-d1">
+          Trefelle's local option talks directly to Ollama or LM Studio on
+          your own machine—free, private, and no account needed. Pick
+          whichever one you use and follow the steps in order. Jump to
+          <a href="#ollama">Ollama</a>, <a href="#lmstudio">LM Studio</a>, or
+          <a href="#troubleshooting">troubleshooting</a>.
+        </p>
+      </section>
+
+      <section class="principles">
+        <header class="reveal-up">
+          <p class="eyebrow">BEFORE YOU START</p>
+          <p>What your machine needs.</p>
+        </header>
+        <div class="option-grid">
+          <div class="option-card reveal-up">
+            <small>HARDWARE</small>
+            <h3>Enough room to run it</h3>
+            <ul>
+              <li>~6 GB free storage for the model download</li>
+              <li>16 GB+ RAM recommended</li>
+              <li>A GPU makes it noticeably faster, but isn't required</li>
+            </ul>
+          </div>
+          <div class="option-card reveal-up reveal-d1">
+            <small>WHY THIS ONE MODEL</small>
+            <h3>Qwen3-VL specifically</h3>
+            <p>
+              Trefelle only supports Qwen3-VL locally right now because it's
+              one of the few open models with both real reasoning and vision
+              built in—vision is what lets it read a resume file you attach
+              directly, the same way Claude Sonnet does on the BYOK side.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="guide" id="ollama">
+        <header class="reveal-up">
+          <p class="eyebrow">OPTION A</p>
+          <h2>Set up with <em>Ollama</em></h2>
+        </header>
+        <div class="guide-steps">
+          <article class="guide-step reveal-up">
+            <span class="guide-num">01</span>
+            <div class="guide-body">
+              <h3>Install Ollama</h3>
+              <p>
+                Download it from <a href="https://ollama.com/download">ollama.com/download</a>
+                and install it like any other app. It runs quietly in the
+                background (look for its icon in your system tray / menu bar).
+              </p>
+            </div>
+          </article>
+          <article class="guide-step reveal-up">
+            <span class="guide-num">02</span>
+            <div class="guide-body">
+              <h3>Pull Qwen3-VL</h3>
+              <p>Open a terminal and run:</p>
+              <pre class="code-block">ollama pull qwen3-vl</pre>
+              <p class="step-note">This downloads ~6 GB. Grab a coffee.</p>
+            </div>
+          </article>
+          <article class="guide-step reveal-up">
+            <span class="guide-num">03</span>
+            <div class="guide-body">
+              <h3>Allow Trefelle to reach it</h3>
+              <p>
+                By default, Ollama only accepts requests from apps on your
+                own machine at <code>localhost</code>—it blocks requests
+                coming from a website like Trefelle unless you explicitly
+                allow it. Set the <code>OLLAMA_ORIGINS</code> environment
+                variable, then restart Ollama.
+              </p>
+              <p class="step-note"><strong>Windows</strong> — PowerShell:</p>
+              <pre class="code-block">[Environment]::SetEnvironmentVariable("OLLAMA_ORIGINS", "*", "User")</pre>
+              <p class="step-note">
+                Then quit Ollama from the system tray (right-click its icon
+                → Quit) and reopen it from the Start Menu so it picks up the
+                change.
+              </p>
+              <p class="step-note"><strong>macOS</strong> — Terminal:</p>
+              <pre class="code-block">launchctl setenv OLLAMA_ORIGINS "*"</pre>
+              <p class="step-note">Then quit and reopen Ollama from the menu bar.</p>
+              <p class="step-note"><strong>Linux</strong> (systemd service) — Terminal:</p>
+              <pre class="code-block">sudo systemctl edit ollama.service</pre>
+              <p class="step-note">
+                Add these two lines in the editor that opens, then save and exit:
+              </p>
+              <pre class="code-block">[Service]
+Environment="OLLAMA_ORIGINS=*"</pre>
+              <p class="step-note">Then restart the service:</p>
+              <pre class="code-block">sudo systemctl daemon-reload
+sudo systemctl restart ollama</pre>
+              <p class="step-note">
+                Running <code>ollama serve</code> manually in a terminal
+                instead? Just set <code>OLLAMA_ORIGINS=*</code> in that same
+                terminal before starting it.
+              </p>
+            </div>
+          </article>
+          <article class="guide-step reveal-up">
+            <span class="guide-num">04</span>
+            <div class="guide-body">
+              <h3>Connect it in Trefelle</h3>
+              <p>
+                In the workspace setup, choose <strong>Run it locally</strong>,
+                confirm the address <code>http://localhost:11434</code>, and
+                Trefelle will find Qwen3-VL automatically.
+              </p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="guide" id="lmstudio">
+        <header class="reveal-up">
+          <p class="eyebrow">OPTION B</p>
+          <h2>Set up with <em>LM Studio</em></h2>
+        </header>
+        <div class="guide-steps">
+          <article class="guide-step reveal-up">
+            <span class="guide-num">01</span>
+            <div class="guide-body">
+              <h3>Install LM Studio</h3>
+              <p>Download it from <a href="https://lmstudio.ai">lmstudio.ai</a> and install it.</p>
+            </div>
+          </article>
+          <article class="guide-step reveal-up">
+            <span class="guide-num">02</span>
+            <div class="guide-body">
+              <h3>Download Qwen3-VL</h3>
+              <p>
+                In LM Studio, open the search/discover tab, search for
+                <strong>Qwen3-VL</strong>, and download an 8B (or similar)
+                instruct variant.
+              </p>
+            </div>
+          </article>
+          <article class="guide-step reveal-up">
+            <span class="guide-num">03</span>
+            <div class="guide-body">
+              <h3>Start the local server with CORS on</h3>
+              <p>
+                Open the <strong>Developer</strong> tab, load the Qwen3-VL
+                model, and in the server settings turn on
+                <strong>Enable CORS</strong>—it's off by default, and without
+                it your browser can't reach the server from a website. Then
+                toggle <strong>Start server</strong>.
+              </p>
+              <p class="step-note">
+                Prefer the command line? <code>lms server start --cors</code>
+                does the same thing.
+              </p>
+            </div>
+          </article>
+          <article class="guide-step reveal-up">
+            <span class="guide-num">04</span>
+            <div class="guide-body">
+              <h3>Connect it in Trefelle</h3>
+              <p>
+                In the workspace setup, choose <strong>Run it locally</strong>,
+                confirm the address <code>http://localhost:1234</code>, and
+                Trefelle will find Qwen3-VL automatically.
+              </p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="principles" id="troubleshooting">
+        <header class="reveal-up">
+          <p class="eyebrow">TROUBLESHOOTING</p>
+          <p>What each error actually means.</p>
+        </header>
+        <div>
+          <article class="reveal-up">
+            <small>“COULDN’T REACH YOUR SERVER”</small>
+            <h3>It's not running</h3>
+            <p>
+              Ollama or LM Studio isn't open, or the local server inside LM
+              Studio hasn't been started. Open the app and check.
+            </p>
+          </article>
+          <article class="reveal-up reveal-d1">
+            <small>“QWEN3-VL ISN’T AVAILABLE”</small>
+            <h3>It's running, but not pulled</h3>
+            <p>
+              The server responded, but no model matching Qwen3-VL was found
+              on it. Run the pull/download step above, then click
+              <strong>Check again</strong>.
+            </p>
+          </article>
+          <article class="reveal-up reveal-d2">
+            <small>SILENT FAILURE, NEVER FINDS IT</small>
+            <h3>It's blocked by CORS</h3>
+            <p>
+              The model is there, but your browser's request is being
+              silently rejected before it even reaches the app. This is the
+              <code>OLLAMA_ORIGINS</code> / <strong>Enable CORS</strong> step
+              above—it's the most commonly missed one.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="roadmap">
+        <div class="reveal-up">
+          <p class="eyebrow">NOT UP FOR ALL THIS?</p>
+          <h2>Bring your own key<br />is the zero-setup option.</h2>
+          <p>
+            If this feels like more than you want to deal with, the BYOK
+            option (Claude Sonnet) just needs an API key pasted in—no
+            install, no download, no CORS.
+          </p>
+          <a href="/requirements" class="primary">See both options <b>→</b></a>
+        </div>
+      </section>
+      <footer class="site-footer">
+        <p>A <a href="/who-we-are">Waypoint</a> product</p>
+      </footer>
+    </main>
+    <script src="effects.js" defer></script>
+  </body>
+</html>
