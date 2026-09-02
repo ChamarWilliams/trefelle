@@ -5,7 +5,6 @@
   var answers = {};
   var history = [];
   var currentId = null;
-  var profileFiles = [];
 
   function saveAnswers() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(answers)); } catch (e) {}
@@ -161,12 +160,11 @@
 
   var QUESTION_FORMATS = 'Respond with ONLY strict JSON, nothing else, no markdown fences, no prose outside the JSON.\nPrefer small interactive exercises over asking directly whenever one would fit — a self-reported answer to "are you organized?" is easy to answer aspirationally; watching someone rank, stack, sort, tap, or allocate under a lightly-framed prompt reveals it more honestly, because they are not consciously aware of exactly what the exercise is measuring. Reach for "stack", "sort", "tiles", "allocate", or "quickpick" first; use "choice" only when you genuinely need to compare a few named options head-on, and "text" or "slider" when only their own words or a spectrum position would reveal something else. Do not lean on "choice" as the default. You can also use a second exercise to quietly cross-check an earlier answer that felt uncertain or too clean.\nPrefer closed hypotheticals over questions about their actual real life. Do not ask "what are your top tasks today" or anything else that requires them to expose real personal or work details — most people are more comfortable, and more honest, answering "imagine X situation, what would you do" than being asked to describe their own life. Build a specific fictional-but-plausible scenario ("you\'ve just joined a team and inherit a system with no documentation," "a client calls saying the product broke right before a demo") and ask what they\'d do inside it. EVERY question needs its own new scenario — never reuse the same premise you just used for the previous question, even in a different format. If you already asked about "joining a team and inheriting an undocumented system" once, that premise is now spent — the next question needs a genuinely different situation, not the same one wrapped in a different exercise type. Repeating a premise teaches you nothing new and wastes a question. The items inside any exercise must be concrete and specific to that invented scenario — never generic productivity-app filler like "reply to email," "grocery shopping," "dinner with friends," or a bland real-life to-do list. Either build on something they already said in this conversation, or invent something specific to real technical/engineering work (a specific kind of bug, a specific kind of decision, a specific trade-off) inside a hypothetical scenario — something that could only belong in an assessment for their field, not a life-admin app, and never a direct ask about their actual day.\nStack — a vertical list they physically drag to reorder, top to bottom; this is the premium version of ranking and should be your default choice for any ranking exercise: {"type":"question","format":"stack","eyebrow":"SHORT LABEL","question":"...","instruction":"a short framing like \'Drag to put these in the order you\'d actually reach for them\'","items":["item 1","item 2","item 3","item 4","item 5"]}\nRank — a lighter-weight tap-in-order version of the same idea, for when a full drag-to-reorder stack would be overkill: {"type":"question","format":"rank","eyebrow":"SHORT LABEL","question":"...","instruction":"...","items":["item 1","item 2","item 3","item 4"]}\nSort — they drag items into one of two boxes; which box, and the order they sort in, is the signal: {"type":"question","format":"sort","eyebrow":"SHORT LABEL","question":"...","boxA":"label for box A","boxB":"label for box B","items":["item 1","item 2","item 3","item 4","item 5"]}\nTiles — they tap as many or as few as resonate, no forced order or count; good for gauging what genuinely pulls them without asking outright: {"type":"question","format":"tiles","eyebrow":"SHORT LABEL","question":"...","instruction":"optional short framing","items":["item 1","item 2","item 3","item 4","item 5","item 6"]}\nAllocate — they distribute a fixed pool of points across a few buckets, revealing relative priority instead of a single pick: {"type":"question","format":"allocate","eyebrow":"SHORT LABEL","question":"...","points":10,"buckets":["bucket 1","bucket 2","bucket 3","bucket 4"]}\nQuickpick — looks like an ordinary multiple-choice question, but reaction time is measured invisibly; use it when hesitation itself (gut instinct vs deliberation) is the interesting signal — never tell the user timing is involved: {"type":"question","format":"quickpick","eyebrow":"SHORT LABEL","question":"...","options":["...","...","...","..."]}\nMultiple choice, only when comparing a few genuinely distinct named approaches: {"type":"question","format":"choice","eyebrow":"SHORT LABEL","question":"...","options":["...","...","...","..."]}\nOpen-ended, only when their own words would reveal something no list or exercise could: {"type":"question","format":"text","eyebrow":"SHORT LABEL","question":"...","placeholder":"short example of the kind of answer you want"}\nSlider, for a spectrum between two opposing traits: {"type":"question","format":"slider","eyebrow":"SHORT LABEL","question":"...","minLabel":"left end of the spectrum","maxLabel":"right end of the spectrum"}\nIf someone gives a vague or uncertain answer, don’t just move on — dig deeper on the same topic, ideally with a different exercise than before, rather than repeating the same format.\nEvery ranking, sorting, or dragging exercise has a "none of these apply to me" escape hatch — expect people to use it when your items assumed something untrue about their life (a job they don\'t have, tasks they don\'t do). If that happens, do not repeat a similar exercise with similarly guessed items — switch to something more open-ended ("text") or more clearly scoped to what you actually know about them, and treat the mismatch itself as a signal you guessed wrong about their situation.';
 
-  var PERSONALITY_PROMPT = 'You are an intake assessor for Trefelle, a hands-on career-exploration platform. Right now your ONLY goal is to understand how this specific person thinks, solves problems, handles ambiguity, and learns best — their personality and learning style. You must INFER all of this — never ask about it directly. Never ask "how do you prefer to learn?", "are you a visual learner?", "what is your learning style?", or any variant — that is a meta-question about the thing you are trying to measure, and self-report on it is nearly worthless. Instead, put them inside a concrete, specific, slightly odd little HYPOTHETICAL scenario or exercise and watch what they actually do — order, timing, which box something lands in, what they reach for first — then draw the conclusion yourself afterward; they should never be able to guess what trait a given exercise is measuring. Prefer a closed hypothetical ("imagine X happens, what would you do") over any question that asks about their actual real life or day — people answer more honestly, and feel more comfortable, responding inside a fictional scenario than being asked to expose real personal details. Avoid generic template exercises ("sort these by energy," "rank your tasks for today") — invent a specific fictional-but-plausible situation vivid enough that it could only have come from this conversation, ideally building on something they already said. This is NOT about picking a technical field yet, and it is not a fixed script — invent whatever exercise, in whatever order, actually gets you there fastest for THIS person. Aim for around 10 questions total, but if you are still genuinely unsure after 10, keep going — accuracy matters more than speed. Stop as soon as you have a confident, specific picture.\n' + QUESTION_FORMATS + '\nWhen confident, respond with exactly: {"type":"done","summary":"2-3 sentence summary of how they think, solve problems, and learn — written as your own inference, not as if they told you","learningStyle":"short label","workStyle":"short label"}';
+  var PERSONALITY_PROMPT = 'You are an intake assessor for Trefelle, a hands-on career-exploration platform. Right now your ONLY goal is to understand how this specific person thinks, solves problems, handles ambiguity, and learns best — their personality and learning style. You must INFER all of this — never ask about it directly. Never ask "how do you prefer to learn?", "are you a visual learner?", "what is your learning style?", or any variant — that is a meta-question about the thing you are trying to measure, and self-report on it is nearly worthless. Instead, put them inside a concrete, specific, slightly odd little HYPOTHETICAL scenario or exercise and watch what they actually do — order, timing, which box something lands in, what they reach for first — then draw the conclusion yourself afterward; they should never be able to guess what trait a given exercise is measuring. Prefer a closed hypothetical ("imagine X happens, what would you do") over any question that asks about their actual real life or day — people answer more honestly, and feel more comfortable, responding inside a fictional scenario than being asked to expose real personal details. Avoid generic template exercises ("sort these by energy," "rank your tasks for today") — invent a specific fictional-but-plausible situation vivid enough that it could only have come from this conversation, ideally building on something they already said. This is NOT about picking a technical field yet, and it is not a fixed script — invent whatever exercise, in whatever order, actually gets you there fastest for THIS person. Aim for around 6 questions total, but if you are still genuinely unsure after 6, keep going — accuracy matters more than speed. Stop as soon as you have a confident, specific picture.\n' + QUESTION_FORMATS + '\nWhen confident, respond with exactly: {"type":"done","summary":"2-3 sentence summary of how they think, solve problems, and learn — written as your own inference, not as if they told you","learningStyle":"short label","workStyle":"short label"}';
 
-  var FIELDS_PROMPT_BASE = 'Your goal now is to determine which specific field(s) and roles genuinely fit this person. The scope is EVERY STEM and technical discipline, not a short list — software, data science, mechanical, electrical, civil, aerospace, biomedical, chemical, industrial, materials science, environmental engineering, robotics, nuclear, marine/ocean engineering, mining, geology and earth science, agriculture and agtech, energy systems, physics, mathematics and statistics, actuarial work, network and telecom engineering, pharma and biotech, manufacturing, and anything else STEM or technical — including ones not listed here. Never default to software unless it genuinely fits best.\nField and career stage are FACTS, not personality traits — you have already been told which broad field they\'re interested in and their career stage below; these were asked directly before you started, so never ask about either again. Use them as the fixed setting for every hypothetical you build from here on — a hypothetical for an undergrad mechanical engineering student should look nothing like one for a working professional in biomedical devices, and a scenario that assumes the wrong field wastes the question entirely.\nIf their stage is "graduated and/or working professionally," dig further with direct factual questions (job title, how many years, do they hold a degree or certifications and in what) before you rely on any exercise result to justify "mid" or "senior" — a job title and years of real experience is what earns "mid" or "senior", credentials and confidence alone are not enough. If their stage is "haven\'t started a degree yet" or "undergrad," the level is "student" or "early" respectively unless they describe real professional work on top of that — do not round up.\nWithin the given field and stage, keep narrowing toward a specific sub-field and concrete role (e.g. not just "mechanical," but which corner: thermal systems, robotics, manufacturing, automotive, aerospace structures) and keep verifying claims with small exercises scoped to that exact field and stage — never reuse a scenario you already asked about, even for a different exercise type, and never repeat the same item twice within one exercise\'s list.\nAim for around 15 to 20 questions total, but if you are still genuinely unsure after that, keep going — accuracy matters more than speed. Stop as soon as you are confident.\n' + QUESTION_FORMATS + '\nWhen confident, respond with exactly: {"type":"done","level":"student|early|mid|senior","fields":[{"name":"Field name","why":"one sentence on why this fits them","blurb":"one sentence describing the field","demand":"rough demand label","pay":"rough pay range","roles":[{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"}]}]} with up to 3 fields ranked best fit first.';
+  var FIELDS_PROMPT_BASE = 'Your goal now is to determine which specific field(s) and roles genuinely fit this person. The scope is EVERY STEM and technical discipline, not a short list — software, data science, mechanical, electrical, civil, aerospace, biomedical, chemical, industrial, materials science, environmental engineering, robotics, nuclear, marine/ocean engineering, mining, geology and earth science, agriculture and agtech, energy systems, physics, mathematics and statistics, actuarial work, network and telecom engineering, pharma and biotech, manufacturing, and anything else STEM or technical — including ones not listed here. Never default to software unless it genuinely fits best.\nField and career stage are FACTS, not personality traits — you have already been told which broad field they\'re interested in and their career stage below; these were asked directly before you started, so never ask about either again. Use them as the fixed setting for every hypothetical you build from here on — a hypothetical for an undergrad mechanical engineering student should look nothing like one for a working professional in biomedical devices, and a scenario that assumes the wrong field wastes the question entirely.\nIf their stage is "graduated and/or working professionally," dig further with direct factual questions (job title, how many years, do they hold a degree or certifications and in what) before you rely on any exercise result to justify "mid" or "senior" — a job title and years of real experience is what earns "mid" or "senior", credentials and confidence alone are not enough. If their stage is "haven\'t started a degree yet" or "undergrad," the level is "student" or "early" respectively unless they describe real professional work on top of that — do not round up.\nWithin the given field and stage, keep narrowing toward a specific sub-field and concrete role (e.g. not just "mechanical," but which corner: thermal systems, robotics, manufacturing, automotive, aerospace structures) and keep verifying claims with small exercises scoped to that exact field and stage — never reuse a scenario you already asked about, even for a different exercise type, and never repeat the same item twice within one exercise\'s list.\nAim for around 8 to 10 questions total, but if you are still genuinely unsure after that, keep going — accuracy matters more than speed. Stop as soon as you are confident.\n' + QUESTION_FORMATS + '\nWhen confident, respond with exactly: {"type":"done","level":"student|early|mid|senior","fields":[{"name":"Field name","why":"one sentence on why this fits them","blurb":"one sentence describing the field","demand":"rough demand label","pay":"rough pay range","roles":[{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"}]}]} with up to 3 fields ranked best fit first.';
 
   var MAX_RESUME_BYTES = 5 * 1024 * 1024;
-  var MAX_RESUME_FILES = 2;
 
   function loadScriptOnce(src) {
     return new Promise(function (resolve, reject) {
@@ -179,19 +177,6 @@
     });
   }
 
-  function fileToBase64(file) {
-    return new Promise(function (resolve, reject) {
-      var reader = new FileReader();
-      reader.onload = function () {
-        var result = String(reader.result || '');
-        var idx = result.indexOf(',');
-        resolve(idx > -1 ? result.slice(idx + 1) : result);
-      };
-      reader.onerror = function () { reject(new Error('Couldn’t read that file — try pasting the text instead.')); };
-      reader.readAsDataURL(file);
-    });
-  }
-
   function fileToText(file) {
     return new Promise(function (resolve, reject) {
       var reader = new FileReader();
@@ -201,149 +186,44 @@
     });
   }
 
-  var MAX_PDF_PAGE_IMAGES = 5;
-
-  // Ollama has no PDF/document content block, only per-message "images".
-  // This renders PDF pages to JPEGs with pdf.js — it never reads or
-  // interprets the text, it's just handing the local vision model a
-  // picture of each page so the model itself is the one doing the reading.
-  function renderPdfPageImages(file) {
+  function extractPdfText(file) {
     return loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js').then(function () {
       window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
       return file.arrayBuffer();
     }).then(function (buf) {
       return window.pdfjsLib.getDocument({ data: buf }).promise;
     }).then(function (pdf) {
-      var count = Math.min(pdf.numPages, MAX_PDF_PAGE_IMAGES);
       var pageNums = [];
-      for (var i = 1; i <= count; i++) pageNums.push(i);
+      for (var i = 1; i <= pdf.numPages; i++) pageNums.push(i);
       return pageNums.reduce(function (chain, pageNum) {
         return chain.then(function (acc) {
-          return pdf.getPage(pageNum).then(function (page) {
-            var viewport = page.getViewport({ scale: 1.5 });
-            var canvas = document.createElement('canvas');
-            canvas.width = viewport.width;
-            canvas.height = viewport.height;
-            return page.render({ canvasContext: canvas.getContext('2d'), viewport: viewport }).promise.then(function () {
-              var dataUrl = canvas.toDataURL('image/jpeg', 0.82);
-              var idx = dataUrl.indexOf(',');
-              acc.push(idx > -1 ? dataUrl.slice(idx + 1) : dataUrl);
-              return acc;
-            });
+          return pdf.getPage(pageNum).then(function (page) { return page.getTextContent(); }).then(function (content) {
+            acc.push(content.items.map(function (it) { return it.str; }).join(' '));
+            return acc;
           });
         });
-      }, Promise.resolve([]));
+      }, Promise.resolve([])).then(function (pages) { return pages.join('\n'); });
     });
   }
 
-  // Reads a file into an attachment the AI itself can analyze rather than
-  // something we've pre-interpreted. PDFs are kept as raw base64 and sent
-  // natively (Anthropic "document" blocks, OpenAI-style "file" parts) so the
-  // model reads the real document. For a local Ollama model, which has
-  // neither of those, the pages are rendered as images instead so a
-  // vision-capable local model can read them directly too. .docx has no
-  // native block on any provider, so it's the one case still read as plain
-  // text ourselves — a lossless 1:1 read of the file's own text, not an
-  // interpretation.
+  // No supported model is guaranteed to have vision anymore, so a resume
+  // file is just read into plain text and dropped into the paste box —
+  // simple, and the person can see/edit exactly what got captured.
   function readProfileFile(file) {
     var name = (file.name || '').toLowerCase();
-    if (name.endsWith('.pdf')) {
-      var wantsImages = answers.engine === 'local';
-      return fileToBase64(file).then(function (base64) {
-        if (!wantsImages) return { kind: 'pdf', name: file.name, size: file.size, base64: base64 };
-        return renderPdfPageImages(file).then(function (images) {
-          return { kind: 'pdf', name: file.name, size: file.size, base64: base64, images: images };
-        }, function () {
-          return { kind: 'pdf', name: file.name, size: file.size, base64: base64 };
-        });
-      });
-    }
-    if (name.endsWith('.txt')) {
-      return fileToText(file).then(function (text) {
-        return { kind: 'text-file', name: file.name, size: file.size, text: text };
-      });
-    }
+    if (name.endsWith('.txt')) return fileToText(file);
+    if (name.endsWith('.pdf')) return extractPdfText(file);
     if (name.endsWith('.docx')) {
       return loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js').then(function () {
         return file.arrayBuffer();
       }).then(function (buf) {
         return window.mammoth.extractRawText({ arrayBuffer: buf });
-      }).then(function (result) {
-        return { kind: 'text-file', name: file.name, size: file.size, text: result.value || '' };
-      });
+      }).then(function (result) { return result.value || ''; });
     }
     if (name.endsWith('.doc')) {
       return Promise.reject(new Error('.doc files aren’t supported — save as .docx or .pdf, or paste the text instead.'));
     }
     return Promise.reject(new Error('Unsupported file type — use .pdf, .docx, or .txt, or paste the text instead.'));
-  }
-
-  // Turns resolved profileFiles into a provider-agnostic list of message
-  // content parts; each call* function below maps these to its own wire
-  // format immediately before sending, so the rest of the app never has to
-  // know about OpenAI/Anthropic content-block differences.
-  function buildAttachmentParts(introText, files) {
-    var parts = [{ type: 'text', text: introText }];
-    files.forEach(function (f) {
-      if (f.kind === 'pdf') parts.push({ type: 'pdf', name: f.name, base64: f.base64 });
-      else parts.push({ type: 'text', text: 'Attached file "' + f.name + '":\n' + f.text });
-    });
-    return parts;
-  }
-
-  function mapContentParts(content, mode) {
-    if (typeof content === 'string') return content;
-    if (mode === 'anthropic') {
-      return content.map(function (p) {
-        if (p.type === 'pdf') return { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: p.base64 } };
-        return { type: 'text', text: p.text };
-      });
-    }
-    // Plain-text fallback (used when a PDF has no rendered page images either).
-    return content.map(function (p) {
-      if (p.type === 'pdf') return '[Attached file "' + p.name + '" is a PDF — not supported by this local model. Ask the person to paste its text instead if you need it.]';
-      return p.text;
-    }).join('\n\n');
-  }
-
-  function mapMessages(messages, mode) {
-    return messages.map(function (m) {
-      if (mode === 'ollama' && Array.isArray(m.content)) {
-        var images = [];
-        var texts = m.content.map(function (p) {
-          if (p.type === 'pdf') {
-            if (p.images && p.images.length) {
-              images = images.concat(p.images);
-              return 'Attached file "' + p.name + '" — its pages are included below as images for you to read directly.';
-            }
-            return '[Attached file "' + p.name + '" is a PDF — not supported by this local model. Ask the person to paste its text instead if you need it.]';
-          }
-          return p.text;
-        });
-        var msg = { role: m.role, content: texts.join('\n\n') };
-        if (images.length) msg.images = images;
-        return msg;
-      }
-      if (mode === 'lmstudio' && Array.isArray(m.content)) {
-        var parts = [];
-        m.content.forEach(function (p) {
-          if (p.type === 'pdf') {
-            if (p.images && p.images.length) {
-              parts.push({ type: 'text', text: 'Attached file "' + p.name + '" — its pages follow as images for you to read directly.' });
-              p.images.forEach(function (img) {
-                parts.push({ type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + img } });
-              });
-            } else {
-              parts.push({ type: 'text', text: '[Attached file "' + p.name + '" is a PDF — not supported by this local model. Ask the person to paste its text instead if you need it.]' });
-            }
-          } else {
-            parts.push({ type: 'text', text: p.text });
-          }
-        });
-        return { role: m.role, content: parts };
-      }
-      return { role: m.role, content: mapContentParts(m.content, mode) };
-    });
   }
 
   function slugify(s) {
@@ -389,82 +269,73 @@
     return null;
   }
 
-  // Trefelle only supports two engines right now: BYOK Claude Sonnet, or a
-  // local Qwen3-VL model via Ollama — chosen because both handle attached
-  // resume files reliably and keep results comparable across people, rather
-  // than every provider/model combination quietly producing different
-  // quality. Broader model support is a later goal, not a current one.
+  // Trefelle runs entirely on keys you bring — any provider works (OpenAI,
+  // Groq, OpenRouter, Anthropic, and most others), as long as the model
+  // supports reasoning; vision isn't required. Keys can be stacked: when
+  // one hits its rate limit mid-conversation, the same request is retried
+  // against the next key automatically, carrying the conversation forward
+  // since nothing is stored server-side per key — it's just resent.
   function aiAvailable(ans) {
-    if (ans.engine === 'local') return !!ans.serverAddress && !!ans.localModel;
-    if (ans.engine === 'byok') return ans.provider === 'anthropic' && !!ans.apiKey;
-    return false;
+    return !!(ans.keyStack && ans.keyStack.length);
   }
 
-  function callAnthropic(messages, signal) {
-    var mapped = mapMessages(messages, 'anthropic');
-    var system = mapped.filter(function (m) { return m.role === 'system'; }).map(function (m) { return m.content; }).join('\n');
-    var rest = mapped.filter(function (m) { return m.role !== 'system'; }).map(function (m) { return { role: m.role, content: m.content }; });
-    var hasPdf = messages.some(function (m) { return Array.isArray(m.content) && m.content.some(function (p) { return p.type === 'pdf'; }); });
-    var headers = {
-      'Content-Type': 'application/json',
-      'x-api-key': answers.apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
-    };
-    if (hasPdf) headers['anthropic-beta'] = 'pdfs-2024-09-25';
+  function markRateLimited(res) {
+    if (res.status === 429) {
+      var e = new Error('rate limited');
+      e.rateLimited = true;
+      throw e;
+    }
+    if (!res.ok) throw new Error('http ' + res.status);
+    return res;
+  }
+
+  function callAnthropic(entry, messages, signal) {
+    var system = messages.filter(function (m) { return m.role === 'system'; }).map(function (m) { return m.content; }).join('\n');
+    var rest = messages.filter(function (m) { return m.role !== 'system'; });
     return fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST', signal: signal, headers: headers,
-      body: JSON.stringify({ model: 'claude-sonnet-5', max_tokens: 700, system: system, messages: rest })
-    }).then(function (res) {
-      if (!res.ok) throw new Error('http ' + res.status);
-      return res.json();
-    }).then(function (data) {
+      method: 'POST', signal: signal,
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': entry.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({ model: entry.byokModel, max_tokens: 700, system: system, messages: rest })
+    }).then(markRateLimited).then(function (res) { return res.json(); }).then(function (data) {
       var text = data.content && data.content[0] && data.content[0].text;
       if (!text) throw new Error('empty response');
       return text;
     });
   }
 
-  function callLocal(messages, signal) {
-    var base = (answers.serverAddress || '').replace(/\/+$/, '');
-    if (answers.runtime === 'lmstudio') {
-      return fetch(base + '/v1/chat/completions', {
-        method: 'POST', signal: signal, headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: answers.localModel, messages: mapMessages(messages, 'lmstudio'), temperature: 0.4 })
-      }).then(function (res) {
-        if (!res.ok) throw new Error('http ' + res.status);
-        return res.json();
-      }).then(function (data) {
-        var text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
-        if (!text) throw new Error('empty response');
-        return text;
-      });
-    }
-    // num_ctx: Ollama's default context window is much smaller than what
-    // Qwen3-VL supports, and this app's system prompts plus a "thinking"
-    // model's own reasoning easily exceed it — the model then gets cut off
-    // mid-thought and never writes anything to `content` at all. Requesting
-    // a generous window here fixes that instead of just working around it.
-    return fetch(base + '/api/chat', {
-      method: 'POST', signal: signal, headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: answers.localModel, messages: mapMessages(messages, 'ollama'), stream: false, format: 'json', options: { num_ctx: 32768 } })
-    }).then(function (res) {
-      if (!res.ok) throw new Error('http ' + res.status);
-      return res.json();
-    }).then(function (data) {
-      // Some Ollama/Qwen3-VL builds route the real answer into `thinking`
-      // instead of `content` even with reasoning "finished" — fall back to
-      // it rather than treat that as a hard failure.
-      var text = (data.message && (data.message.content || data.message.thinking)) || '';
+  function callOpenAICompatible(entry, messages, signal) {
+    var headers = { 'Content-Type': 'application/json' };
+    if (entry.apiKey) headers.Authorization = 'Bearer ' + entry.apiKey;
+    return fetch(entry.byokEndpoint, {
+      method: 'POST', signal: signal, headers: headers,
+      body: JSON.stringify({ model: entry.byokModel, messages: messages, temperature: 0.4 })
+    }).then(markRateLimited).then(function (res) { return res.json(); }).then(function (data) {
+      var text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
       if (!text) throw new Error('empty response');
       return text;
     });
   }
 
+  function callWithEntry(entry, messages, signal) {
+    return entry.provider === 'anthropic' ? callAnthropic(entry, messages, signal) : callOpenAICompatible(entry, messages, signal);
+  }
+
   function callAI(messages, signal) {
-    if (answers.engine === 'local' && answers.serverAddress && answers.localModel) return callLocal(messages, signal);
-    if (answers.engine === 'byok' && answers.provider === 'anthropic' && answers.apiKey) return callAnthropic(messages, signal);
-    return Promise.reject(new Error('No AI model connected'));
+    var stack = answers.keyStack || [];
+    if (!stack.length) return Promise.reject(new Error('No AI model connected'));
+    function tryIndex(i) {
+      if (i >= stack.length) return Promise.reject(new Error('every connected key is rate-limited or unavailable'));
+      return callWithEntry(stack[i], messages, signal).catch(function (err) {
+        if (err && err.rateLimited && i + 1 < stack.length) return tryIndex(i + 1);
+        throw err;
+      });
+    }
+    return tryIndex(0);
   }
 
   function renderAIFlow(el, cfg) {
@@ -1041,11 +912,7 @@
       var msgs = conversation.slice();
       if (atHard) msgs.push({ role: 'user', content: 'You are well past the target question count — you must conclude now with your final "done" response.' });
       else if (atSoft) msgs.push({ role: 'user', content: 'You have reached the target question count. If you are reasonably confident, conclude now with "done". Otherwise ask at most a few more.' });
-      else if (count === 0) {
-        msgs.push(cfg.attachmentFiles && cfg.attachmentFiles.length
-          ? { role: 'user', content: buildAttachmentParts('Begin.', cfg.attachmentFiles) }
-          : { role: 'user', content: 'Begin.' });
-      }
+      else if (count === 0) msgs.push({ role: 'user', content: 'Begin.' });
       attempt(msgs, atHard, 0);
     }
 
@@ -1084,6 +951,17 @@
     step();
   }
 
+  function pushKeyEntry() {
+    if (!answers.provider || !answers.apiKey) return;
+    answers.keyStack = answers.keyStack || [];
+    answers.keyStack.push({
+      provider: answers.provider,
+      byokEndpoint: answers.byokEndpoint || '',
+      byokModel: answers.byokModel || '',
+      apiKey: answers.apiKey
+    });
+  }
+
   var steps = {
     welcome_back: {
       eyebrow: 'WELCOME BACK',
@@ -1109,112 +987,77 @@
     },
     engine: {
       eyebrow: 'AI SETUP',
-      question: 'How should your AI mentor run?',
-      body: 'Trefelle only supports two models right now, on purpose — Claude Sonnet and a local Qwen3-VL, chosen because both handle attached resume files reliably and give comparable results. Wider model support is a later goal, not a current one.',
-      options: [
-        { label: 'Bring your own key', hint: 'Anthropic · Claude Sonnet · pay-per-use', value: 'byok', next: 'byok_key' },
-        { label: 'Run it locally', hint: 'Free · Qwen3-VL via Ollama or LM Studio', value: 'local', next: 'local_address' }
-      ],
-      onSelect: function (value) {
-        answers.engine = value;
-        if (value === 'byok') answers.provider = 'anthropic';
-      },
+      question: 'Connect an AI key.',
+      body: 'Trefelle runs on a key you bring — any provider works (OpenAI, Groq, OpenRouter, Anthropic, and most others). No hosted mentor exists yet, so this is the only path in for now. The one requirement: your model needs to support reasoning (extended thinking / chain-of-thought). Vision is not required, so free reasoning-only models work fine.',
       render: function (el) {
+        var actions = document.createElement('div');
+        actions.className = 'setup-actions';
+        actions.appendChild(button('Get started', 'setup-primary', function () { go('byok_provider'); }));
+        el.appendChild(actions);
         var link = document.createElement('a');
         link.href = '/requirements';
         link.target = '_blank';
         link.rel = 'noopener';
         link.className = 'setup-note-link';
-        link.textContent = 'No hosted mentor yet, and who this is for right now →';
+        link.textContent = 'Why an API key, and who this is for right now →';
         el.appendChild(link);
       }
     },
+    byok_provider: {
+      eyebrow: 'AI SETUP',
+      question: 'Which provider are you using?',
+      body: 'Pick the wire format your key speaks — most providers (OpenAI, Groq, OpenRouter, Together, and others) use the same OpenAI-compatible format; Anthropic has its own.',
+      options: [
+        { label: 'OpenAI-compatible', hint: 'OpenAI, Groq, OpenRouter, Together, and most others', value: 'openai', next: 'byok_endpoint' },
+        { label: 'Anthropic', hint: 'Claude models', value: 'anthropic', next: 'byok_model' }
+      ],
+      onSelect: function (value) { answers.provider = value; }
+    },
+    byok_endpoint: {
+      eyebrow: 'AI SETUP',
+      question: 'What’s the API base URL?',
+      field: { placeholder: 'https://api.groq.com/openai/v1/chat/completions', hint: 'The full chat-completions URL — check your provider’s docs for the exact address.', key: 'byokEndpoint', type: 'text' },
+      next: 'byok_model'
+    },
+    byok_model: {
+      eyebrow: 'AI SETUP',
+      question: 'Which model are you using?',
+      body: 'It needs to support reasoning (extended thinking / chain-of-thought) — vision is not required.',
+      field: { placeholder: 'e.g. openai/gpt-oss-120b, claude-sonnet-5, gpt-4o', hint: 'Type the exact model name/ID your provider expects.', key: 'byokModel', type: 'text' },
+      next: 'byok_key'
+    },
     byok_key: {
       eyebrow: 'AI SETUP',
-      question: 'Paste your Anthropic API key.',
-      body: 'Trefelle only supports Claude Sonnet right now — use a key from an Anthropic account with API access.',
-      field: { placeholder: 'sk-ant-...', hint: 'Stored only in your browser. Never sent to Trefelle.', key: 'apiKey', type: 'password' },
-      next: 'assess_intro'
+      question: 'Paste your API key.',
+      field: { placeholder: 'sk-...', hint: 'Stored only in your browser. Never sent to Trefelle.', key: 'apiKey', type: 'password' },
+      next: 'byok_add_another'
     },
-    local_address: {
+    byok_add_another: {
       eyebrow: 'AI SETUP',
-      question: 'Confirm your server address.',
-      body: 'Trefelle only supports Qwen3-VL locally right now, run through Ollama (default port 11434) or LM Studio (default port 1234).',
-      field: { placeholder: 'http://localhost:11434', hint: 'Your browser will need permission to reach this address.', key: 'serverAddress', type: 'text',
-        default: function () { return 'http://localhost:11434'; } },
-      next: 'local_model'
-    },
-    local_model: {
-      eyebrow: 'AI SETUP',
-      question: 'Checking for Qwen3-VL.',
+      question: 'Add a backup key?',
+      body: 'When one key hits its rate limit mid-conversation, Trefelle automatically retries with the next key and keeps the same conversation going — handy if you’re stacking a few free-tier keys.',
       render: function (el) {
-        var status = document.createElement('p');
-        status.className = 'step-body';
-        status.textContent = 'Checking ' + (answers.serverAddress || 'your server') + ' for qwen3-vl…';
-        el.appendChild(status);
-
-        function showFound(runtime, match, base) {
-          answers.runtime = runtime;
-          answers.localModel = match;
-          status.textContent = 'Found ' + match + ' on ' + base + ' (' + (runtime === 'ollama' ? 'Ollama' : 'LM Studio') + ').';
-          var actions = document.createElement('div');
-          actions.className = 'setup-actions';
-          actions.appendChild(button('Continue', 'setup-primary', function () { go('assess_intro'); }));
-          el.appendChild(actions);
+        if (answers.keyStack && answers.keyStack.length) {
+          var summary = document.createElement('p');
+          summary.className = 'setup-note';
+          summary.textContent = answers.keyStack.length + ' key' + (answers.keyStack.length === 1 ? '' : 's') + ' connected so far.';
+          el.appendChild(summary);
         }
-
-        function showNotFound() {
-          status.textContent = 'Qwen3-VL isn’t available on ' + (answers.serverAddress || 'your server') + ' yet.';
-          var note = document.createElement('p');
-          note.className = 'setup-note';
-          note.textContent = 'Trefelle only supports Qwen3-VL locally right now. Pull it in Ollama, or load it in LM Studio, then check again:';
-          el.appendChild(note);
-          var pre = document.createElement('pre');
-          pre.className = 'ai-raw';
-          pre.textContent = 'ollama pull qwen3-vl';
-          el.appendChild(pre);
-          var guideLink = document.createElement('a');
-          guideLink.href = '/local-setup';
-          guideLink.target = '_blank';
-          guideLink.rel = 'noopener';
-          guideLink.className = 'setup-note-link';
-          guideLink.textContent = 'Stuck? Full setup guide (Ollama, LM Studio, and CORS) →';
-          el.appendChild(guideLink);
-          var actions = document.createElement('div');
-          actions.className = 'setup-actions';
-          actions.appendChild(button('Check again', 'setup-primary', function () { go('local_model', true); }));
-          actions.appendChild(button('Back', 'setup-secondary', function () { go('local_address'); }));
-          el.appendChild(actions);
-        }
-
-        // Ollama and LM Studio speak different APIs on different default
-        // ports — try Ollama's native /api/tags first, then fall back to
-        // LM Studio's OpenAI-compatible /v1/models, rather than asking the
-        // person which runtime they're using.
-        var base = (answers.serverAddress || '').replace(/\/+$/, '');
-        if (!base) { showNotFound(); return; }
-
-        fetch(base + '/api/tags').then(function (res) {
-          if (!res.ok) throw new Error('bad response');
-          return res.json();
-        }).then(function (data) {
-          var models = (data.models || []).map(function (m) { return m.name || m.model; }).filter(Boolean);
-          var match = models.find(function (name) { return /qwen3[-:]?vl/i.test(name); });
-          if (!match) throw new Error('not found');
-          showFound('ollama', match, base);
-        }).catch(function () {
-          fetch(base + '/v1/models').then(function (res) {
-            if (!res.ok) throw new Error('bad response');
-            return res.json();
-          }).then(function (data) {
-            var models = (data.data || []).map(function (m) { return m.id; }).filter(Boolean);
-            var match = models.find(function (name) { return /qwen3[-:]?vl/i.test(name); });
-            if (!match) throw new Error('not found');
-            showFound('lmstudio', match, base);
-          }).catch(function () {
-            showNotFound();
-          });
-        });
+        var actions = document.createElement('div');
+        actions.className = 'setup-actions';
+        actions.appendChild(button('Add another key', 'setup-secondary', function () {
+          pushKeyEntry();
+          answers.provider = null;
+          answers.byokEndpoint = '';
+          answers.byokModel = '';
+          answers.apiKey = '';
+          go('byok_provider');
+        }));
+        actions.appendChild(button('Continue', 'setup-primary', function () {
+          pushKeyEntry();
+          go('assess_intro');
+        }));
+        el.appendChild(actions);
       }
     },
     assess_intro: {
@@ -1232,7 +1075,7 @@
     assess_profile_import: {
       eyebrow: 'SPEED THINGS UP',
       question: 'Have a resume or LinkedIn on hand?',
-      body: 'Paste your resume text or LinkedIn URL, and/or attach up to 2 resume files — your AI mentor reads them directly. Totally optional.',
+      body: 'Paste your resume text or LinkedIn URL, or upload a file and we\'ll drop its text in below for you to check. Totally optional.',
       render: function (el) {
         var form = document.createElement('form');
         form.className = 'setup-field';
@@ -1246,6 +1089,7 @@
         uploadRow.className = 'setup-upload';
         var uploadLabel = document.createElement('label');
         uploadLabel.className = 'setup-upload-btn';
+        uploadLabel.textContent = 'Or upload a file (.pdf, .docx, .txt)';
         var fileInput = document.createElement('input');
         fileInput.type = 'file';
         fileInput.accept = '.pdf,.doc,.docx,.txt';
@@ -1253,54 +1097,14 @@
         uploadRow.appendChild(uploadLabel);
         var uploadStatus = document.createElement('p');
         uploadStatus.className = 'setup-note';
+        uploadStatus.textContent = 'Max 5 MB.';
         form.appendChild(uploadRow);
         form.appendChild(uploadStatus);
-
-        var chipList = document.createElement('div');
-        chipList.className = 'setup-upload-chips';
-        form.appendChild(chipList);
-
-        function renderChips() {
-          chipList.innerHTML = '';
-          profileFiles.forEach(function (f, idx) {
-            var chip = document.createElement('span');
-            chip.className = 'setup-upload-chip';
-            var label = document.createElement('span');
-            label.textContent = f.name + ' (' + Math.round(f.size / 1024) + ' KB)';
-            var remove = document.createElement('button');
-            remove.type = 'button';
-            remove.setAttribute('aria-label', 'Remove ' + f.name);
-            remove.textContent = '×';
-            remove.addEventListener('click', function () {
-              profileFiles.splice(idx, 1);
-              renderChips();
-              updateUploadState();
-            });
-            chip.appendChild(label);
-            chip.appendChild(remove);
-            chipList.appendChild(chip);
-          });
-        }
-
-        function updateUploadState() {
-          var atLimit = profileFiles.length >= MAX_RESUME_FILES;
-          fileInput.disabled = atLimit;
-          uploadLabel.classList.toggle('disabled', atLimit);
-          uploadLabel.textContent = atLimit
-            ? MAX_RESUME_FILES + ' files attached (max)'
-            : 'Attach a resume file (.pdf, .docx, .txt)';
-          uploadLabel.appendChild(fileInput);
-          if (!uploadStatus.classList.contains('error')) uploadStatus.textContent = 'Up to ' + MAX_RESUME_FILES + ' files, 5 MB each.';
-        }
-
-        renderChips();
-        updateUploadState();
 
         fileInput.addEventListener('change', function () {
           var file = fileInput.files && fileInput.files[0];
           fileInput.value = '';
           if (!file) return;
-          if (profileFiles.length >= MAX_RESUME_FILES) return;
           uploadStatus.classList.remove('error');
           if (file.size > MAX_RESUME_BYTES) {
             uploadStatus.classList.add('error');
@@ -1308,11 +1112,15 @@
             return;
           }
           uploadStatus.textContent = 'Reading ' + file.name + '…';
-          readProfileFile(file).then(function (resolved) {
-            profileFiles.push(resolved);
-            renderChips();
-            updateUploadState();
-            uploadStatus.textContent = 'Attached ' + resolved.name + '.';
+          readProfileFile(file).then(function (text) {
+            text = (text || '').trim();
+            if (!text) {
+              uploadStatus.classList.add('error');
+              uploadStatus.textContent = 'Couldn’t find any text in that file — try pasting instead.';
+              return;
+            }
+            textarea.value = text;
+            uploadStatus.textContent = 'Loaded ' + file.name + '.';
           }, function (err) {
             uploadStatus.classList.add('error');
             uploadStatus.textContent = (err && err.message) || 'Couldn’t read that file — try pasting instead.';
@@ -1328,7 +1136,6 @@
         actions.appendChild(submit);
         actions.appendChild(button('Skip', 'setup-secondary', function () {
           answers.profileImport = '';
-          profileFiles = [];
           go('assess_personality');
         }));
         form.appendChild(actions);
@@ -1349,16 +1156,12 @@
         var profileContext = answers.profileImport
           ? ('The person pasted this resume/LinkedIn content before you started — use it for background color if relevant, but it says nothing reliable about how they think or learn, so still infer personality and learning style entirely through your own exercises: "' + answers.profileImport + '" ')
           : '';
-        if (profileFiles.length) {
-          profileContext += 'The person also attached ' + profileFiles.length + ' resume file(s) in their first message below — read them for background, but the same rule applies: a resume says nothing reliable about how someone thinks or learns, so still infer personality and learning style entirely through your own exercises. ';
-        }
         renderAIFlow(el, {
           eyebrow: 'GETTING TO KNOW YOU',
           systemPrompt: profileContext + PERSONALITY_PROMPT,
-          softTarget: 10,
-          hardCap: 16,
+          softTarget: 6,
+          hardCap: 9,
           fallbackStepId: 'assess_bug',
-          attachmentFiles: profileFiles,
           onDone: function (doneObj) {
             answers.personalitySummary = doneObj.summary || '';
             answers.learningStyleLabel = doneObj.learningStyle || '';
@@ -1417,16 +1220,12 @@
         if (answers.profileImport) {
           context += 'They also pasted this resume/LinkedIn content before you started: "' + answers.profileImport + '" Use it to skip questions it already answers plainly (e.g. don\'t ask what their current job title is if it says so) and to target your verification exercises at the specific skills, tools, and claims it makes — but treat every claim in it as something to verify with a real exercise, not something to take at face value, exactly as you would a spoken claim. A resume never earns "mid" or "senior" by itself. ';
         }
-        if (profileFiles.length) {
-          context += 'They also attached ' + profileFiles.length + ' resume file(s) in their first message below — read them directly and use the same rule as above: they narrow what to verify, but every claim in them still needs a real exercise before it counts toward level or fit. ';
-        }
         renderAIFlow(el, {
           eyebrow: 'FINDING YOUR FIT',
           systemPrompt: context + FIELDS_PROMPT_BASE,
-          softTarget: 17,
-          hardCap: 26,
+          softTarget: 10,
+          hardCap: 14,
           fallbackStepId: 'assess_level',
-          attachmentFiles: profileFiles,
           onDone: function (doneObj) {
             if (doneObj.level && LEVEL_PREFIX[doneObj.level] !== undefined) answers.level = doneObj.level;
             answers.aiFieldRecs = (doneObj.fields || []).slice(0, 3).map(function (f) {
@@ -1783,9 +1582,10 @@
   };
 
   function engineLabel() {
-    if (answers.engine === 'byok') return 'Claude Sonnet (your key)';
-    if (answers.engine === 'local') return 'Qwen3-VL (local via ' + (answers.runtime === 'lmstudio' ? 'LM Studio' : 'Ollama') + ')';
-    return 'Not chosen yet';
+    var stack = answers.keyStack || [];
+    if (!stack.length) return 'Not connected yet';
+    if (stack.length === 1) return stack[0].byokModel || (stack[0].provider === 'anthropic' ? 'Anthropic' : 'OpenAI-compatible');
+    return stack.length + ' keys connected';
   }
 
   function levelLabel(value) {

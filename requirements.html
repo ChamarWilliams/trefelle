@@ -32,14 +32,12 @@
 
       <section class="plain-hero">
         <p class="eyebrow reveal"><span></span>AI MENTOR · FOR NOW</p>
-        <h1 class="reveal-up">Only two models—<br />on purpose.</h1>
+        <h1 class="reveal-up">Bring your own key—<br />any provider.</h1>
         <p class="reveal-up reveal-d1">
           Trefelle is unfunded, so there's no hosted AI mentor running on our
-          bill yet. Rather than opening the mentor up to every provider and
-          model—where results, judgment, and quality would quietly vary
-          person to person—it currently runs on exactly two options we've
-          verified handle the assessment (including attached resume files)
-          reliably and consistently.
+          bill yet. Instead of picking one provider for you, it runs on a key
+          you bring—any provider works, including free ones, as long as the
+          model you choose can reason. Vision isn't required.
         </p>
       </section>
 
@@ -52,8 +50,8 @@
           reason there's setup involved at all. Today, this is realistically
           for people who want to support a small, early-stage project; who
           are curious what a real professional workspace needs to be wired up
-          and configured; and who are comfortable enough with tech to manage
-          an API key or set up a local LLM like Ollama or LM Studio.
+          and configured; and who are comfortable enough with tech to get an
+          API key and paste it in.
         </p>
         <p>
           If that's not you yet, that's completely fine—you're not the
@@ -64,28 +62,40 @@
 
       <section class="proof" id="options">
         <div class="proof-statement reveal-up">
-          <p class="eyebrow">TWO WAYS TO RUN IT</p>
-          <h2>Pick based on your<br /><em>hardware, not ours.</em></h2>
+          <p class="eyebrow">ONE REQUIREMENT</p>
+          <h2>Any key works,<br /><em>if the model can reason.</em></h2>
         </div>
         <div class="proof-list">
           <article class="reveal-up">
             <span>01</span>
             <div>
-              <h3>Bring your own key — Claude Sonnet</h3>
+              <h3>Any provider, any key</h3>
               <p>
-                Connect an Anthropic API key. Requests go straight from your
-                browser to Anthropic—we never see the key or the bill.
+                OpenAI, Groq, OpenRouter, Anthropic, and most others all
+                work. Requests go straight from your browser to your
+                provider—we never see the key or the bill.
               </p>
             </div>
           </article>
           <article class="reveal-up reveal-d1">
             <span>02</span>
             <div>
-              <h3>Run it locally — Qwen3-VL</h3>
+              <h3>Reasoning, not vision</h3>
               <p>
-                If you run Ollama, pull Qwen3-VL and Trefelle talks to it
-                directly—free, private, and the only local model currently
-                supported.
+                The model just needs extended thinking / chain-of-reasoning
+                to follow the assessment reliably. Vision isn't used, so
+                free reasoning-only models work fine.
+              </p>
+            </div>
+          </article>
+          <article class="reveal-up reveal-d2">
+            <span>03</span>
+            <div>
+              <h3>Stack multiple free keys</h3>
+              <p>
+                Add a few free-tier keys and Trefelle rotates to the next one
+                automatically when one hits its rate limit—mid-conversation,
+                without losing your place.
               </p>
             </div>
           </article>
@@ -94,104 +104,45 @@
 
       <section class="principles">
         <header class="reveal-up">
-          <p class="eyebrow">SYSTEM REQUIREMENTS</p>
-          <p>What each option actually needs from your machine.</p>
+          <p class="eyebrow">A FEW FREE OPTIONS</p>
+          <p>Verified against each provider's current docs—check before you commit, limits change.</p>
         </header>
         <div class="option-grid">
           <div class="option-card reveal-up">
             <small>OPTION 01</small>
-            <h3>Bring your own key — Claude Sonnet</h3>
-            <p>Best answer quality. Costs you per use, billed by Anthropic directly.</p>
+            <h3>Groq</h3>
+            <p>Reasoning models on a genuinely free tier, no card required.</p>
             <ul>
-              <li>An API key from an Anthropic account with API access</li>
-              <li>Any modern browser, any device</li>
-              <li>An internet connection</li>
-              <li>A card on file with Anthropic for usage billing</li>
+              <li>e.g. <code>openai/gpt-oss-120b</code>, <code>qwen/qwen3.x-27b</code></li>
+              <li>1,000 requests/day, 200K tokens/day (free tier)</li>
+              <li>OpenAI-compatible endpoint</li>
             </ul>
-            <span class="tag">Setup: ~2 minutes</span>
+            <span class="tag">No vision needed—works as-is</span>
           </div>
           <div class="option-card reveal-up reveal-d1">
             <small>OPTION 02</small>
-            <h3>Run it locally — Qwen3-VL</h3>
-            <p>Free, fast, and fully private—if you're set up to run it.</p>
+            <h3>OpenRouter</h3>
+            <p>Aggregates many providers; look for models tagged <code>:free</code>.</p>
             <ul>
-              <li>Ollama or LM Studio installed and running</li>
-              <li>Qwen3-VL pulled or downloaded</li>
-              <li>16 GB+ RAM recommended for comfortable use</li>
-              <li>CORS allowed so your browser can reach it (covered in the guide)</li>
+              <li>20 requests/minute always</li>
+              <li>50 requests/day (0 credits purchased)</li>
+              <li>1,000 requests/day (once $10+ purchased lifetime)</li>
             </ul>
-            <span class="tag">Setup: for existing Ollama/LM Studio users</span>
-            <p class="option-link"><a href="/local-setup">Full setup guide →</a></p>
+            <span class="tag">Free lineup changes—check openrouter.ai/models</span>
           </div>
-        </div>
-      </section>
-
-      <section class="compare">
-        <div class="reveal-up">
-          <p class="eyebrow">SIDE BY SIDE</p>
-          <h2>Two options, chosen<br /><em>for consistency, not just cost.</em></h2>
-        </div>
-        <div class="compare-scroll reveal-up reveal-d1">
-          <table>
-            <thead>
-              <tr>
-                <th>&nbsp;</th>
-                <th>Bring your own key</th>
-                <th>Local model</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Model</td>
-                <td>Claude Sonnet</td>
-                <td>Qwen3-VL</td>
-              </tr>
-              <tr>
-                <td>Cost to you</td>
-                <td>Pay-per-use to Anthropic</td>
-                <td>Free</td>
-              </tr>
-              <tr>
-                <td>Answer quality</td>
-                <td>Frontier-model quality</td>
-                <td>Strong for its size—needs a capable GPU to feel fast</td>
-              </tr>
-              <tr>
-                <td>Setup effort</td>
-                <td>Paste a key</td>
-                <td>Requires Ollama already installed</td>
-              </tr>
-              <tr>
-                <td>Reads attached resumes</td>
-                <td>Yes, natively</td>
-                <td>Yes, if the model is vision-capable (it is)</td>
-              </tr>
-              <tr>
-                <td>Privacy</td>
-                <td>Data sent to Anthropic</td>
-                <td>Fully local</td>
-              </tr>
-              <tr>
-                <td>Best for</td>
-                <td>Anyone wanting top quality</td>
-                <td>Existing Ollama users</td>
-              </tr>
-            </tbody>
-          </table>
         </div>
       </section>
 
       <section class="roadmap">
         <div class="reveal-up">
           <p class="eyebrow">WHAT CHANGES LATER</p>
-          <h2>More models, and a hosted<br />mentor, are both on the roadmap.</h2>
+          <h2>A hosted, zero-setup mentor<br />is the long-term plan.</h2>
           <p>
             Once Trefelle can sustainably cover inference costs, a hosted
-            mentor will remove the setup entirely—no key, no download, no
-            local app. We'll also widen model support beyond these two once
-            we're confident quality stays consistent across them. Until
-            then, these two options keep the mentor free for us to offer and
-            honest about what it costs you.
+            mentor will remove the setup entirely—no key, no provider
+            choice, no rate limits to think about. Until then, bringing your
+            own key keeps the mentor free for us to offer and honest about
+            what it costs you.
           </p>
           <a href="/approach" class="primary">See the approach <b>→</b></a>
         </div>
