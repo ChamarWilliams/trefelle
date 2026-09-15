@@ -1,3 +1,11 @@
+import {
+  getUser,
+  loadProgress,
+  saveProgress,
+  loadMentorConfig,
+  saveMentorConfig,
+} from '/supabase-client.js';
+
 (function () {
   var STORAGE_KEY = 'trefelle_ai_setup';
   var stage = document.getElementById('stage');
@@ -158,11 +166,11 @@
     return templates.map(function (t) { return { title: prefix + t.title, blurb: t.blurb }; });
   }
 
-  var QUESTION_FORMATS = 'Respond with ONLY strict JSON, nothing else, no markdown fences, no prose outside the JSON.\nPrefer small interactive exercises over asking directly whenever one would fit — a self-reported answer to "are you organized?" is easy to answer aspirationally; watching someone rank, stack, sort, tap, or allocate under a lightly-framed prompt reveals it more honestly, because they are not consciously aware of exactly what the exercise is measuring. Reach for "stack", "sort", "tiles", "allocate", or "quickpick" first; use "choice" only when you genuinely need to compare a few named options head-on, and "text" or "slider" when only their own words or a spectrum position would reveal something else. Do not lean on "choice" as the default. You can also use a second exercise to quietly cross-check an earlier answer that felt uncertain or too clean.\nPrefer closed hypotheticals over questions about their actual real life. Do not ask "what are your top tasks today" or anything else that requires them to expose real personal or work details — most people are more comfortable, and more honest, answering "imagine X situation, what would you do" than being asked to describe their own life. Build a specific fictional-but-plausible scenario ("you\'ve just joined a team and inherit a system with no documentation," "a client calls saying the product broke right before a demo") and ask what they\'d do inside it. EVERY question needs its own new scenario — never reuse the same premise you just used for the previous question, even in a different format. If you already asked about "joining a team and inheriting an undocumented system" once, that premise is now spent — the next question needs a genuinely different situation, not the same one wrapped in a different exercise type. Repeating a premise teaches you nothing new and wastes a question. The items inside any exercise must be concrete and specific to that invented scenario — never generic productivity-app filler like "reply to email," "grocery shopping," "dinner with friends," or a bland real-life to-do list. Either build on something they already said in this conversation, or invent something specific to real technical/engineering work (a specific kind of bug, a specific kind of decision, a specific trade-off) inside a hypothetical scenario — something that could only belong in an assessment for their field, not a life-admin app, and never a direct ask about their actual day.\nStack — a vertical list they physically drag to reorder, top to bottom; this is the premium version of ranking and should be your default choice for any ranking exercise: {"type":"question","format":"stack","eyebrow":"SHORT LABEL","question":"...","instruction":"a short framing like \'Drag to put these in the order you\'d actually reach for them\'","items":["item 1","item 2","item 3","item 4","item 5"]}\nRank — a lighter-weight tap-in-order version of the same idea, for when a full drag-to-reorder stack would be overkill: {"type":"question","format":"rank","eyebrow":"SHORT LABEL","question":"...","instruction":"...","items":["item 1","item 2","item 3","item 4"]}\nSort — they drag items into one of two boxes; which box, and the order they sort in, is the signal: {"type":"question","format":"sort","eyebrow":"SHORT LABEL","question":"...","boxA":"label for box A","boxB":"label for box B","items":["item 1","item 2","item 3","item 4","item 5"]}\nTiles — they tap as many or as few as resonate, no forced order or count; good for gauging what genuinely pulls them without asking outright: {"type":"question","format":"tiles","eyebrow":"SHORT LABEL","question":"...","instruction":"optional short framing","items":["item 1","item 2","item 3","item 4","item 5","item 6"]}\nAllocate — they distribute a fixed pool of points across a few buckets, revealing relative priority instead of a single pick: {"type":"question","format":"allocate","eyebrow":"SHORT LABEL","question":"...","points":10,"buckets":["bucket 1","bucket 2","bucket 3","bucket 4"]}\nQuickpick — looks like an ordinary multiple-choice question, but reaction time is measured invisibly; use it when hesitation itself (gut instinct vs deliberation) is the interesting signal — never tell the user timing is involved: {"type":"question","format":"quickpick","eyebrow":"SHORT LABEL","question":"...","options":["...","...","...","..."]}\nMultiple choice, only when comparing a few genuinely distinct named approaches: {"type":"question","format":"choice","eyebrow":"SHORT LABEL","question":"...","options":["...","...","...","..."]}\nOpen-ended, only when their own words would reveal something no list or exercise could: {"type":"question","format":"text","eyebrow":"SHORT LABEL","question":"...","placeholder":"short example of the kind of answer you want"}\nSlider, for a spectrum between two opposing traits: {"type":"question","format":"slider","eyebrow":"SHORT LABEL","question":"...","minLabel":"left end of the spectrum","maxLabel":"right end of the spectrum"}\nIf someone gives a vague or uncertain answer, don’t just move on — dig deeper on the same topic, ideally with a different exercise than before, rather than repeating the same format.\nEvery ranking, sorting, or dragging exercise has a "none of these apply to me" escape hatch — expect people to use it when your items assumed something untrue about their life (a job they don\'t have, tasks they don\'t do). If that happens, do not repeat a similar exercise with similarly guessed items — switch to something more open-ended ("text") or more clearly scoped to what you actually know about them, and treat the mismatch itself as a signal you guessed wrong about their situation.';
+  var QUESTION_FORMATS = 'Respond with ONLY strict JSON, nothing else, no markdown fences, no prose outside the JSON.\nEvery item, option, or bucket label must be short — a phrase, not a sentence (aim for under 6 words / ~40 characters) — so it fits cleanly in a compact card; put any necessary nuance in the question or instruction text instead, never in the item labels.\nAssume the person may be completely new to this — many have never worked a single day in it and don\'t know its vocabulary. Never use jargon, acronyms, tool names, or role-specific terms without plainly explaining what they mean in the same sentence. Describe what a thing does before you name it, not the other way around. Write every scenario like you\'re explaining it to a smart friend who has zero background, in warm plain language — never textbook or corporate-sounding.\nPrefer small interactive exercises over asking directly whenever one would fit — a self-reported answer to "are you organized?" is easy to answer aspirationally; watching someone rank, stack, sort, tap, or allocate under a lightly-framed prompt reveals it more honestly, because they are not consciously aware of exactly what the exercise is measuring. Reach for "stack", "sort", "tiles", "allocate", or "quickpick" first; use "choice" only when you genuinely need to compare a few named options head-on, and "text" or "slider" when only their own words or a spectrum position would reveal something else. Do not lean on "choice" as the default. You can also use a second exercise to quietly cross-check an earlier answer that felt uncertain or too clean.\nPrefer closed hypotheticals over questions about their actual real life. Do not ask "what are your top tasks today" or anything else that requires them to expose real personal or work details — most people are more comfortable, and more honest, answering "imagine X situation, what would you do" than being asked to describe their own life. Build a specific fictional-but-plausible scenario ("you\'ve just joined a team and inherit a system with no documentation," "a client calls saying the product broke right before a demo") and ask what they\'d do inside it. EVERY question needs its own new scenario — never reuse the same premise you just used for the previous question, even in a different format. If you already asked about "joining a team and inheriting an undocumented system" once, that premise is now spent — the next question needs a genuinely different situation, not the same one wrapped in a different exercise type. Repeating a premise teaches you nothing new and wastes a question. The items inside any exercise must be concrete and specific to that invented scenario — never generic productivity-app filler like "reply to email," "grocery shopping," "dinner with friends," or a bland real-life to-do list. Either build on something they already said in this conversation, or invent something specific to real technical/engineering work (a specific kind of bug, a specific kind of decision, a specific trade-off) inside a hypothetical scenario — something that could only belong in an assessment for their field, not a life-admin app, and never a direct ask about their actual day.\nStack — a vertical list they physically drag to reorder, top to bottom; this is the premium version of ranking and should be your default choice for any ranking exercise: {"type":"question","format":"stack","eyebrow":"SHORT LABEL","question":"...","instruction":"a short framing like \'Drag to put these in the order you\'d actually reach for them\'","items":["item 1","item 2","item 3","item 4","item 5"]}\nRank — a lighter-weight tap-in-order version of the same idea, for when a full drag-to-reorder stack would be overkill: {"type":"question","format":"rank","eyebrow":"SHORT LABEL","question":"...","instruction":"...","items":["item 1","item 2","item 3","item 4"]}\nSort — they drag items into one of two boxes; which box, and the order they sort in, is the signal: {"type":"question","format":"sort","eyebrow":"SHORT LABEL","question":"...","boxA":"label for box A","boxB":"label for box B","items":["item 1","item 2","item 3","item 4","item 5"]}\nTiles — they tap as many or as few as resonate, no forced order or count; good for gauging what genuinely pulls them without asking outright: {"type":"question","format":"tiles","eyebrow":"SHORT LABEL","question":"...","instruction":"optional short framing","items":["item 1","item 2","item 3","item 4","item 5","item 6"]}\nAllocate — they distribute a fixed pool of points across a few buckets, revealing relative priority instead of a single pick: {"type":"question","format":"allocate","eyebrow":"SHORT LABEL","question":"...","points":10,"buckets":["bucket 1","bucket 2","bucket 3","bucket 4"]}\nQuickpick — looks like an ordinary multiple-choice question, but reaction time is measured invisibly; use it when hesitation itself (gut instinct vs deliberation) is the interesting signal — never tell the user timing is involved: {"type":"question","format":"quickpick","eyebrow":"SHORT LABEL","question":"...","options":["...","...","...","..."]}\nMultiple choice, only when comparing a few genuinely distinct named approaches: {"type":"question","format":"choice","eyebrow":"SHORT LABEL","question":"...","options":["...","...","...","..."]}\nOpen-ended, only when their own words would reveal something no list or exercise could: {"type":"question","format":"text","eyebrow":"SHORT LABEL","question":"...","placeholder":"short example of the kind of answer you want"}\nSlider, for a spectrum between two opposing traits: {"type":"question","format":"slider","eyebrow":"SHORT LABEL","question":"...","minLabel":"left end of the spectrum","maxLabel":"right end of the spectrum"}\nIf someone gives a vague or uncertain answer, don’t just move on — dig deeper on the same topic, ideally with a different exercise than before, rather than repeating the same format.\nEvery ranking, sorting, or dragging exercise has a "none of these apply to me" escape hatch — expect people to use it when your items assumed something untrue about their life (a job they don\'t have, tasks they don\'t do). If that happens, do not repeat a similar exercise with similarly guessed items — switch to something more open-ended ("text") or more clearly scoped to what you actually know about them, and treat the mismatch itself as a signal you guessed wrong about their situation.';
 
-  var PERSONALITY_PROMPT = 'You are an intake assessor for Trefelle, a hands-on career-exploration platform. Right now your ONLY goal is to understand how this specific person thinks, solves problems, handles ambiguity, and learns best — their personality and learning style. You must INFER all of this — never ask about it directly. Never ask "how do you prefer to learn?", "are you a visual learner?", "what is your learning style?", or any variant — that is a meta-question about the thing you are trying to measure, and self-report on it is nearly worthless. Instead, put them inside a concrete, specific, slightly odd little HYPOTHETICAL scenario or exercise and watch what they actually do — order, timing, which box something lands in, what they reach for first — then draw the conclusion yourself afterward; they should never be able to guess what trait a given exercise is measuring. Prefer a closed hypothetical ("imagine X happens, what would you do") over any question that asks about their actual real life or day — people answer more honestly, and feel more comfortable, responding inside a fictional scenario than being asked to expose real personal details. Avoid generic template exercises ("sort these by energy," "rank your tasks for today") — invent a specific fictional-but-plausible situation vivid enough that it could only have come from this conversation, ideally building on something they already said. This is NOT about picking a technical field yet, and it is not a fixed script — invent whatever exercise, in whatever order, actually gets you there fastest for THIS person. Aim for around 10 questions total, but if you are still genuinely unsure after 10, keep going — accuracy matters more than speed. Stop as soon as you have a confident, specific picture.\n' + QUESTION_FORMATS + '\nWhen confident, respond with exactly: {"type":"done","summary":"2-3 sentence summary of how they think, solve problems, and learn — written as your own inference, not as if they told you","learningStyle":"short label","workStyle":"short label"}';
+  var PERSONALITY_PROMPT = 'You are an intake assessor for Trefelle, a hands-on career-exploration platform. Right now your ONLY goal is to understand how this specific person thinks, solves problems, handles ambiguity, and learns best — their personality and learning style. You must INFER all of this — never ask about it directly. Never ask "how do you prefer to learn?", "are you a visual learner?", "what is your learning style?", or any variant — that is a meta-question about the thing you are trying to measure, and self-report on it is nearly worthless. Instead, put them inside a concrete, specific, slightly odd little HYPOTHETICAL scenario or exercise and watch what they actually do — order, timing, which box something lands in, what they reach for first — then draw the conclusion yourself afterward; they should never be able to guess what trait a given exercise is measuring. Prefer a closed hypothetical ("imagine X happens, what would you do") over any question that asks about their actual real life or day — people answer more honestly, and feel more comfortable, responding inside a fictional scenario than being asked to expose real personal details. Avoid generic template exercises ("sort these by energy," "rank your tasks for today") — invent a specific fictional-but-plausible situation vivid enough that it could only have come from this conversation, ideally building on something they already said. This is NOT about picking a technical field yet, and it is not a fixed script — invent whatever exercise, in whatever order, actually gets you there fastest for THIS person. Keep every scenario understandable to someone with no professional experience in any field yet — plain everyday situations, never workplace jargon. Aim for around 10 questions total, but if you are still genuinely unsure after 10, keep going — accuracy matters more than speed. Stop as soon as you have a confident, specific picture.\n' + QUESTION_FORMATS + '\nWhen confident, respond with exactly: {"type":"done","summary":"2-3 sentence summary of how they think, solve problems, and learn — written as your own inference, not as if they told you","learningStyle":"short label","workStyle":"short label"}';
 
-  var FIELDS_PROMPT_BASE = 'Your goal now is to determine which specific field(s) and roles genuinely fit this person. The scope is EVERY STEM and technical discipline, not a short list — software, data science, mechanical, electrical, civil, aerospace, biomedical, chemical, industrial, materials science, environmental engineering, robotics, nuclear, marine/ocean engineering, mining, geology and earth science, agriculture and agtech, energy systems, physics, mathematics and statistics, actuarial work, network and telecom engineering, pharma and biotech, manufacturing, and anything else STEM or technical — including ones not listed here. Never default to software unless it genuinely fits best.\nField and career stage are FACTS, not personality traits — you have already been told which broad field they\'re interested in and their career stage below; these were asked directly before you started, so never ask about either again. Use them as the fixed setting for every hypothetical you build from here on — a hypothetical for an undergrad mechanical engineering student should look nothing like one for a working professional in biomedical devices, and a scenario that assumes the wrong field wastes the question entirely.\nIf their stage is "graduated and/or working professionally," dig further with direct factual questions (job title, how many years, do they hold a degree or certifications and in what) before you rely on any exercise result to justify "mid" or "senior" — a job title and years of real experience is what earns "mid" or "senior", credentials and confidence alone are not enough. If their stage is "haven\'t started a degree yet" or "undergrad," the level is "student" or "early" respectively unless they describe real professional work on top of that — do not round up.\nWithin the given field and stage, keep narrowing toward a specific sub-field and concrete role (e.g. not just "mechanical," but which corner: thermal systems, robotics, manufacturing, automotive, aerospace structures) and keep verifying claims with small exercises scoped to that exact field and stage — never reuse a scenario you already asked about, even for a different exercise type, and never repeat the same item twice within one exercise\'s list.\nAim for around 15 to 20 questions total, but if you are still genuinely unsure after that, keep going — accuracy matters more than speed. Stop as soon as you are confident.\n' + QUESTION_FORMATS + '\nWhen confident, respond with exactly: {"type":"done","level":"student|early|mid|senior","fields":[{"name":"Field name","why":"one sentence on why this fits them","blurb":"one sentence describing the field","demand":"rough demand label","pay":"rough pay range","roles":[{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"}]}]} with up to 3 fields ranked best fit first.';
+  var FIELDS_PROMPT_BASE = 'Your goal now is to determine which specific field(s) and roles genuinely fit this person. The scope is EVERY STEM and technical discipline, not a short list — software, data science, mechanical, electrical, civil, aerospace, biomedical, chemical, industrial, materials science, environmental engineering, robotics, nuclear, marine/ocean engineering, mining, geology and earth science, agriculture and agtech, energy systems, physics, mathematics and statistics, actuarial work, network and telecom engineering, pharma and biotech, manufacturing, and anything else STEM or technical — including ones not listed here. Never default to software unless it genuinely fits best.\nAssume they may know almost nothing about this field yet — most people picking a broad field of interest are going on curiosity or a vague pull toward it, not hands-on background. Every scenario must be understandable to a total beginner: the moment you mention a tool, role, process, or piece of jargon, explain in plain words what it is or does — never assume they already know. Judge fit by their instincts, curiosity, and what kind of problem excites them, not by whether they already speak the field\'s insider vocabulary.\nField and career stage are FACTS, not personality traits — you have already been told which broad field they\'re interested in and their career stage below; these were asked directly before you started, so never ask about either again. Use them as the fixed setting for every hypothetical you build from here on — a hypothetical for an undergrad mechanical engineering student should look nothing like one for a working professional in biomedical devices, and a scenario that assumes the wrong field wastes the question entirely.\nIf their stage is "graduated and/or working professionally," dig further with direct factual questions (job title, how many years, do they hold a degree or certifications and in what) before you rely on any exercise result to justify "mid" or "senior" — a job title and years of real experience is what earns "mid" or "senior", credentials and confidence alone are not enough. If their stage is "haven\'t started a degree yet" or "undergrad," the level is "student" or "early" respectively unless they describe real professional work on top of that — do not round up.\nWithin the given field and stage, keep narrowing toward a specific sub-field and concrete role (e.g. not just "mechanical," but which corner: thermal systems, robotics, manufacturing, automotive, aerospace structures) and keep verifying claims with small exercises scoped to that exact field and stage — never reuse a scenario you already asked about, even for a different exercise type, and never repeat the same item twice within one exercise\'s list.\nAim for around 15 to 20 questions total, but if you are still genuinely unsure after that, keep going — accuracy matters more than speed. Stop as soon as you are confident.\n' + QUESTION_FORMATS + '\nWhen confident, respond with exactly: {"type":"done","level":"student|early|mid|senior","fields":[{"name":"Field name","why":"one sentence on why this fits them","blurb":"one sentence describing the field","demand":"rough demand label","pay":"rough pay range","roles":[{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"}]}]} with up to 3 fields ranked best fit first.';
 
   function slugify(s) {
     return (s || 'field').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'field';
@@ -183,9 +191,35 @@
     try { return JSON.parse(repaired); } catch (e) { return null; }
   }
 
+  function capLabel(s, max) {
+    s = String(s == null ? '' : s).trim();
+    if (s.length <= max) return s;
+    var cut = s.slice(0, max);
+    var lastSpace = cut.lastIndexOf(' ');
+    if (lastSpace > max * 0.6) cut = cut.slice(0, lastSpace);
+    return cut.replace(/[,.;:!?\-–—]+$/, '') + '…';
+  }
+  function capLabels(items, max, maxCount) {
+    var arr = (items || []).map(function (it) { return capLabel(it, max); });
+    if (maxCount && arr.length > maxCount) arr = arr.slice(0, maxCount);
+    return arr;
+  }
+  var ITEM_CAPS = { stack: [70, 7], rank: [46, 6], tiles: [40, 8], sort: [46, 6] };
+
   function normalizeAIResponse(data) {
     if (!data || typeof data !== 'object') return null;
-    if (data.type === 'question' || data.type === 'done') return data;
+    if (data.type === 'question') {
+      if (ITEM_CAPS[data.format] && data.items) {
+        var cap = ITEM_CAPS[data.format];
+        data.items = capLabels(data.items, cap[0], cap[1]);
+      } else if ((data.format === 'choice' || data.format === 'quickpick') && data.options) {
+        data.options = capLabels(data.options, 60, 6);
+      } else if (data.format === 'allocate' && data.buckets) {
+        data.buckets = capLabels(data.buckets, 46, 6);
+      }
+      return data;
+    }
+    if (data.type === 'done') return data;
     if (data.fields || data.level || (data.summary && (data.learningStyle || data.workStyle))) {
       data.type = 'done';
       return data;
@@ -202,7 +236,7 @@
         else if (data.items) { data.format = 'rank'; }
         else { data.format = 'text'; }
       }
-      return data;
+      return normalizeAIResponse(data);
     }
     return null;
   }
@@ -604,14 +638,27 @@
         boxATitle.className = 'sort-box-title';
         boxATitle.textContent = q.boxA || 'Yes';
         boxA.appendChild(boxATitle);
+        var boxAEmpty = document.createElement('p');
+        boxAEmpty.className = 'sort-box-empty';
+        boxAEmpty.textContent = 'Nothing here yet';
+        boxA.appendChild(boxAEmpty);
         var boxB = document.createElement('div');
         boxB.className = 'sort-box';
         var boxBTitle = document.createElement('p');
         boxBTitle.className = 'sort-box-title';
         boxBTitle.textContent = q.boxB || 'No';
         boxB.appendChild(boxBTitle);
+        var boxBEmpty = document.createElement('p');
+        boxBEmpty.className = 'sort-box-empty';
+        boxBEmpty.textContent = 'Nothing here yet';
+        boxB.appendChild(boxBEmpty);
         boxes.appendChild(boxA);
         boxes.appendChild(boxB);
+
+        function updateEmptyHints() {
+          boxAEmpty.style.display = boxA.querySelectorAll('.sort-chip').length ? 'none' : 'block';
+          boxBEmpty.style.display = boxB.querySelectorAll('.sort-chip').length ? 'none' : 'block';
+        }
 
         var moveOrder = [];
         var placement = {};
@@ -639,6 +686,15 @@
           chip.classList.add(zone === 'A' ? 'drag-a' : 'drag-b');
           (zone === 'A' ? boxA : boxB).appendChild(chip);
           doneBtn.disabled = Object.keys(placement).length < total;
+          updateEmptyHints();
+        }
+        function unplaceChip(chip, item) {
+          delete placement[item];
+          var idx = moveOrder.indexOf(item);
+          if (idx > -1) moveOrder.splice(idx, 1);
+          chip.classList.remove('drag-a', 'drag-b');
+          doneBtn.disabled = Object.keys(placement).length < total;
+          updateEmptyHints();
         }
 
         (q.items || []).forEach(function (item) {
@@ -682,7 +738,7 @@
               boxB.classList.remove('drop-hover');
               if (isOver(boxA, x, y)) placeChip(chip, item, 'A');
               else if (isOver(boxB, x, y)) placeChip(chip, item, 'B');
-              else tray.appendChild(chip);
+              else { unplaceChip(chip, item); tray.appendChild(chip); }
             }
 
             if (isTouch) {
@@ -1080,17 +1136,31 @@
       render: function (el) {
         var actions = document.createElement('div');
         actions.className = 'setup-actions';
-        actions.appendChild(button('Start', 'setup-primary', function () { go('assess_personality'); }));
+        actions.appendChild(button('Start', 'setup-primary', function () { go('assess_profile_import'); }));
         actions.appendChild(button('Skip for now', 'setup-secondary', function () { go('voice_ask'); }));
         el.appendChild(actions);
       }
     },
+    assess_profile_import: {
+      eyebrow: 'SPEED THINGS UP',
+      question: 'Have a resume or LinkedIn on hand?',
+      body: 'Paste your resume text, your LinkedIn URL, or your LinkedIn About/Experience section. We\'ll use it to skip questions the answer already covers — totally optional.',
+      field: {
+        type: 'textarea',
+        key: 'profileImport',
+        placeholder: 'Paste resume text, a LinkedIn URL, or your About/Experience section…'
+      },
+      next: 'assess_personality'
+    },
     assess_personality: {
       hideHeader: true,
       render: function (el) {
+        var profileContext = answers.profileImport
+          ? ('The person pasted this resume/LinkedIn content before you started — use it for background color if relevant, but it says nothing reliable about how they think or learn, so still infer personality and learning style entirely through your own exercises: "' + answers.profileImport + '" ')
+          : '';
         renderAIFlow(el, {
           eyebrow: 'GETTING TO KNOW YOU',
-          systemPrompt: PERSONALITY_PROMPT,
+          systemPrompt: profileContext + PERSONALITY_PROMPT,
           softTarget: 10,
           hardCap: 16,
           fallbackStepId: 'assess_bug',
@@ -1149,6 +1219,9 @@
           ? ('Here is what you already learned about how this person thinks and learns: "' + answers.personalitySummary + '" Use it — do not re-ask about personality or learning style. ')
           : '';
         context += 'Their stated field of interest is "' + (answers.chosenField || 'not yet known') + '" and their career stage is "' + (stageLabels[answers.stage] || answers.stage || 'not yet known') + '". These were already asked directly — never ask about either again. ';
+        if (answers.profileImport) {
+          context += 'They also pasted this resume/LinkedIn content before you started: "' + answers.profileImport + '" Use it to skip questions it already answers plainly (e.g. don\'t ask what their current job title is if it says so) and to target your verification exercises at the specific skills, tools, and claims it makes — but treat every claim in it as something to verify with a real exercise, not something to take at face value, exactly as you would a spoken claim. A resume never earns "mid" or "senior" by itself. ';
+        }
         renderAIFlow(el, {
           eyebrow: 'FINDING YOUR FIT',
           systemPrompt: context + FIELDS_PROMPT_BASE,
@@ -1680,8 +1753,9 @@
     if (step.field) {
       var form = document.createElement('form');
       form.className = 'setup-field';
-      var input = document.createElement('input');
-      input.type = step.field.type === 'password' ? 'password' : 'text';
+      var isTextarea = step.field.type === 'textarea';
+      var input = document.createElement(isTextarea ? 'textarea' : 'input');
+      if (!isTextarea) input.type = step.field.type === 'password' ? 'password' : 'text';
       input.placeholder = step.field.placeholder || '';
       input.autocomplete = 'off';
       input.spellcheck = false;
