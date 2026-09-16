@@ -38,8 +38,10 @@
           if (error) throw error;
           window.location.replace(next);
         } catch (e) {
+          console.error('Trefelle auth callback failed:', e);
+          const detail = (e && e.message) ? e.message : String(e);
           statusEl.innerHTML =
-            'Sign-in failed. <a href="/login?error=1">Try again</a>.';
+            'Sign-in failed: ' + detail + '<br><a href="/login?error=1">Try again</a>.';
         }
       })();
     </script>
