@@ -5,8 +5,268 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <title>Sign in — Trefelle</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root { color-scheme: light; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f7f5f1;
+        font-family: 'Inter', system-ui, sans-serif;
+        color: #1d241e;
+      }
+      .card {
+        width: min(360px, 90vw);
+        padding: 40px 32px;
+        border-radius: 16px;
+        background: #fff;
+        border: 1px solid #e6e2da;
+        box-shadow: 0 20px 40px -20px rgba(29, 36, 30, 0.15);
+        text-align: center;
+      }
+      .mark { display: inline-flex; margin-bottom: 16px; }
+      h1 { font-size: 1.25rem; margin: 0 0 8px; }
+      p.sub { margin: 0 0 28px; color: #6b6a63; font-size: 0.9rem; }
+      button {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 12px 16px;
+        border-radius: 10px;
+        border: 1px solid #1d241e;
+        background: #1d241e;
+        color: #fff;
+        font-size: 0.95rem;
+        font-family: inherit;
+        cursor: pointer;
+      }
+      button:hover { opacity: 0.9; }
+      button:disabled { opacity: 0.6; cursor: default; }
+      .divider {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 20px 0;
+        color: #a6a49c;
+        font-size: 0.8rem;
+      }
+      .divider::before,
+      .divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: #e6e2da;
+      }
+      form { display: grid; gap: 10px; text-align: left; }
+      .name-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .name-row[hidden] { display: none; }
+      input[type='email'],
+      input[type='password'],
+      input[type='text'] {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 10px;
+        border: 1px solid #e6e2da;
+        background: #fff;
+        color: #1d241e;
+        font-size: 0.9rem;
+        font-family: inherit;
+        box-sizing: border-box;
+      }
+      input[type='email']:focus,
+      input[type='password']:focus,
+      input[type='text']:focus {
+        outline: 2px solid #1d241e;
+        outline-offset: 1px;
+      }
+      form button {
+        background: #fff;
+        color: #1d241e;
+        border: 1px solid #1d241e;
+        margin-top: 4px;
+      }
+      .toggle {
+        margin: 20px 0 0;
+        font-size: 0.85rem;
+        color: #6b6a63;
+      }
+      .toggle button {
+        all: unset;
+        width: auto;
+        display: inline;
+        color: #1d241e;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+      }
+      p.error,
+      p.info {
+        margin-top: 16px;
+        font-size: 0.85rem;
+        display: none;
+      }
+      p.error { color: #b3261e; }
+      p.info { color: #3f6c33; }
+      a.back { display: inline-block; margin-top: 24px; color: #6b6a63; font-size: 0.85rem; }
+    </style>
   </head>
   <body>
-    <p>Login page placeholder — coming soon.</p>
+    <div class="card">
+      <span class="mark">
+        <svg width="40" height="40" viewBox="213 119 626 626" aria-hidden="true">
+          <circle cx="526" cy="432" r="300" fill="none" stroke="#1d241e" stroke-width="26" />
+          <path fill="#1d241e" d="M578,296 L621,296 L739,535 L676,535 L599,380 L495,586 L432,586 Z" />
+          <path fill="#1d241e" d="M429,334 L470,333 L505,401 L475,467 L449,419 L391,535 L328,535 Z" />
+        </svg>
+      </span>
+      <h1 id="heading">Sign in to Trefelle</h1>
+      <p class="sub" id="subtext">You need an account to open the practice workspace.</p>
+      <button id="githubBtn" type="button">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/>
+        </svg>
+        <span>Continue with GitHub</span>
+      </button>
+      <div class="divider"><span>or</span></div>
+      <form id="emailForm">
+        <div class="name-row" id="nameRow" hidden>
+          <input type="text" id="firstNameInput" placeholder="First name" autocomplete="given-name" />
+          <input type="text" id="lastNameInput" placeholder="Last name" autocomplete="family-name" />
+        </div>
+        <input type="email" id="emailInput" placeholder="Email" autocomplete="email" required />
+        <input
+          type="password"
+          id="passwordInput"
+          placeholder="Password"
+          autocomplete="current-password"
+          minlength="6"
+          required
+        />
+        <button type="submit" id="emailSubmitBtn">Sign in</button>
+      </form>
+      <p class="toggle">
+        <span id="toggleText">Don't have an account?</span>
+        <button type="button" id="toggleModeBtn">Create one</button>
+      </p>
+      <p class="error" id="errorMsg"></p>
+      <p class="info" id="infoMsg"></p>
+      <a class="back" href="/">← Back to Trefelle</a>
+    </div>
+    <script type="module">
+      import { signInWithGitHub, signInWithEmail, signUpWithEmail } from '/supabase-client.js';
+
+      const params = new URLSearchParams(window.location.search);
+      const next = params.get('next') || '/workspace';
+
+      const heading = document.getElementById('heading');
+      const subtext = document.getElementById('subtext');
+      const githubBtn = document.getElementById('githubBtn');
+      const emailForm = document.getElementById('emailForm');
+      const nameRow = document.getElementById('nameRow');
+      const firstNameInput = document.getElementById('firstNameInput');
+      const lastNameInput = document.getElementById('lastNameInput');
+      const emailInput = document.getElementById('emailInput');
+      const passwordInput = document.getElementById('passwordInput');
+      const emailSubmitBtn = document.getElementById('emailSubmitBtn');
+      const toggleText = document.getElementById('toggleText');
+      const toggleModeBtn = document.getElementById('toggleModeBtn');
+      const errorMsg = document.getElementById('errorMsg');
+      const infoMsg = document.getElementById('infoMsg');
+
+      let mode = 'signin';
+
+      function render() {
+        if (mode === 'signin') {
+          heading.textContent = 'Sign in to Trefelle';
+          subtext.textContent = 'You need an account to open the practice workspace.';
+          emailSubmitBtn.textContent = 'Sign in';
+          toggleText.textContent = "Don't have an account?";
+          toggleModeBtn.textContent = 'Create one';
+          passwordInput.autocomplete = 'current-password';
+          nameRow.hidden = true;
+          firstNameInput.required = false;
+          lastNameInput.required = false;
+        } else {
+          heading.textContent = 'Create your account';
+          subtext.textContent = 'Takes a few seconds — no credit card, nothing to configure.';
+          emailSubmitBtn.textContent = 'Create account';
+          toggleText.textContent = 'Already have an account?';
+          toggleModeBtn.textContent = 'Sign in instead';
+          passwordInput.autocomplete = 'new-password';
+          nameRow.hidden = false;
+          firstNameInput.required = true;
+          lastNameInput.required = true;
+        }
+      }
+      render();
+
+      toggleModeBtn.addEventListener('click', () => {
+        mode = mode === 'signin' ? 'signup' : 'signin';
+        errorMsg.style.display = 'none';
+        infoMsg.style.display = 'none';
+        render();
+      });
+
+      if (params.get('error')) {
+        errorMsg.textContent = 'Sign-in failed or was cancelled. Please try again.';
+        errorMsg.style.display = 'block';
+      }
+
+      githubBtn.addEventListener('click', async () => {
+        githubBtn.disabled = true;
+        githubBtn.querySelector('span').textContent = 'Redirecting…';
+        try {
+          await signInWithGitHub(next);
+        } catch (e) {
+          githubBtn.disabled = false;
+          githubBtn.querySelector('span').textContent = 'Continue with GitHub';
+          errorMsg.textContent = 'Something went wrong starting sign-in. Please try again.';
+          errorMsg.style.display = 'block';
+        }
+      });
+
+      emailForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errorMsg.style.display = 'none';
+        infoMsg.style.display = 'none';
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+        emailSubmitBtn.disabled = true;
+        try {
+          if (mode === 'signin') {
+            await signInWithEmail(email, password);
+            window.location.replace(next);
+          } else {
+            const firstName = firstNameInput.value.trim();
+            const lastName = lastNameInput.value.trim();
+            const data = await signUpWithEmail(email, password, { firstName, lastName });
+            if (data.session) {
+              window.location.replace(next);
+            } else {
+              mode = 'signin';
+              render();
+              infoMsg.textContent = 'Check your email to confirm your account, then sign in.';
+              infoMsg.style.display = 'block';
+            }
+          }
+        } catch (err) {
+          errorMsg.textContent = err.message || 'Something went wrong. Please try again.';
+          errorMsg.style.display = 'block';
+        } finally {
+          emailSubmitBtn.disabled = false;
+        }
+      });
+    </script>
   </body>
 </html>

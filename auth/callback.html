@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <title>Signing in — Trefelle</title>
+    <style>
+      :root { color-scheme: light; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f7f5f1;
+        font-family: system-ui, sans-serif;
+        color: #1d241e;
+      }
+      p { font-size: 0.95rem; color: #6b6a63; }
+      a { color: #1d241e; }
+    </style>
+  </head>
+  <body>
+    <p id="status">Signing you in…</p>
+    <script type="module">
+      import { getSupabaseClient, getUser } from '/supabase-client.js';
+
+      const next = sessionStorage.getItem('trefelle_auth_next') || '/workspace';
+      sessionStorage.removeItem('trefelle_auth_next');
+      const statusEl = document.getElementById('status');
+
+      (async () => {
+        try {
+          // guards against a duplicate invocation racing an already-consumed code
+          const already = await getUser();
+          if (already) {
+            window.location.replace(next);
+            return;
+          }
+          const { error } = await getSupabaseClient().auth.exchangeCodeForSession(
+            window.location.href
+          );
+          if (error) throw error;
+          window.location.replace(next);
+        } catch (e) {
+          console.error('Trefelle auth callback failed:', e);
+          const detail = (e && e.message) ? e.message : String(e);
+          statusEl.innerHTML =
+            'Sign-in failed: ' + detail + '<br><a href="/login?error=1">Try again</a>.';
+        }
+      })();
+    </script>
+  </body>
+</html>
