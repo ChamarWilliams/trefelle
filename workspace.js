@@ -20,19 +20,19 @@
   }
 
   var FIELD_CATALOG = [
-    { id: 'backend', name: 'Backend / APIs', demand: 'Very high', pay: '$85k – $170k+', blurb: 'You build the services, data models, and APIs that everything else depends on. Correctness and reliability matter more than pixels.' },
-    { id: 'frontend', name: 'Frontend', demand: 'High', pay: '$75k – $155k+', blurb: 'You turn designs and data into interfaces people actually use — performance, accessibility, and state management are the daily craft.' },
-    { id: 'fullstack', name: 'Full-stack', demand: 'Very high', pay: '$80k – $165k+', blurb: 'You move across the whole stack — comfortable enough in the backend and the UI to ship a feature end to end.' },
-    { id: 'data', name: 'Data / ML', demand: 'High', pay: '$95k – $190k+', blurb: 'You work with pipelines, models, and the messy data behind them — equal parts engineering and statistics.' },
-    { id: 'infra', name: 'Infra / DevOps', demand: 'High', pay: '$95k – $175k+', blurb: 'You build the platform other engineers ship on top of — CI/CD, cloud infrastructure, observability, and uptime.' },
-    { id: 'security', name: 'Security', demand: 'Very high', pay: '$100k – $185k+', blurb: 'You think like an attacker to defend systems — from code review to incident response.' },
-    { id: 'mobile', name: 'Mobile', demand: 'Moderate', pay: '$85k – $165k+', blurb: 'You build native or cross-platform apps, working closely with OS constraints, performance, and app-store realities.' },
-    { id: 'product-ux', name: 'Product / UX design', demand: 'Moderate', pay: '$75k – $150k+', blurb: 'You shape how the product feels to use — research, flows, and the handoff between design and engineering.' },
-    { id: 'mechanical', name: 'Mechanical Engineering', demand: 'High', pay: '$70k – $130k+', blurb: 'You design, analyze, and test physical systems and machines — from prototypes to production, using physics as much as code.' },
-    { id: 'civil', name: 'Civil Engineering', demand: 'Moderate', pay: '$65k – $120k+', blurb: 'You design and oversee infrastructure — buildings, roads, bridges, water systems — balancing safety, cost, and regulation.' },
-    { id: 'electrical', name: 'Electrical Engineering', demand: 'High', pay: '$75k – $140k+', blurb: 'You design circuits, power systems, and embedded hardware — the physical layer everything else runs on top of.' },
-    { id: 'aerospace', name: 'Aerospace Engineering', demand: 'Moderate', pay: '$80k – $145k+', blurb: 'You design and test aircraft, spacecraft, and the systems that keep them flying safely.' },
-    { id: 'biomedical', name: 'Biomedical Engineering', demand: 'Moderate', pay: '$70k – $125k+', blurb: 'You apply engineering to medicine — devices, diagnostics, and systems that directly affect patient care.' }
+    { id: 'backend', name: 'Backend / APIs', demand: 'Very high', entryPay: '$85k', tools: ['PostgreSQL', 'Docker', 'Node.js or Django'], blurb: 'You build the services, data models, and APIs that everything else depends on. Correctness and reliability matter more than pixels.' },
+    { id: 'frontend', name: 'Frontend', demand: 'High', entryPay: '$75k', tools: ['React', 'TypeScript', 'Chrome DevTools'], blurb: 'You turn designs and data into interfaces people actually use — performance, accessibility, and state management are the daily craft.' },
+    { id: 'fullstack', name: 'Full-stack', demand: 'Very high', entryPay: '$80k', tools: ['React', 'Node.js', 'PostgreSQL'], blurb: 'You move across the whole stack — comfortable enough in the backend and the UI to ship a feature end to end.' },
+    { id: 'mobile', name: 'Mobile', demand: 'Moderate', entryPay: '$85k', tools: ['Swift / Xcode', 'Kotlin / Android Studio', 'React Native'], blurb: 'You build native or cross-platform apps, working closely with OS constraints, performance, and app-store realities.' },
+    { id: 'data-eng', name: 'Data Engineering', demand: 'High', entryPay: '$90k', tools: ['Apache Airflow', 'SQL', 'Spark'], blurb: 'You build and maintain the pipelines that move and clean data at scale, so analysts and models have something reliable to work with.' },
+    { id: 'data-science', name: 'Data Science / Analytics', demand: 'High', entryPay: '$85k', tools: ['Python (pandas)', 'Jupyter', 'SQL'], blurb: 'You dig through data to find patterns and answer business questions, using statistics as much as code.' },
+    { id: 'ml', name: 'Machine Learning / AI Engineering', demand: 'High', entryPay: '$100k', tools: ['PyTorch or TensorFlow', 'Python', 'Jupyter'], blurb: 'You build and deploy models that learn from data — equal parts research, engineering, and experimentation.' },
+    { id: 'infra', name: 'Cloud / DevOps', demand: 'High', entryPay: '$90k', tools: ['Docker', 'Kubernetes', 'Terraform'], blurb: 'You build the platform other engineers ship on top of — CI/CD, cloud infrastructure, observability, and uptime.' },
+    { id: 'security', name: 'Security / Cybersecurity', demand: 'Very high', entryPay: '$90k', tools: ['Burp Suite', 'Wireshark', 'Metasploit'], blurb: 'You think like an attacker to defend systems — from code review to incident response.' },
+    { id: 'qa', name: 'QA / Test Engineering', demand: 'Moderate', entryPay: '$70k', tools: ['Selenium or Playwright', 'Postman', 'Jira'], blurb: 'You make sure software actually works before it ships — writing automated tests and hunting for what breaks it.' },
+    { id: 'it-sysadmin', name: 'IT / Systems Administration', demand: 'High', entryPay: '$55k', tools: ['Linux', 'Active Directory', 'PowerShell or Bash'], blurb: 'You keep an organization’s computers, networks, and accounts running — the first call when something’s broken.' },
+    { id: 'game-dev', name: 'Game Development', demand: 'Moderate', entryPay: '$70k', tools: ['Unity or Unreal Engine', 'C# or C++', 'Git'], blurb: 'You build the interactive systems, physics, and logic that make a game actually playable.' },
+    { id: 'product-ux', name: 'Product / UX design', demand: 'Moderate', entryPay: '$75k', tools: ['Figma', 'Miro', 'User research tools'], blurb: 'You shape how the product feels to use — research, flows, and the handoff between design and engineering.' }
   ];
 
   var ROLE_TEMPLATES = {
@@ -51,10 +51,20 @@
       { title: 'Product Engineer', blurb: 'Work closely with product and design to build and iterate on user-facing features.' },
       { title: 'Startup Generalist Engineer', blurb: 'Wear many hats — whatever the product needs this week.' }
     ],
-    data: [
+    'data-eng': [
       { title: 'Data Engineer', blurb: 'Build and maintain the pipelines that move and shape data reliably.' },
+      { title: 'Analytics Engineer', blurb: 'Turn raw data into trustworthy, well-modeled datasets others can build on.' },
+      { title: 'ETL Developer', blurb: 'Build the jobs that extract, clean, and load data between systems.' }
+    ],
+    'data-science': [
+      { title: 'Data Scientist', blurb: 'Dig through data to find patterns and answer business questions.' },
+      { title: 'Data Analyst', blurb: 'Turn data into reports and dashboards that drive real decisions.' },
+      { title: 'Business Intelligence Analyst', blurb: 'Build the metrics and dashboards leadership actually watches.' }
+    ],
+    ml: [
       { title: 'Machine Learning Engineer', blurb: 'Take models from notebook to production, and keep them running well.' },
-      { title: 'Analytics Engineer', blurb: 'Turn raw data into trustworthy, well-modeled datasets others can build on.' }
+      { title: 'AI Engineer', blurb: 'Build applications and systems powered by machine learning models.' },
+      { title: 'Research Engineer', blurb: 'Prototype and evaluate new modeling approaches before they ship.' }
     ],
     infra: [
       { title: 'DevOps Engineer', blurb: 'Build and maintain the CI/CD pipelines and infrastructure teams ship through.' },
@@ -76,30 +86,20 @@
       { title: 'UX Engineer', blurb: 'Sit between design and engineering — prototyping and polishing the handoff.' },
       { title: 'Product Manager', blurb: 'Decide what gets built and why, working closely with engineering and design.' }
     ],
-    mechanical: [
-      { title: 'Mechanical Design Engineer', blurb: 'Design and prototype mechanical components and systems using CAD and physical testing.' },
-      { title: 'Manufacturing Engineer', blurb: 'Optimize how physical products are actually built, from process to tooling.' },
-      { title: 'Product Development Engineer', blurb: 'Take a mechanical concept from sketch to a tested, manufacturable product.' }
+    qa: [
+      { title: 'QA Engineer', blurb: 'Write automated tests and hunt for what breaks before it ships.' },
+      { title: 'Test Automation Engineer', blurb: 'Build the frameworks and pipelines that catch regressions automatically.' },
+      { title: 'QA Analyst', blurb: 'Manually and systematically verify a product works as intended.' }
     ],
-    civil: [
-      { title: 'Civil Engineer', blurb: 'Design and oversee infrastructure projects — from concept through construction.' },
-      { title: 'Structural Engineer', blurb: 'Ensure buildings and structures can safely carry the loads they’re built for.' },
-      { title: 'Transportation Engineer', blurb: 'Design roads, transit, and traffic systems that move people safely and efficiently.' }
+    'it-sysadmin': [
+      { title: 'IT Support Specialist', blurb: 'The first call when someone’s computer, account, or network breaks.' },
+      { title: 'Systems Administrator', blurb: 'Keep servers, networks, and accounts running and secure.' },
+      { title: 'Help Desk Technician', blurb: 'Triage and resolve day-to-day technical issues across an organization.' }
     ],
-    electrical: [
-      { title: 'Electrical Engineer', blurb: 'Design and test circuits, power systems, and hardware.' },
-      { title: 'Embedded Systems Engineer', blurb: 'Write the firmware that runs directly on hardware.' },
-      { title: 'Hardware Engineer', blurb: 'Design the physical boards and components that power electronic products.' }
-    ],
-    aerospace: [
-      { title: 'Aerospace Engineer', blurb: 'Design and analyze aircraft or spacecraft systems and structures.' },
-      { title: 'Flight Test Engineer', blurb: 'Plan and run the tests that validate a vehicle actually flies as designed.' },
-      { title: 'Propulsion Engineer', blurb: 'Design and test the systems that power flight.' }
-    ],
-    biomedical: [
-      { title: 'Biomedical Engineer', blurb: 'Design medical devices and systems that directly affect patient outcomes.' },
-      { title: 'Clinical Systems Engineer', blurb: 'Bridge engineering and healthcare delivery — deploying and maintaining medical technology.' },
-      { title: 'R&D Engineer, Medical Devices', blurb: 'Research and prototype the next generation of medical devices.' }
+    'game-dev': [
+      { title: 'Gameplay Engineer', blurb: 'Build the interactive systems and logic that make a game playable.' },
+      { title: 'Game Engine Programmer', blurb: 'Build and maintain the underlying engine tools and systems.' },
+      { title: 'Technical Game Designer', blurb: 'Bridge design and code to prototype and tune how a game feels.' }
     ],
     custom: [
       { title: 'Explore this on your own', blurb: 'There’s no role ladder for a custom field yet — specify a role directly instead.' }
@@ -108,61 +108,21 @@
 
   var LEVEL_PREFIX = { student: 'Junior ', early: 'Junior ', mid: '', senior: 'Senior ' };
 
-  function fieldWhy(id, ans) {
-    var matched = (ans.interests || []).some(function (label) {
-      var f = FIELD_CATALOG.filter(function (x) { return x.name === label; })[0];
-      return f && f.id === id;
-    });
-    return matched ? 'You told us this is one of your interests.' : 'A close fit based on how you like to work.';
-  }
-
-  function computeFieldRecommendations(ans) {
-    var scores = {};
-    FIELD_CATALOG.forEach(function (f) { scores[f.id] = 0; });
-    (ans.interests || []).forEach(function (label) {
-      var match = FIELD_CATALOG.filter(function (f) { return f.name === label; })[0];
-      if (match) scores[match.id] += 3;
-    });
-    function bump(id, amt) { if (scores[id] !== undefined) scores[id] += amt; }
-    if (ans.learningStyle === 'visual') { bump('frontend', 1); bump('product-ux', 1); }
-    if (ans.learningStyle === 'reading') { bump('backend', 1); bump('security', 1); }
-    if (ans.learningStyle === 'verbal') { bump('product-ux', 0.5); }
-    if (ans.learningStyle === 'example') { bump('data', 1); }
-    if (ans.debugStyle === 'search') { bump('infra', 0.5); }
-    if (ans.debugStyle === 'read') { bump('backend', 0.5); bump('security', 0.5); }
-    if (ans.ambiguityStyle === 'clarify') { bump('product-ux', 0.5); }
-    if (ans.incidentComfort === 'oncall' || ans.incidentComfort === 'handled') { bump('infra', 1); bump('security', 0.5); }
-
-    var ranked = FIELD_CATALOG.filter(function (f) { return scores[f.id] > 0; })
-      .sort(function (a, b) { return scores[b.id] - scores[a.id]; });
-
-    var results = ranked.slice(0, 3).map(function (f) {
-      return { id: f.id, name: f.name, demand: f.demand, pay: f.pay, blurb: f.blurb, why: fieldWhy(f.id, ans) };
-    });
-
-    if (!results.length) {
-      results = FIELD_CATALOG.slice(0, 3).map(function (f) {
-        return { id: f.id, name: f.name, demand: f.demand, pay: f.pay, blurb: f.blurb, why: 'A broad starting point while you explore.' };
-      });
-    }
-
-    if (ans.customInterest) {
-      results.unshift({ id: 'custom', name: ans.customInterest, demand: 'Not tracked', pay: 'Varies', blurb: 'A field you typed in yourself — we don’t have benchmark data for it yet, but it’s saved as an option.', why: 'You told us this is what you’re after.' });
-    }
-    return results.slice(0, 3);
-  }
-
   function computeRoleRecommendations(fieldId, ans) {
     var templates = ROLE_TEMPLATES[fieldId] || ROLE_TEMPLATES.fullstack;
     var prefix = LEVEL_PREFIX[ans.level] || '';
     return templates.map(function (t) { return { title: prefix + t.title, blurb: t.blurb }; });
   }
 
-  var QUESTION_FORMATS = 'Respond with ONLY strict JSON, nothing else, no markdown fences, no prose outside the JSON.\nEvery item, option, or bucket label must be short — a phrase, not a sentence (aim for under 6 words / ~40 characters) — so it fits cleanly in a compact card; put any necessary nuance in the question or instruction text instead, never in the item labels.\nAssume the person may be completely new to this — many have never worked a single day in it and don\'t know its vocabulary. Never use jargon, acronyms, tool names, or role-specific terms without plainly explaining what they mean in the same sentence. Describe what a thing does before you name it, not the other way around. Write every scenario like you\'re explaining it to a smart friend who has zero background, in warm plain language — never textbook or corporate-sounding.\nPrefer small interactive exercises over asking directly whenever one would fit — a self-reported answer to "are you organized?" is easy to answer aspirationally; watching someone rank, stack, sort, tap, or allocate under a lightly-framed prompt reveals it more honestly, because they are not consciously aware of exactly what the exercise is measuring. Reach for "stack", "sort", "tiles", "allocate", or "quickpick" first; use "choice" only when you genuinely need to compare a few named options head-on, and "text" or "slider" when only their own words or a spectrum position would reveal something else. Do not lean on "choice" as the default. You can also use a second exercise to quietly cross-check an earlier answer that felt uncertain or too clean.\nPrefer closed hypotheticals over questions about their actual real life. Do not ask "what are your top tasks today" or anything else that requires them to expose real personal or work details — most people are more comfortable, and more honest, answering "imagine X situation, what would you do" than being asked to describe their own life. Build a specific fictional-but-plausible scenario ("you\'ve just joined a team and inherit a system with no documentation," "a client calls saying the product broke right before a demo") and ask what they\'d do inside it. EVERY question needs its own new scenario — never reuse the same premise you just used for the previous question, even in a different format. If you already asked about "joining a team and inheriting an undocumented system" once, that premise is now spent — the next question needs a genuinely different situation, not the same one wrapped in a different exercise type. Repeating a premise teaches you nothing new and wastes a question. The items inside any exercise must be concrete and specific to that invented scenario — never generic productivity-app filler like "reply to email," "grocery shopping," "dinner with friends," or a bland real-life to-do list. Either build on something they already said in this conversation, or invent something specific to real technical/engineering work (a specific kind of bug, a specific kind of decision, a specific trade-off) inside a hypothetical scenario — something that could only belong in an assessment for their field, not a life-admin app, and never a direct ask about their actual day.\nStack — a vertical list they physically drag to reorder, top to bottom; this is the premium version of ranking and should be your default choice for any ranking exercise: {"type":"question","format":"stack","eyebrow":"SHORT LABEL","question":"...","instruction":"a short framing like \'Drag to put these in the order you\'d actually reach for them\'","items":["item 1","item 2","item 3","item 4","item 5"]}\nRank — a lighter-weight tap-in-order version of the same idea, for when a full drag-to-reorder stack would be overkill: {"type":"question","format":"rank","eyebrow":"SHORT LABEL","question":"...","instruction":"...","items":["item 1","item 2","item 3","item 4"]}\nSort — they drag items into one of two boxes; which box, and the order they sort in, is the signal: {"type":"question","format":"sort","eyebrow":"SHORT LABEL","question":"...","boxA":"label for box A","boxB":"label for box B","items":["item 1","item 2","item 3","item 4","item 5"]}\nTiles — they tap as many or as few as resonate, no forced order or count; good for gauging what genuinely pulls them without asking outright: {"type":"question","format":"tiles","eyebrow":"SHORT LABEL","question":"...","instruction":"optional short framing","items":["item 1","item 2","item 3","item 4","item 5","item 6"]}\nAllocate — they distribute a fixed pool of points across a few buckets, revealing relative priority instead of a single pick: {"type":"question","format":"allocate","eyebrow":"SHORT LABEL","question":"...","points":10,"buckets":["bucket 1","bucket 2","bucket 3","bucket 4"]}\nQuickpick — looks like an ordinary multiple-choice question, but reaction time is measured invisibly; use it when hesitation itself (gut instinct vs deliberation) is the interesting signal — never tell the user timing is involved: {"type":"question","format":"quickpick","eyebrow":"SHORT LABEL","question":"...","options":["...","...","...","..."]}\nMultiple choice, only when comparing a few genuinely distinct named approaches: {"type":"question","format":"choice","eyebrow":"SHORT LABEL","question":"...","options":["...","...","...","..."]}\nOpen-ended, only when their own words would reveal something no list or exercise could: {"type":"question","format":"text","eyebrow":"SHORT LABEL","question":"...","placeholder":"short example of the kind of answer you want"}\nSlider, for a spectrum between two opposing traits: {"type":"question","format":"slider","eyebrow":"SHORT LABEL","question":"...","minLabel":"left end of the spectrum","maxLabel":"right end of the spectrum"}\nIf someone gives a vague or uncertain answer, don’t just move on — dig deeper on the same topic, ideally with a different exercise than before, rather than repeating the same format.\nEvery ranking, sorting, or dragging exercise has a "none of these apply to me" escape hatch — expect people to use it when your items assumed something untrue about their life (a job they don\'t have, tasks they don\'t do). If that happens, do not repeat a similar exercise with similarly guessed items — switch to something more open-ended ("text") or more clearly scoped to what you actually know about them, and treat the mismatch itself as a signal you guessed wrong about their situation.';
+  // One-shot: the person fills in a short profile form once, this is sent as
+  // a single message, and the model returns a JSON recommendation directly —
+  // no back-and-forth conversation, so there's only ever one AI wait.
+  var FIELDS_PROMPT_BASE = 'You are a career-fit assessor for Trefelle, a hands-on career-exploration platform for computer science, IT, and data-related fields. You are given one description of a person\'s background in a single message: their experience level, languages/tools used, past roles or internships, education, and anything they said interests them, plus optionally pasted resume/LinkedIn text. Based on this alone, recommend which specific field(s) genuinely fit them — you get exactly one read, so use everything given and make a real judgment rather than defaulting to the most generic-sounding option.\nThe scope is computer science, information technology, and data-related fields ONLY: backend/API development, frontend development, full-stack development, mobile development, data engineering, data science/analytics, machine learning/AI engineering, cloud/DevOps engineering, security/cybersecurity, QA/test engineering, IT/systems administration, game development, and product/UX design — plus closely related fields not listed here if they clearly fit better. Never recommend a field outside this scope (no mechanical, civil, electrical, aerospace, or other non-computing engineering disciplines), even if their background mentions one.\nAssume they may know little about a field\'s daily reality yet — judge fit from their stated experience, tools, and curiosity, not from whether they already use the field\'s insider vocabulary.\nRecommend as many fields as genuinely fit well — usually 2 to 4, never more than 6 — ranked best fit first. Do not pad the list with a poor fit just to reach a round number, and do not recommend only one unless everything else given is a clearly poor match.\nFor "level": "student" = no professional work in the field yet; "early" = professional role held, under ~2 years; "mid" = roughly 3-6 years of professional work; "senior" = 7+ years or demonstrated technical leadership. If their stated experience level already answers this, use it directly rather than re-deriving it.\nRespond with ONLY strict JSON, nothing else, no markdown fences, no prose outside the JSON, in exactly this shape: {"type":"done","level":"student|early|mid|senior","fields":[{"name":"Field name","why":"one sentence on why this fits them specifically, referencing something from their background","blurb":"one sentence describing what someone in this field actually does day to day","demand":"rough demand label","entryPay":"a single rough entry-level figure, e.g. \\"$75k\\"","tools":["2 to 3 real tools or technologies commonly used in this field"],"roles":[{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"}]}]}';
 
-  var PERSONALITY_PROMPT = 'You are an intake assessor for Trefelle, a hands-on career-exploration platform. Right now your ONLY goal is to understand how this specific person thinks, solves problems, handles ambiguity, and learns best — their personality and learning style. You must INFER all of this — never ask about it directly. Never ask "how do you prefer to learn?", "are you a visual learner?", "what is your learning style?", or any variant — that is a meta-question about the thing you are trying to measure, and self-report on it is nearly worthless. Instead, put them inside a concrete, specific, slightly odd little HYPOTHETICAL scenario or exercise and watch what they actually do — order, timing, which box something lands in, what they reach for first — then draw the conclusion yourself afterward; they should never be able to guess what trait a given exercise is measuring. Prefer a closed hypothetical ("imagine X happens, what would you do") over any question that asks about their actual real life or day — people answer more honestly, and feel more comfortable, responding inside a fictional scenario than being asked to expose real personal details. Avoid generic template exercises ("sort these by energy," "rank your tasks for today") — invent a specific fictional-but-plausible situation vivid enough that it could only have come from this conversation, ideally building on something they already said. This is NOT about picking a technical field yet, and it is not a fixed script — invent whatever exercise, in whatever order, actually gets you there fastest for THIS person. Keep every scenario understandable to someone with no professional experience in any field yet — plain everyday situations, never workplace jargon. Aim for around 6 questions total, but if you are still genuinely unsure after 6, keep going — accuracy matters more than speed. Before you conclude, you must be able to point to at least two separate exercises whose results directly support the learningStyle and workStyle you are about to report — a single ambiguous signal is not enough, ask another question instead of concluding early on a guess. This check matters more than it looks: it is what keeps your read of this person consistent with what a different AI model would have concluded from the same conversation, rather than each model settling on a different guess. Stop as soon as you have that evidence, not before.\n' + QUESTION_FORMATS + '\nWhen confident, respond with exactly: {"type":"done","summary":"2-3 sentence summary of how they think, solve problems, and learn — written as your own inference, not as if they told you","learningStyle":"short label","workStyle":"short label"}';
-
-  var FIELDS_PROMPT_BASE = 'Your goal now is to determine which specific field(s) and roles genuinely fit this person. The scope is EVERY STEM and technical discipline, not a short list — software, data science, mechanical, electrical, civil, aerospace, biomedical, chemical, industrial, materials science, environmental engineering, robotics, nuclear, marine/ocean engineering, mining, geology and earth science, agriculture and agtech, energy systems, physics, mathematics and statistics, actuarial work, network and telecom engineering, pharma and biotech, manufacturing, and anything else STEM or technical — including ones not listed here. Never default to software unless it genuinely fits best.\nAssume they may know almost nothing about this field yet — most people picking a broad field of interest are going on curiosity or a vague pull toward it, not hands-on background. Every scenario must be understandable to a total beginner: the moment you mention a tool, role, process, or piece of jargon, explain in plain words what it is or does — never assume they already know. Judge fit by their instincts, curiosity, and what kind of problem excites them, not by whether they already speak the field\'s insider vocabulary.\nField(s) and career stage are FACTS, not personality traits — you have already been told which broad field(s) they\'re interested in (sometimes more than one) and their career stage below; these were asked directly before you started, so never ask about either again. Use them as the fixed setting for every hypothetical you build from here on — a hypothetical for an undergrad mechanical engineering student should look nothing like one for a working professional in biomedical devices, and a scenario that assumes the wrong field wastes the question entirely. If they named multiple fields, explore across all of them rather than silently picking one as primary — the point is to find out which actually fits best, not to assume you already know.\nIf their stage is "graduated and/or working professionally," dig further with direct factual questions (job title, how many years, do they hold a degree or certifications and in what) before you rely on any exercise result to justify "mid" or "senior" — a job title and years of real experience is what earns "mid" or "senior", credentials and confidence alone are not enough. If their stage is "haven\'t started a degree yet" or "undergrad," the level is "student" or "early" respectively unless they describe real professional work on top of that — do not round up.\nUse this as a checkable rubric, not a vibe — before you assign a level, name the specific fact that earns it: "student" = no professional work in the field yet; "early" = professional role held, but under ~2 years and no independently-owned production work; "mid" = roughly 3–6 years of professional work, or clearly demonstrated independent ownership of real systems; "senior" = 7+ years, or demonstrated technical leadership/mentorship of others. If you cannot name the one fact that justifies the level, you are not ready to conclude — ask one more direct question instead of rounding up on confidence or credentials alone. The same goes for each field recommendation: it must trace to a specific answer or exercise result, not to what sounds like a safe, popular default. This discipline is what keeps different AI models landing on the same conclusion from the same conversation, rather than each one drifting to its own guess.\nWithin the given field and stage, keep narrowing toward a specific sub-field and concrete role (e.g. not just "mechanical," but which corner: thermal systems, robotics, manufacturing, automotive, aerospace structures) and keep verifying claims with small exercises scoped to that exact field and stage — never reuse a scenario you already asked about, even for a different exercise type, and never repeat the same item twice within one exercise\'s list.\nAim for around 8 to 10 questions total, but if you are still genuinely unsure after that, keep going — accuracy matters more than speed. Stop as soon as you are confident.\n' + QUESTION_FORMATS + '\nWhen confident, respond with exactly: {"type":"done","level":"student|early|mid|senior","fields":[{"name":"Field name","why":"one sentence on why this fits them","blurb":"one sentence describing the field","demand":"rough demand label","pay":"rough pay range","roles":[{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"}]}]} with up to 3 fields ranked best fit first.';
+  // Generates a short, interactive "day in the life" for one field the
+  // person is considering, before they commit to it — a handful of story
+  // beats, some of which are tiny hands-on exercises rather than just text.
+  var QUALIFICATIONS_PROMPT = 'You are building a short, honest "day in the life" simulation for someone considering a specific field, inside Trefelle, a career-exploration platform. Given the field name and a one-sentence description of what it involves, write 4 to 6 beats forming one realistic workday, in order. Most beats are short narrative ("beat") setting a scene or moment — plain language, no unexplained jargon. At least 2 beats must be a tiny interactive task ("task") where the person actually does a simplified version of real work from that moment — a one-to-three-line snippet or short realistic technical decision to fill in or complete. A task beat gives a "prompt" (what to do), a "starter" (the starting point, with a blank or TODO for them to fill in), and a "hint" (a short nudge revealed on demand) — this is exploratory and ungraded, not a formal test. Keep the whole thing skimmable.\nRespond with ONLY strict JSON, nothing else, no markdown fences, in exactly this shape: {"type":"done","beats":[{"type":"beat","time":"9:00 AM","text":"..."},{"type":"task","time":"10:30 AM","prompt":"...","starter":"...","hint":"..."}]}';
 
   var MAX_RESUME_BYTES = 5 * 1024 * 1024;
 
@@ -245,56 +205,6 @@
     try { return JSON.parse(repaired); } catch (e) { return null; }
   }
 
-  function capLabel(s, max) {
-    s = String(s == null ? '' : s).trim();
-    if (s.length <= max) return s;
-    var cut = s.slice(0, max);
-    var lastSpace = cut.lastIndexOf(' ');
-    if (lastSpace > max * 0.6) cut = cut.slice(0, lastSpace);
-    return cut.replace(/[,.;:!?\-–—]+$/, '') + '…';
-  }
-  function capLabels(items, max, maxCount) {
-    var arr = (items || []).map(function (it) { return capLabel(it, max); });
-    if (maxCount && arr.length > maxCount) arr = arr.slice(0, maxCount);
-    return arr;
-  }
-  var ITEM_CAPS = { stack: [70, 7], rank: [46, 6], tiles: [40, 8], sort: [46, 6] };
-
-  function normalizeAIResponse(data) {
-    if (!data || typeof data !== 'object') return null;
-    if (data.type === 'question') {
-      if (ITEM_CAPS[data.format] && data.items) {
-        var cap = ITEM_CAPS[data.format];
-        data.items = capLabels(data.items, cap[0], cap[1]);
-      } else if ((data.format === 'choice' || data.format === 'quickpick') && data.options) {
-        data.options = capLabels(data.options, 60, 6);
-      } else if (data.format === 'allocate' && data.buckets) {
-        data.buckets = capLabels(data.buckets, 46, 6);
-      }
-      return data;
-    }
-    if (data.type === 'done') return data;
-    if (data.fields || data.level || (data.summary && (data.learningStyle || data.workStyle))) {
-      data.type = 'done';
-      return data;
-    }
-    var q = data.question || data.text || data.prompt;
-    if (q) {
-      data.type = 'question';
-      data.question = q;
-      if (!data.format) {
-        if (data.options || data.choices) { data.format = 'choice'; data.options = data.options || data.choices; }
-        else if (data.boxA || data.boxB) { data.format = 'sort'; }
-        else if (data.buckets || data.points) { data.format = 'allocate'; }
-        else if (data.minLabel || data.maxLabel) { data.format = 'slider'; }
-        else if (data.items) { data.format = 'rank'; }
-        else { data.format = 'text'; }
-      }
-      return normalizeAIResponse(data);
-    }
-    return null;
-  }
-
   // Trefelle runs entirely on keys you bring — any provider works (OpenAI,
   // Groq, OpenRouter, Anthropic, and most others), as long as the model
   // supports reasoning; vision isn't required. Keys can be stacked: when
@@ -306,707 +216,6 @@
   function aiAvailable(ans) { return window.TrefelleAI.aiAvailable(ans); }
   function callAI(messages, signal) { return window.TrefelleAI.callAI(answers.keyStack, messages, signal); }
   var WEBLLM_MODEL_ID = window.TrefelleAI.WEBLLM_MODEL_ID;
-
-  function renderAIFlow(el, cfg) {
-    if (!aiAvailable(answers)) {
-      var note = document.createElement('p');
-      note.className = 'setup-note';
-      note.textContent = 'No connected AI model yet — using the standard question set instead.';
-      el.appendChild(note);
-      setTimeout(function () { go(cfg.fallbackStepId, true); }, 900);
-      return;
-    }
-
-    var body = document.createElement('div');
-    el.appendChild(body);
-    var conversation = [{ role: 'system', content: cfg.systemPrompt }];
-    var count = 0;
-    var controller = null;
-    var slowTimer = null;
-    var cycleTimer = null;
-    var FIRST_MESSAGES = ['Reading your answers…', 'Getting to know you…', 'Warming up your model…'];
-    var NEXT_MESSAGES = ['Thinking of a good question…', 'Weighing what you just said…', 'Still thinking…', 'Almost there…'];
-
-    function clearSlowTimer() { if (slowTimer) { clearTimeout(slowTimer); slowTimer = null; } }
-    function clearCycleTimer() { if (cycleTimer) { clearInterval(cycleTimer); cycleTimer = null; } }
-
-    function renderLoading(isFirst) {
-      body.innerHTML = '';
-      var eyebrow = document.createElement('p');
-      eyebrow.className = 'step-eyebrow';
-      eyebrow.textContent = cfg.eyebrow;
-      body.appendChild(eyebrow);
-      var wrap = document.createElement('div');
-      wrap.className = 'ai-loading';
-      var dots = document.createElement('span');
-      dots.className = 'ai-dots';
-      dots.appendChild(document.createElement('span'));
-      dots.appendChild(document.createElement('span'));
-      dots.appendChild(document.createElement('span'));
-      var text = document.createElement('span');
-      var pool = isFirst ? FIRST_MESSAGES : NEXT_MESSAGES;
-      var i = 0;
-      text.textContent = pool[0];
-      wrap.appendChild(dots);
-      wrap.appendChild(text);
-      body.appendChild(wrap);
-
-      clearCycleTimer();
-      cycleTimer = setInterval(function () {
-        i = (i + 1) % pool.length;
-        text.textContent = pool[i];
-      }, 3200);
-
-      var actions = document.createElement('div');
-      actions.className = 'setup-actions setup-actions-hidden';
-      actions.style.display = 'none';
-      body.appendChild(actions);
-      clearSlowTimer();
-      slowTimer = setTimeout(function () { actions.style.display = 'flex'; }, 12000);
-      actions.appendChild(button('Taking too long — use standard questions', 'setup-secondary', function () {
-        clearSlowTimer();
-        clearCycleTimer();
-        if (controller) controller.abort();
-        go(cfg.fallbackStepId, true);
-      }));
-    }
-
-    function renderError(msg, rawText) {
-      clearSlowTimer();
-      clearCycleTimer();
-      body.innerHTML = '';
-      var p = document.createElement('p');
-      p.className = 'setup-note error';
-      p.textContent = msg;
-      body.appendChild(p);
-      if (rawText) {
-        var pre = document.createElement('pre');
-        pre.className = 'ai-raw';
-        pre.textContent = String(rawText).slice(0, 600);
-        body.appendChild(pre);
-      }
-      var actions = document.createElement('div');
-      actions.className = 'setup-actions';
-      actions.appendChild(button('Try again', 'setup-primary', function () { step(); }));
-      actions.appendChild(button('Use standard questions instead', 'setup-secondary', function () { go(cfg.fallbackStepId, true); }));
-      body.appendChild(actions);
-    }
-
-    function recordAnswer(q, answerText) {
-      conversation.push({ role: 'assistant', content: JSON.stringify(q) });
-      conversation.push({ role: 'user', content: answerText });
-      count++;
-      step();
-    }
-
-    function renderQuestion(q) {
-      clearSlowTimer();
-      clearCycleTimer();
-      body.innerHTML = '';
-      var eyebrow = document.createElement('p');
-      eyebrow.className = 'step-eyebrow';
-      eyebrow.textContent = q.eyebrow || cfg.eyebrow;
-      body.appendChild(eyebrow);
-      var h1 = document.createElement('h1');
-      h1.textContent = q.question;
-      var qLen = (q.question || '').length;
-      if (qLen > 260) h1.style.fontSize = 'clamp(19px,2.3vw,24px)';
-      else if (qLen > 180) h1.style.fontSize = 'clamp(22px,2.8vw,28px)';
-      else if (qLen > 110) h1.style.fontSize = 'clamp(25px,3.4vw,33px)';
-      body.appendChild(h1);
-
-      var format = q.format || 'choice';
-
-      if (format === 'text') {
-        var form = document.createElement('form');
-        form.className = 'setup-field';
-        var textarea = document.createElement('textarea');
-        textarea.placeholder = q.placeholder || 'Type your answer…';
-        form.appendChild(textarea);
-        var tActions = document.createElement('div');
-        tActions.className = 'setup-actions';
-        var submit = document.createElement('button');
-        submit.type = 'submit';
-        submit.className = 'setup-primary';
-        submit.textContent = 'Continue';
-        tActions.appendChild(submit);
-        form.appendChild(tActions);
-        form.addEventListener('submit', function (e) {
-          e.preventDefault();
-          recordAnswer(q, textarea.value.trim() || '(skipped)');
-        });
-        body.appendChild(form);
-        setTimeout(function () { textarea.focus(); }, 200);
-      } else if (format === 'slider') {
-        var sWrap = document.createElement('div');
-        sWrap.className = 'setup-slider';
-        var valueDisplay = document.createElement('div');
-        valueDisplay.className = 'slider-value';
-        valueDisplay.textContent = '50';
-        var range = document.createElement('input');
-        range.type = 'range';
-        range.min = '0';
-        range.max = '100';
-        range.value = '50';
-        range.addEventListener('input', function () { valueDisplay.textContent = range.value; });
-        var labels = document.createElement('div');
-        labels.className = 'slider-labels';
-        var lo = document.createElement('span');
-        lo.textContent = q.minLabel || '0';
-        var hi = document.createElement('span');
-        hi.textContent = q.maxLabel || '100';
-        labels.appendChild(lo);
-        labels.appendChild(hi);
-        sWrap.appendChild(valueDisplay);
-        sWrap.appendChild(range);
-        sWrap.appendChild(labels);
-        body.appendChild(sWrap);
-        var sActions = document.createElement('div');
-        sActions.className = 'setup-actions';
-        sActions.appendChild(button('Continue', 'setup-primary', function () {
-          recordAnswer(q, range.value + '/100, where 0 is "' + (q.minLabel || '0') + '" and 100 is "' + (q.maxLabel || '100') + '"');
-        }));
-        body.appendChild(sActions);
-      } else if (format === 'stack') {
-        var stackHint = document.createElement('p');
-        stackHint.className = 'setup-hint';
-        stackHint.textContent = q.instruction || 'Drag to reorder — top is first.';
-        body.appendChild(stackHint);
-
-        var stackOrder = (q.items || []).slice();
-        var stackList = document.createElement('div');
-        stackList.className = 'stack-list';
-        var rowMap = {};
-
-        var stackPlaceholder = document.createElement('div');
-        stackPlaceholder.className = 'stack-placeholder';
-        stackPlaceholder.textContent = 'Drop here';
-
-        function buildRow(stackItem) {
-          var row = document.createElement('div');
-          row.className = 'stack-item';
-          row.dataset.item = stackItem;
-          var badge = document.createElement('span');
-          badge.className = 'stack-badge';
-          var label = document.createElement('span');
-          label.className = 'stack-label';
-          label.textContent = stackItem;
-          var handle = document.createElement('span');
-          handle.className = 'stack-handle';
-          handle.textContent = '⠿';
-          row.appendChild(badge);
-          row.appendChild(label);
-          row.appendChild(handle);
-
-          function place(clientY, offsetY) {
-            row.style.top = (clientY - offsetY) + 'px';
-            var kids = Array.prototype.slice.call(stackList.children);
-            var newIdx = kids.length;
-            for (var i = 0; i < kids.length; i++) {
-              var r = kids[i].getBoundingClientRect();
-              if (clientY < r.top + r.height / 2) { newIdx = i; break; }
-            }
-            var rest = stackOrder.filter(function (x) { return x !== stackItem; });
-            rest.splice(newIdx, 0, stackItem);
-            stackOrder = rest;
-            renderStack(stackItem);
-          }
-          function beginDrag(clientY) {
-            var rect = row.getBoundingClientRect();
-            var offsetY = clientY - rect.top;
-            row.classList.add('dragging');
-            row.style.position = 'fixed';
-            row.style.left = rect.left + 'px';
-            row.style.top = rect.top + 'px';
-            row.style.width = rect.width + 'px';
-            document.body.appendChild(row);
-            renderStack(stackItem);
-            return offsetY;
-          }
-          function endDrag() {
-            row.classList.remove('dragging');
-            row.style.position = '';
-            row.style.left = '';
-            row.style.top = '';
-            row.style.width = '';
-            renderStack(null);
-          }
-
-          row.addEventListener('pointerdown', function (e) {
-            if (e.pointerType === 'touch') return;
-            e.preventDefault();
-            var offsetY = beginDrag(e.clientY);
-            var onMove = function (ev) { place(ev.clientY, offsetY); };
-            var onUp = function (ev) {
-              place(ev.clientY, offsetY);
-              endDrag();
-              document.removeEventListener('pointermove', onMove);
-              document.removeEventListener('pointerup', onUp);
-            };
-            document.addEventListener('pointermove', onMove);
-            document.addEventListener('pointerup', onUp);
-          });
-          row.addEventListener('touchstart', function (e) {
-            var t = e.touches[0];
-            var offsetY = beginDrag(t.clientY);
-            var onMove = function (ev) { var tt = ev.touches[0]; place(tt.clientY, offsetY); ev.preventDefault(); };
-            var onEnd = function (ev) {
-              var tt = ev.changedTouches[0];
-              place(tt.clientY, offsetY);
-              endDrag();
-              document.removeEventListener('touchmove', onMove);
-              document.removeEventListener('touchend', onEnd);
-            };
-            document.addEventListener('touchmove', onMove, { passive: false });
-            document.addEventListener('touchend', onEnd);
-          }, { passive: true });
-
-          return row;
-        }
-
-        function renderStack(draggingItem) {
-          var prevRects = {};
-          Array.prototype.forEach.call(stackList.children, function (child) {
-            if (child.dataset && child.dataset.item) prevRects[child.dataset.item] = child.getBoundingClientRect();
-          });
-
-          stackList.innerHTML = '';
-          stackOrder.forEach(function (stackItem, idx) {
-            if (stackItem === draggingItem) {
-              stackList.appendChild(stackPlaceholder);
-              return;
-            }
-            var row = rowMap[stackItem] || (rowMap[stackItem] = buildRow(stackItem));
-            var badge = row.querySelector('.stack-badge');
-            if (badge.textContent && badge.textContent !== String(idx + 1)) {
-              badge.classList.add('bump');
-              setTimeout(function () { badge.classList.remove('bump'); }, 220);
-            }
-            badge.textContent = idx + 1;
-            stackList.appendChild(row);
-          });
-
-          Array.prototype.forEach.call(stackList.children, function (child) {
-            if (!child.dataset || !child.dataset.item) return;
-            var prev = prevRects[child.dataset.item];
-            if (!prev) return;
-            var next = child.getBoundingClientRect();
-            var deltaY = prev.top - next.top;
-            if (deltaY) {
-              child.style.transition = 'none';
-              child.style.transform = 'translateY(' + deltaY + 'px)';
-              requestAnimationFrame(function () {
-                child.style.transition = '';
-                child.style.transform = '';
-              });
-            }
-          });
-        }
-        renderStack(null);
-
-        body.appendChild(stackList);
-        var stackActions = document.createElement('div');
-        stackActions.className = 'setup-actions';
-        stackActions.appendChild(button('Continue', 'setup-primary', function () {
-          recordAnswer(q, 'Dragged into this order, top to bottom: ' + stackOrder.join(' → '));
-        }));
-        stackActions.appendChild(button('None of these apply to me', 'setup-secondary', function () {
-          recordAnswer(q, 'None of these applied to their actual situation — the exercise didn\'t fit.');
-        }));
-        body.appendChild(stackActions);
-      } else if (format === 'rank') {
-        var hint = document.createElement('p');
-        hint.className = 'setup-hint';
-        hint.textContent = q.instruction || 'Tap each one, in the order that feels right — first instinct first.';
-        body.appendChild(hint);
-
-        var rankGrid = document.createElement('div');
-        rankGrid.className = 'rank-grid';
-        var order = [];
-        var tiles = [];
-        (q.items || []).forEach(function (item) {
-          var tile = document.createElement('button');
-          tile.type = 'button';
-          tile.className = 'rank-tile';
-          var badge = document.createElement('span');
-          badge.className = 'rank-badge';
-          var label = document.createElement('span');
-          label.className = 'rank-label';
-          label.textContent = item;
-          tile.appendChild(badge);
-          tile.appendChild(label);
-          tile.addEventListener('click', function () {
-            if (tile.classList.contains('picked')) return;
-            order.push(item);
-            tile.classList.add('picked', 'pop');
-            setTimeout(function () { tile.classList.remove('pop'); }, 260);
-            badge.textContent = order.length;
-            if (order.length === tiles.length) {
-              setTimeout(function () {
-                recordAnswer(q, 'Ranked in this order (first = strongest instinct): ' + order.join(' → '));
-              }, 380);
-            }
-          });
-          tiles.push(tile);
-          rankGrid.appendChild(tile);
-        });
-        body.appendChild(rankGrid);
-        var rankActions = document.createElement('div');
-        rankActions.className = 'setup-actions';
-        rankActions.appendChild(button('None of these apply to me', 'setup-secondary', function () {
-          recordAnswer(q, 'None of these applied to their actual situation — the exercise didn\'t fit.');
-        }));
-        body.appendChild(rankActions);
-      } else if (format === 'sort') {
-        var tray = document.createElement('div');
-        tray.className = 'sort-tray';
-        var boxes = document.createElement('div');
-        boxes.className = 'sort-boxes';
-        var boxA = document.createElement('div');
-        boxA.className = 'sort-box';
-        var boxATitle = document.createElement('p');
-        boxATitle.className = 'sort-box-title';
-        boxATitle.textContent = q.boxA || 'Yes';
-        boxA.appendChild(boxATitle);
-        var boxAEmpty = document.createElement('p');
-        boxAEmpty.className = 'sort-box-empty';
-        boxAEmpty.textContent = 'Nothing here yet';
-        boxA.appendChild(boxAEmpty);
-        var boxB = document.createElement('div');
-        boxB.className = 'sort-box';
-        var boxBTitle = document.createElement('p');
-        boxBTitle.className = 'sort-box-title';
-        boxBTitle.textContent = q.boxB || 'No';
-        boxB.appendChild(boxBTitle);
-        var boxBEmpty = document.createElement('p');
-        boxBEmpty.className = 'sort-box-empty';
-        boxBEmpty.textContent = 'Nothing here yet';
-        boxB.appendChild(boxBEmpty);
-        boxes.appendChild(boxA);
-        boxes.appendChild(boxB);
-
-        function updateEmptyHints() {
-          boxAEmpty.style.display = boxA.querySelectorAll('.sort-chip').length ? 'none' : 'block';
-          boxBEmpty.style.display = boxB.querySelectorAll('.sort-chip').length ? 'none' : 'block';
-        }
-
-        var moveOrder = [];
-        var placement = {};
-        var total = (q.items || []).length;
-        var sActions2 = document.createElement('div');
-        sActions2.className = 'setup-actions';
-        var doneBtn = button('Continue', 'setup-primary', function () {
-          var listA = (q.items || []).filter(function (it) { return placement[it] === 'A'; });
-          var listB = (q.items || []).filter(function (it) { return placement[it] === 'B'; });
-          var summary = (q.boxA || 'Yes') + ': ' + (listA.join(', ') || '(none)') + '. ' +
-            (q.boxB || 'No') + ': ' + (listB.join(', ') || '(none)') + '.' +
-            (moveOrder.length ? ' Sorted in this order: ' + moveOrder.join(' → ') + '.' : '');
-          recordAnswer(q, summary);
-        });
-        doneBtn.disabled = true;
-        sActions2.appendChild(doneBtn);
-        sActions2.appendChild(button('None of these apply to me', 'setup-secondary', function () {
-          recordAnswer(q, 'None of these applied to their actual situation — the exercise didn\'t fit.');
-        }));
-
-        function placeChip(chip, item, zone) {
-          if (!placement[item]) moveOrder.push(item);
-          placement[item] = zone;
-          chip.classList.remove('drag-a', 'drag-b', 'landed');
-          chip.classList.add(zone === 'A' ? 'drag-a' : 'drag-b');
-          (zone === 'A' ? boxA : boxB).appendChild(chip);
-          chip.classList.add('landed');
-          setTimeout(function () { chip.classList.remove('landed'); }, 300);
-          doneBtn.disabled = Object.keys(placement).length < total;
-          updateEmptyHints();
-        }
-        function unplaceChip(chip, item) {
-          delete placement[item];
-          var idx = moveOrder.indexOf(item);
-          if (idx > -1) moveOrder.splice(idx, 1);
-          chip.classList.remove('drag-a', 'drag-b');
-          doneBtn.disabled = Object.keys(placement).length < total;
-          updateEmptyHints();
-        }
-
-        (q.items || []).forEach(function (item) {
-          var chip = document.createElement('div');
-          chip.className = 'sort-chip';
-          chip.textContent = item;
-          chip.tabIndex = 0;
-
-          function dragStart(clientX, clientY, pointerId, isTouch) {
-            var startRect = chip.getBoundingClientRect();
-            var offsetX = clientX - startRect.left;
-            var offsetY = clientY - startRect.top;
-            chip.classList.add('dragging');
-            chip.style.position = 'fixed';
-            chip.style.width = startRect.width + 'px';
-            chip.style.left = startRect.left + 'px';
-            chip.style.top = startRect.top + 'px';
-            chip.style.zIndex = '50';
-            document.body.appendChild(chip);
-
-            function move(x, y) {
-              chip.style.left = (x - offsetX) + 'px';
-              chip.style.top = (y - offsetY) + 'px';
-              var overA = isOver(boxA, x, y);
-              var overB = isOver(boxB, x, y);
-              boxA.classList.toggle('drop-hover', overA);
-              boxB.classList.toggle('drop-hover', overB);
-            }
-            function isOver(box, x, y) {
-              var r = box.getBoundingClientRect();
-              return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
-            }
-            function end(x, y) {
-              chip.classList.remove('dragging');
-              chip.style.position = '';
-              chip.style.width = '';
-              chip.style.left = '';
-              chip.style.top = '';
-              chip.style.zIndex = '';
-              boxA.classList.remove('drop-hover');
-              boxB.classList.remove('drop-hover');
-              if (isOver(boxA, x, y)) placeChip(chip, item, 'A');
-              else if (isOver(boxB, x, y)) placeChip(chip, item, 'B');
-              else { unplaceChip(chip, item); tray.appendChild(chip); }
-            }
-
-            if (isTouch) {
-              var onTouchMove = function (e) { var t = e.touches[0]; move(t.clientX, t.clientY); e.preventDefault(); };
-              var onTouchEnd = function (e) {
-                var t = e.changedTouches[0];
-                end(t.clientX, t.clientY);
-                document.removeEventListener('touchmove', onTouchMove);
-                document.removeEventListener('touchend', onTouchEnd);
-              };
-              document.addEventListener('touchmove', onTouchMove, { passive: false });
-              document.addEventListener('touchend', onTouchEnd);
-            } else {
-              var onMove = function (e) { move(e.clientX, e.clientY); };
-              var onUp = function (e) {
-                end(e.clientX, e.clientY);
-                document.removeEventListener('pointermove', onMove);
-                document.removeEventListener('pointerup', onUp);
-              };
-              document.addEventListener('pointermove', onMove);
-              document.addEventListener('pointerup', onUp);
-            }
-          }
-
-          chip.addEventListener('pointerdown', function (e) {
-            if (e.pointerType === 'touch') return;
-            e.preventDefault();
-            dragStart(e.clientX, e.clientY, e.pointerId, false);
-          });
-          chip.addEventListener('touchstart', function (e) {
-            var t = e.touches[0];
-            dragStart(t.clientX, t.clientY, null, true);
-          }, { passive: true });
-
-          tray.appendChild(chip);
-        });
-
-        body.appendChild(tray);
-        body.appendChild(boxes);
-        body.appendChild(sActions2);
-      } else if (format === 'quickpick') {
-        var qpStart = Date.now();
-        var qpList = document.createElement('div');
-        qpList.className = 'setup-options';
-        (q.options || []).forEach(function (opt) {
-          var b = document.createElement('button');
-          b.type = 'button';
-          b.className = 'setup-option';
-          var span = document.createElement('span');
-          span.textContent = opt;
-          var arrow = document.createElement('span');
-          arrow.className = 'arrow';
-          arrow.textContent = '→';
-          b.appendChild(span);
-          b.appendChild(arrow);
-          b.addEventListener('click', function () {
-            var seconds = ((Date.now() - qpStart) / 1000).toFixed(1);
-            recordAnswer(q, 'Picked "' + opt + '" after ' + seconds + 's of thinking');
-          });
-          qpList.appendChild(b);
-        });
-        body.appendChild(qpList);
-      } else if (format === 'tiles') {
-        var tHint = document.createElement('p');
-        tHint.className = 'setup-hint';
-        tHint.textContent = q.instruction || 'Tap whichever ones resonate — as many or as few as you like.';
-        body.appendChild(tHint);
-        var tGrid = document.createElement('div');
-        tGrid.className = 'rank-grid';
-        var tOrder = [];
-        var tContinue = button('Continue', 'setup-primary', function () {
-          recordAnswer(q, tOrder.length ? ('Picked, in this order: ' + tOrder.join(' → ')) : 'Picked none of these.');
-        });
-        (q.items || []).forEach(function (item) {
-          var tile = document.createElement('button');
-          tile.type = 'button';
-          tile.className = 'rank-tile tile-toggle';
-          var label = document.createElement('span');
-          label.className = 'rank-label';
-          label.textContent = item;
-          var tBadge = document.createElement('span');
-          tBadge.className = 'rank-badge';
-          tile.appendChild(tBadge);
-          tile.appendChild(label);
-          function refreshBadges() {
-            tGrid.querySelectorAll('.rank-tile.picked').forEach(function (t) {
-              t.querySelector('.rank-badge').textContent = tOrder.indexOf(t.dataset.item) + 1;
-            });
-          }
-          tile.dataset.item = item;
-          tile.addEventListener('click', function () {
-            var idx = tOrder.indexOf(item);
-            if (idx > -1) {
-              tOrder.splice(idx, 1);
-              tile.classList.remove('picked');
-              tBadge.textContent = '';
-            } else {
-              tOrder.push(item);
-              tile.classList.add('picked', 'pop');
-              setTimeout(function () { tile.classList.remove('pop'); }, 260);
-            }
-            refreshBadges();
-          });
-          tGrid.appendChild(tile);
-        });
-        body.appendChild(tGrid);
-        var tActions = document.createElement('div');
-        tActions.className = 'setup-actions';
-        tActions.appendChild(tContinue);
-        body.appendChild(tActions);
-      } else if (format === 'allocate') {
-        var totalPoints = q.points || 10;
-        var buckets = q.buckets || [];
-        var values = buckets.map(function () { return 0; });
-        var remainingEl = document.createElement('p');
-        remainingEl.className = 'setup-hint';
-        var aContinue = button('Continue', 'setup-primary', function () {
-          var summary = buckets.map(function (b, i) { return b + ' = ' + values[i]; }).join(', ');
-          recordAnswer(q, 'Distributed ' + totalPoints + ' points across: ' + summary);
-        });
-        function updateRemaining() {
-          var used = values.reduce(function (a, b) { return a + b; }, 0);
-          remainingEl.textContent = (totalPoints - used) + ' of ' + totalPoints + ' points left to place';
-          aContinue.disabled = used !== totalPoints;
-        }
-        var aGrid = document.createElement('div');
-        aGrid.className = 'allocate-grid';
-        buckets.forEach(function (bLabel, i) {
-          var row = document.createElement('div');
-          row.className = 'allocate-row';
-          var label = document.createElement('span');
-          label.className = 'allocate-label';
-          label.textContent = bLabel;
-          var fill = document.createElement('span');
-          fill.className = 'allocate-fill';
-          var val = document.createElement('span');
-          val.className = 'allocate-value';
-          val.textContent = '0';
-          function bump() { val.classList.remove('pop'); void val.offsetWidth; val.classList.add('pop'); }
-          function updateFill() { fill.style.width = (totalPoints ? (values[i] / totalPoints * 100) : 0) + '%'; }
-          var minus = button('–', 'allocate-btn', function () {
-            if (values[i] > 0) { values[i]--; val.textContent = values[i]; bump(); updateFill(); updateRemaining(); }
-          });
-          var plus = button('+', 'allocate-btn', function () {
-            var used = values.reduce(function (a, c) { return a + c; }, 0);
-            if (used < totalPoints) { values[i]++; val.textContent = values[i]; bump(); updateFill(); updateRemaining(); }
-          });
-          row.appendChild(label);
-          row.appendChild(minus);
-          row.appendChild(val);
-          row.appendChild(plus);
-          var track = document.createElement('span');
-          track.className = 'allocate-track';
-          track.appendChild(fill);
-          row.appendChild(track);
-          aGrid.appendChild(row);
-        });
-        var aActions = document.createElement('div');
-        aActions.className = 'setup-actions';
-        aActions.appendChild(aContinue);
-        body.appendChild(remainingEl);
-        body.appendChild(aGrid);
-        body.appendChild(aActions);
-        updateRemaining();
-      } else {
-        var list = document.createElement('div');
-        list.className = 'setup-options';
-        (q.options || []).forEach(function (opt) {
-          var b = document.createElement('button');
-          b.type = 'button';
-          b.className = 'setup-option';
-          var span = document.createElement('span');
-          span.textContent = opt;
-          var arrow = document.createElement('span');
-          arrow.className = 'arrow';
-          arrow.textContent = '→';
-          b.appendChild(span);
-          b.appendChild(arrow);
-          b.addEventListener('click', function () { recordAnswer(q, opt); });
-          list.appendChild(b);
-        });
-        body.appendChild(list);
-      }
-    }
-
-    function finish(doneObj) {
-      clearSlowTimer();
-      clearCycleTimer();
-      cfg.onDone(doneObj);
-    }
-
-    function step() {
-      renderLoading(count === 0);
-      var atSoft = count >= cfg.softTarget;
-      var atHard = count >= cfg.hardCap;
-      var msgs = conversation.slice();
-      if (atHard) msgs.push({ role: 'user', content: 'You are well past the target question count — you must conclude now with your final "done" response.' });
-      else if (atSoft) msgs.push({ role: 'user', content: 'You have reached the target question count. If you are reasonably confident, conclude now with "done". Otherwise ask at most a few more.' });
-      else if (count === 0) msgs.push({ role: 'user', content: 'Begin.' });
-      attempt(msgs, atHard, 0);
-    }
-
-    function attempt(msgs, atHard, retryNum) {
-      controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-      callAI(msgs, controller ? controller.signal : undefined).then(function (text) {
-        var data = normalizeAIResponse(parseAIJson(text));
-        var valid = !!data;
-        if (!valid && retryNum < 2) {
-          attempt(msgs.concat([
-            { role: 'assistant', content: String(text || '').slice(0, 400) },
-            { role: 'user', content: 'That was not valid — respond again with ONLY a single JSON object matching one of the required shapes, nothing else, no markdown, no explanation.' }
-          ]), atHard, retryNum + 1);
-          return;
-        }
-        clearSlowTimer();
-        if (!valid) { renderError('Your AI model didn’t respond in the expected format.', text); return; }
-        if (data.type === 'done') { finish(data); return; }
-        if (atHard) { renderError('Your AI model kept asking questions past the limit.'); return; }
-        renderQuestion(data);
-      }).catch(function (err) {
-        if (err && err.name === 'AbortError') return;
-        // A local model can occasionally run out of room mid-turn (long
-        // system prompt + its own reasoning) and come back empty — that's
-        // transient, not a real connection problem, so retry a couple of
-        // times before giving up rather than hard-failing on the first blip.
-        if (retryNum < 2) {
-          attempt(msgs, atHard, retryNum + 1);
-          return;
-        }
-        clearSlowTimer();
-        renderError('Couldn’t reach your AI model (' + (err && err.message ? err.message : 'unknown error') + ').');
-      });
-    }
-
-    step();
-  }
 
   function pushKeyEntry() {
     if (!answers.provider || !answers.apiKey) return;
@@ -1356,171 +565,186 @@
         actions.appendChild(submit);
         actions.appendChild(button('Skip', 'setup-secondary', function () {
           answers.profileImport = '';
-          go('assess_personality');
+          go('assess_profile_form');
         }));
         form.appendChild(actions);
 
         form.addEventListener('submit', function (e) {
           e.preventDefault();
           answers.profileImport = textarea.value.trim();
-          go('assess_personality');
+          go('assess_profile_form');
         });
 
         el.appendChild(form);
         setTimeout(function () { textarea.focus(); }, 260);
       }
     },
-    assess_personality: {
+    assess_profile_form: {
       hideHeader: true,
       render: function (el) {
-        var profileContext = answers.profileImport
-          ? ('The person pasted this resume/LinkedIn content before you started — use it for background color if relevant, but it says nothing reliable about how they think or learn, so still infer personality and learning style entirely through your own exercises: "' + answers.profileImport + '" ')
-          : '';
-        renderAIFlow(el, {
-          eyebrow: 'GETTING TO KNOW YOU',
-          systemPrompt: profileContext + PERSONALITY_PROMPT,
-          softTarget: 6,
-          hardCap: 9,
-          fallbackStepId: 'assess_bug',
-          onDone: function (doneObj) {
-            answers.personalitySummary = doneObj.summary || '';
-            answers.learningStyleLabel = doneObj.learningStyle || '';
-            answers.workStyleLabel = doneObj.workStyle || '';
-            go('assess_field_choice');
-          }
+        var eyebrow = document.createElement('p');
+        eyebrow.className = 'step-eyebrow';
+        eyebrow.textContent = 'ABOUT YOU';
+        el.appendChild(eyebrow);
+        var h1 = document.createElement('h1');
+        h1.textContent = 'Tell us a bit about your background.';
+        el.appendChild(h1);
+        var body = document.createElement('p');
+        body.className = 'step-body';
+        body.textContent = 'One AI read of this decides which fields and roles genuinely fit you — no back-and-forth. Everything here is optional except experience level.';
+        el.appendChild(body);
+
+        var form = document.createElement('form');
+        form.className = 'setup-field';
+        var p = answers.profile || {};
+
+        function group(labelText, inputEl) {
+          var wrap = document.createElement('div');
+          wrap.className = 'setup-field-group';
+          var label = document.createElement('label');
+          label.textContent = labelText;
+          wrap.appendChild(label);
+          wrap.appendChild(inputEl);
+          form.appendChild(wrap);
+          return inputEl;
+        }
+
+        var levelSelect = document.createElement('select');
+        [
+          ['student', 'Student, bootcamp, or self-taught'],
+          ['early', 'Early career (0–2 years)'],
+          ['mid', 'Mid-level (3–6 years)'],
+          ['senior', 'Senior+ (7+ years)']
+        ].forEach(function (pair) {
+          var opt = document.createElement('option');
+          opt.value = pair[0];
+          opt.textContent = pair[1];
+          if (p.level === pair[0]) opt.selected = true;
+          levelSelect.appendChild(opt);
         });
+        group('Experience level', levelSelect);
+
+        var languagesInput = document.createElement('input');
+        languagesInput.type = 'text';
+        languagesInput.placeholder = 'e.g. Python, JavaScript, SQL';
+        languagesInput.value = p.languages || '';
+        group('Languages / tools you’ve used', languagesInput);
+
+        var rolesInput = document.createElement('input');
+        rolesInput.type = 'text';
+        rolesInput.placeholder = 'e.g. Summer internship doing QA, none yet';
+        rolesInput.value = p.roles || '';
+        group('Past roles or internships (optional)', rolesInput);
+
+        var educationInput = document.createElement('input');
+        educationInput.type = 'text';
+        educationInput.placeholder = 'e.g. CS degree in progress, self-taught';
+        educationInput.value = p.education || '';
+        group('Education (optional)', educationInput);
+
+        var interestInput = document.createElement('input');
+        interestInput.type = 'text';
+        interestInput.placeholder = 'e.g. Something data-related, not sure yet';
+        interestInput.value = p.interest || '';
+        group('Field or role you’re curious about (optional)', interestInput);
+
+        var actions = document.createElement('div');
+        actions.className = 'setup-actions';
+        var submit = document.createElement('button');
+        submit.type = 'submit';
+        submit.className = 'setup-primary';
+        submit.textContent = 'Find my fields';
+        actions.appendChild(submit);
+        form.appendChild(actions);
+
+        form.addEventListener('submit', function (e) {
+          e.preventDefault();
+          answers.profile = {
+            level: levelSelect.value,
+            languages: languagesInput.value.trim(),
+            roles: rolesInput.value.trim(),
+            education: educationInput.value.trim(),
+            interest: interestInput.value.trim()
+          };
+          go('assess_fields');
+        });
+
+        el.appendChild(form);
       }
-    },
-    assess_field_choice: {
-      eyebrow: 'YOUR FIELD',
-      question: 'Which broad fields pull you in right now?',
-      body: 'Pick as many as genuinely interest you — plenty of people are drawn to more than one.',
-      multi: {
-        key: 'chosenFields',
-        next: 'assess_stage_choice',
-        custom: true,
-        customKey: 'chosenFieldsCustom',
-        customPlaceholder: 'Or type one not listed (optional)',
-        options: [
-          'Software & Computer Science', 'Data Science, AI & ML', 'Mechanical Engineering',
-          'Electrical / Computer Engineering', 'Civil / Structural Engineering', 'Aerospace Engineering',
-          'Biomedical / Health Tech', 'Chemical / Materials / Process', 'Industrial / Manufacturing / Robotics',
-          'Environmental / Energy / Earth Science', 'Math, Physics, or Actuarial / Quant'
-        ]
-      }
-    },
-    assess_stage_choice: {
-      eyebrow: 'YOUR STAGE',
-      question: 'Which best describes where you are right now?',
-      options: [
-        { label: 'Haven’t started a degree yet', hint: 'High school, or still considering options', value: 'pre-undergrad', next: 'assess_fields' },
-        { label: 'Currently in an undergraduate program', value: 'undergrad', next: 'assess_fields' },
-        { label: 'Graduated and/or working professionally', hint: 'In this field or an adjacent one', value: 'professional', next: 'assess_fields' }
-      ],
-      onSelect: function (value) { answers.stage = value; }
     },
     assess_fields: {
       hideHeader: true,
       render: function (el) {
-        var stageLabels = { 'pre-undergrad': 'Hasn’t started a degree yet', undergrad: 'Currently in an undergraduate program', professional: 'Graduated and/or working professionally' };
-        var context = answers.personalitySummary
-          ? ('Here is what you already learned about how this person thinks and learns: "' + answers.personalitySummary + '" Use it — do not re-ask about personality or learning style. ')
-          : '';
-        var chosenFieldsList = (answers.chosenFields || []).slice();
-        if (answers.chosenFieldsCustom) chosenFieldsList.push(answers.chosenFieldsCustom);
-        var fieldsText = chosenFieldsList.length ? chosenFieldsList.join(', ') : 'not yet known';
-        context += 'Their stated field(s) of interest: "' + fieldsText + '"' + (chosenFieldsList.length > 1 ? ' — they picked more than one, so explore across all of them rather than assuming the first is primary' : '') + '. Their career stage is "' + (stageLabels[answers.stage] || answers.stage || 'not yet known') + '". These were already asked directly — never ask about either again. ';
-        if (answers.profileImport) {
-          context += 'They also pasted this resume/LinkedIn content before you started: "' + answers.profileImport + '" This is past/background context, not a declaration of what they want next — it can include old jobs, school projects, or one-off gigs in fields they have no interest in continuing. Never assume the field(s) they picked above are wrong because the resume leans a different direction, and never build a scenario around a field or role that only appears in the resume and was NOT one of the field(s) they explicitly chose — if the resume mentions something outside their stated field(s), ignore it for scenario-building purposes; it is not evidence of intent. Use it only to skip questions it already answers plainly (e.g. don\'t ask what their current job title is if it says so) and to target verification exercises at specific skills/tools/claims within their CHOSEN field(s) — but treat every claim in it as something to verify with a real exercise, not something to take at face value, exactly as you would a spoken claim. A resume never earns "mid" or "senior" by itself. ';
+        if (!aiAvailable(answers)) {
+          var note = document.createElement('p');
+          note.className = 'setup-note';
+          note.textContent = 'No connected AI model yet — pick a field directly instead.';
+          el.appendChild(note);
+          setTimeout(function () { go('field_manual', true); }, 900);
+          return;
         }
-        renderAIFlow(el, {
-          eyebrow: 'FINDING YOUR FIT',
-          systemPrompt: context + FIELDS_PROMPT_BASE,
-          softTarget: 10,
-          hardCap: 14,
-          fallbackStepId: 'assess_level',
-          onDone: function (doneObj) {
-            if (doneObj.level && LEVEL_PREFIX[doneObj.level] !== undefined) answers.level = doneObj.level;
-            answers.aiFieldRecs = (doneObj.fields || []).slice(0, 3).map(function (f) {
+
+        var eyebrow = document.createElement('p');
+        eyebrow.className = 'step-eyebrow';
+        eyebrow.textContent = 'FINDING YOUR FIT';
+        el.appendChild(eyebrow);
+        var h1 = document.createElement('h1');
+        h1.textContent = 'Reading your background…';
+        el.appendChild(h1);
+        var status = document.createElement('p');
+        status.className = 'step-body';
+        status.textContent = 'This takes a few seconds.';
+        el.appendChild(status);
+        var errorBox = document.createElement('div');
+        errorBox.hidden = true;
+        el.appendChild(errorBox);
+
+        var p = answers.profile || {};
+        var profileText = 'Experience level: ' + (p.level || 'not specified') + '\n' +
+          'Languages/tools used: ' + (p.languages || 'none specified') + '\n' +
+          'Past roles/internships: ' + (p.roles || 'none specified') + '\n' +
+          'Education: ' + (p.education || 'not specified') + '\n' +
+          'Field/role interest: ' + (p.interest || 'not specified');
+        if (answers.profileImport) {
+          profileText += '\nResume/LinkedIn text they pasted: ' + answers.profileImport;
+        }
+        var messages = [
+          { role: 'system', content: FIELDS_PROMPT_BASE },
+          { role: 'user', content: profileText }
+        ];
+
+        function attempt(retryNum) {
+          callAI(messages, null).then(function (text) {
+            var data = parseAIJson(text);
+            if (!data || !data.fields || !data.fields.length) {
+              throw new Error('Couldn’t read a usable recommendation from your AI model.');
+            }
+            if (data.level && LEVEL_PREFIX[data.level] !== undefined) answers.level = data.level;
+            answers.aiFieldRecs = data.fields.slice(0, 6).map(function (f) {
               return {
                 id: slugify(f.name), name: f.name, why: f.why || '', blurb: f.blurb || f.why || '',
-                demand: f.demand || 'Not tracked', pay: f.pay || 'Varies', roles: (f.roles || []).slice(0, 3)
+                demand: f.demand || 'Not tracked', entryPay: f.entryPay || 'Varies',
+                tools: (f.tools || []).slice(0, 3), roles: (f.roles || []).slice(0, 3)
               };
             });
             go('field_loading');
-          }
-        });
-      }
-    },
-    assess_bug: {
-      eyebrow: 'HOW YOU WORK',
-      question: 'A bug shows up that you don’t understand. First move?',
-      options: [
-        { label: 'Read the code line by line', value: 'read', next: 'assess_ambiguity' },
-        { label: 'Search the error message', value: 'search', next: 'assess_ambiguity' },
-        { label: 'Add print statements or logging', value: 'log', next: 'assess_ambiguity' },
-        { label: 'Ask someone or your mentor', value: 'ask', next: 'assess_ambiguity' }
-      ],
-      onSelect: function (value) { answers.debugStyle = value; }
-    },
-    assess_ambiguity: {
-      eyebrow: 'HOW YOU WORK',
-      question: 'A ticket is ambiguous. You’d rather:',
-      options: [
-        { label: 'Ask clarifying questions before starting', value: 'clarify', next: 'assess_learn' },
-        { label: 'Make reasonable assumptions and note them', value: 'assume', next: 'assess_learn' },
-        { label: 'Build the simplest version and iterate', value: 'iterate', next: 'assess_learn' }
-      ],
-      onSelect: function (value) { answers.ambiguityStyle = value; }
-    },
-    assess_learn: {
-      eyebrow: 'LEARNING STYLE',
-      question: 'What helps you understand a new system fastest?',
-      options: [
-        { label: 'A diagram of how it fits together', value: 'visual', next: 'assess_level' },
-        { label: 'Reading the code itself', value: 'reading', next: 'assess_level' },
-        { label: 'Talking it through out loud', value: 'verbal', next: 'assess_level' },
-        { label: 'Tracing an example step by step', value: 'example', next: 'assess_level' }
-      ],
-      onSelect: function (value) { answers.learningStyle = value; }
-    },
-    assess_level: {
-      eyebrow: 'BACKGROUND',
-      question: 'What best describes where you are right now?',
-      options: [
-        { label: 'Student, bootcamp, or self-taught', value: 'student', next: 'assess_experience' },
-        { label: 'Early career', hint: '0–2 years', value: 'early', next: 'assess_experience' },
-        { label: 'Mid-level', hint: '3–6 years', value: 'mid', next: 'assess_experience' },
-        { label: 'Senior+', hint: '7+ years', value: 'senior', next: 'assess_experience' }
-      ],
-      onSelect: function (value) { answers.level = value; }
-    },
-    assess_experience: {
-      eyebrow: 'BACKGROUND',
-      question: 'Which areas do you have real hands-on experience with?',
-      body: 'Pick as many as apply.',
-      multi: { key: 'experience', next: 'assess_incidents', options: ['Backend / APIs', 'Frontend', 'Data / ML', 'Infra / DevOps', 'Security', 'Mobile', 'None yet'] }
-    },
-    assess_incidents: {
-      eyebrow: 'BACKGROUND',
-      question: 'How comfortable are you with production incidents?',
-      options: [
-        { label: 'Never touched one', value: 'none', next: 'assess_interests' },
-        { label: 'Watched but didn’t lead', value: 'observed', next: 'assess_interests' },
-        { label: 'Handled a few', value: 'handled', next: 'assess_interests' },
-        { label: 'Regularly on-call', value: 'oncall', next: 'assess_interests' }
-      ],
-      onSelect: function (value) { answers.incidentComfort = value; }
-    },
-    assess_interests: {
-      eyebrow: 'INTERESTS',
-      question: 'Which tech fields pull you in?',
-      body: 'Pick any that interest you — we’ll use this to suggest fields next.',
-      multi: {
-        key: 'interests',
-        next: 'field_loading',
-        custom: true,
-        options: FIELD_CATALOG.map(function (f) { return f.name; })
+          }).catch(function (err) {
+            if (retryNum < 1) { attempt(retryNum + 1); return; }
+            status.textContent = '';
+            errorBox.hidden = false;
+            errorBox.innerHTML = '';
+            var errP = document.createElement('p');
+            errP.className = 'setup-note error';
+            errP.textContent = (err && err.message) || 'Something went wrong reading your background.';
+            errorBox.appendChild(errP);
+            var actions = document.createElement('div');
+            actions.className = 'setup-actions';
+            actions.appendChild(button('Try again', 'setup-primary', function () { go('assess_fields', true); }));
+            actions.appendChild(button('Pick a field directly instead', 'setup-secondary', function () { go('field_manual'); }));
+            errorBox.appendChild(actions);
+          });
+        }
+        attempt(0);
       }
     },
     field_loading: {
@@ -1535,7 +759,7 @@
       eyebrow: 'YOUR FIELDS',
       question: 'Based on your answers, these fit.',
       render: function (el) {
-        var recs = (answers.aiFieldRecs && answers.aiFieldRecs.length) ? answers.aiFieldRecs : computeFieldRecommendations(answers);
+        var recs = answers.aiFieldRecs || [];
         var selected = [];
         var continueBtn;
         var list = document.createElement('div');
@@ -1586,11 +810,23 @@
             return d;
           }
           stats.appendChild(statBlock('DEMAND', f.demand));
-          stats.appendChild(statBlock('TYPICAL PAY', f.pay));
+          stats.appendChild(statBlock('ENTRY-LEVEL PAY', f.entryPay));
           var desc = document.createElement('p');
           desc.textContent = f.blurb;
           inner.appendChild(stats);
           inner.appendChild(desc);
+          if (f.tools && f.tools.length) {
+            var toolsP = document.createElement('p');
+            toolsP.className = 'field-tools';
+            toolsP.textContent = 'Tools: ' + f.tools.join(', ');
+            inner.appendChild(toolsP);
+          }
+          var tryBtn = button('Try a day in this role →', 'setup-secondary', function (e) {
+            e.stopPropagation();
+            answers.qualifyingField = f;
+            go('qualifications');
+          });
+          inner.appendChild(tryBtn);
           details.appendChild(inner);
 
           card.appendChild(head);
@@ -1603,7 +839,7 @@
               selected.splice(idx, 1);
               card.classList.remove('selected');
             } else {
-              if (selected.length >= 2) return;
+              if (selected.length >= 3) return;
               selected.push(f);
               card.classList.add('selected');
             }
@@ -1618,7 +854,7 @@
 
         var note = document.createElement('p');
         note.className = 'setup-hint';
-        note.textContent = 'Pick 1–2 fields. Pay and demand are rough, US-market ballparks — they vary by location and company.';
+        note.textContent = 'Pick 1–3 fields — try a day in the role first if you’re not sure. Pay and demand are rough, US-market ballparks.';
         el.appendChild(note);
 
         var actions = document.createElement('div');
@@ -1633,11 +869,98 @@
         el.appendChild(actions);
       }
     },
+    qualifications: {
+      hideHeader: true,
+      render: function (el) {
+        var field = answers.qualifyingField;
+        if (!field) { go('field_results', true); return; }
+
+        var eyebrow = document.createElement('p');
+        eyebrow.className = 'step-eyebrow';
+        eyebrow.textContent = 'A DAY AS A ' + field.name.toUpperCase();
+        el.appendChild(eyebrow);
+        var h1 = document.createElement('h1');
+        h1.textContent = 'Try a sample day before you decide.';
+        el.appendChild(h1);
+        var status = document.createElement('p');
+        status.className = 'step-body';
+        status.textContent = 'Building a realistic day…';
+        el.appendChild(status);
+        var body = document.createElement('div');
+        el.appendChild(body);
+
+        var backActions = document.createElement('div');
+        backActions.className = 'setup-actions';
+        backActions.appendChild(button('Back to fields', 'setup-secondary', function () { go('field_results', true); }));
+
+        var messages = [
+          { role: 'system', content: QUALIFICATIONS_PROMPT },
+          { role: 'user', content: 'Field: ' + field.name + '. What they do: ' + field.blurb }
+        ];
+        callAI(messages, null).then(function (text) {
+          var data = parseAIJson(text);
+          if (!data || !data.beats || !data.beats.length) throw new Error('Couldn’t build a sample day.');
+          status.remove();
+          data.beats.forEach(function (beat) {
+            var row = document.createElement('div');
+            row.className = 'quali-beat';
+            var time = document.createElement('span');
+            time.className = 'quali-time';
+            time.textContent = beat.time || '';
+            row.appendChild(time);
+            var content = document.createElement('div');
+            content.className = 'quali-content';
+            if (beat.type === 'task') {
+              var prompt = document.createElement('p');
+              prompt.className = 'quali-task-prompt';
+              prompt.textContent = beat.prompt || '';
+              content.appendChild(prompt);
+              var textarea = document.createElement('textarea');
+              textarea.className = 'quali-task-input';
+              textarea.spellcheck = false;
+              textarea.value = beat.starter || '';
+              content.appendChild(textarea);
+              if (beat.hint) {
+                var hintToggle = document.createElement('a');
+                hintToggle.href = '#';
+                hintToggle.className = 'setup-note-link';
+                hintToggle.textContent = 'Show hint';
+                var hintText = document.createElement('p');
+                hintText.className = 'setup-note';
+                hintText.textContent = beat.hint;
+                hintText.hidden = true;
+                hintToggle.addEventListener('click', function (e) {
+                  e.preventDefault();
+                  hintText.hidden = !hintText.hidden;
+                  hintToggle.textContent = hintText.hidden ? 'Show hint' : 'Hide hint';
+                });
+                content.appendChild(hintToggle);
+                content.appendChild(hintText);
+              }
+            } else {
+              var text2 = document.createElement('p');
+              text2.textContent = beat.text || '';
+              content.appendChild(text2);
+            }
+            row.appendChild(content);
+            body.appendChild(row);
+          });
+          body.appendChild(backActions);
+        }).catch(function (err) {
+          status.textContent = '';
+          var errP = document.createElement('p');
+          errP.className = 'setup-note error';
+          errP.textContent = (err && err.message) || 'Something went wrong building this sample day.';
+          body.appendChild(errP);
+          body.appendChild(backActions);
+        });
+      }
+    },
     field_manual: {
       eyebrow: 'YOUR FIELDS',
       question: 'Pick a field directly.',
       options: FIELD_CATALOG.map(function (f) {
-        return { label: f.name, hint: f.demand + ' demand · ' + f.pay, value: f.id, next: 'role_results' };
+        return { label: f.name, hint: f.demand + ' demand · ' + f.entryPay + ' entry-level', value: f.id, next: 'role_results' };
       }).concat([{ label: 'Type a field not listed', value: 'custom', next: 'field_custom' }]),
       onSelect: function (value) {
         if (value === 'custom') return;
@@ -1876,7 +1199,7 @@
   function summaryLine() {
     var rows = [
       ['AI engine', engineLabel()],
-      ['Assessment', answers.aiFieldRecs ? 'AI-guided' : (answers.level ? 'Standard questions' : 'Not answered')],
+      ['Assessment', answers.aiFieldRecs ? 'AI-guided' : 'Not answered'],
       ['Background', answers.level ? levelLabel(answers.level) : 'Not answered']
     ];
     if (answers.selectedFields && answers.selectedFields.length) {
