@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <title>Signing in — Trefelle</title>
+    <style>
+      :root { color-scheme: light; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f7f5f1;
+        font-family: system-ui, sans-serif;
+        color: #1d241e;
+      }
+      p { font-size: 0.95rem; color: #6b6a63; }
+      a { color: #1d241e; }
+    </style>
+  </head>
+  <body>
+    <p id="status">Signing you in…</p>
+    <script type="module">
+      import { getSupabaseClient } from '/supabase-client.js';
+
+      const params = new URLSearchParams(window.location.search);
+      const next = params.get('next') || '/workspace';
+      const statusEl = document.getElementById('status');
+
+      (async () => {
+        try {
+          const { error } = await getSupabaseClient().auth.exchangeCodeForSession(
+            window.location.href
+          );
+          if (error) throw error;
+          window.location.replace(next);
+        } catch (e) {
+          statusEl.innerHTML =
+            'Sign-in failed. <a href="/login?error=1">Try again</a>.';
+        }
+      })();
+    </script>
+  </body>
+</html>
