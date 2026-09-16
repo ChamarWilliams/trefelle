@@ -689,6 +689,9 @@
 
     split.appendChild(workbench);
     mainEl.appendChild(split);
+    // CodeMirror measures its container on construction; it was off-DOM until
+    // the line above, so it needs one refresh now that it has real layout.
+    cm.refresh();
 
     function setStatus(text, isError) {
       status.hidden = !text;
