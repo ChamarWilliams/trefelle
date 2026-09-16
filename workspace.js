@@ -1,11 +1,3 @@
-import {
-  getUser,
-  loadProgress,
-  saveProgress,
-  loadMentorConfig,
-  saveMentorConfig,
-} from '/supabase-client.js';
-
 (function () {
   var STORAGE_KEY = 'trefelle_ai_setup';
   var stage = document.getElementById('stage');
