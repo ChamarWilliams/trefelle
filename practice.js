@@ -665,7 +665,12 @@
       indentUnit: 4,
       tabSize: 4,
       viewportMargin: Infinity,
-      extraKeys: { Tab: function (inst) { inst.replaceSelection('    '); } }
+      // Enter inserts a plain newline -- CodeMirror's mode-aware auto-indent
+      // stacks with a student's own leading spaces and breaks Python indentation.
+      extraKeys: {
+        Tab: function (inst) { inst.replaceSelection('    '); },
+        Enter: function (inst) { inst.replaceSelection('\n'); }
+      }
     });
     cm.on('change', function () { saveCode(project.id, cm.getValue()); });
     editorHost.addEventListener('mousedown', function (e) {
