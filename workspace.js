@@ -356,7 +356,7 @@
 
   function getWebLLMEngine(onProgress) {
     if (webllmEnginePromise) return webllmEnginePromise;
-    webllmEnginePromise = import('https://esm.sh/@mlc-ai/web-llm').then(function (mod) {
+    webllmEnginePromise = import('https://esm.sh/@mlc-ai/web-llm?bundle').then(function (mod) {
       return mod.CreateMLCEngine(WEBLLM_MODEL_ID, {
         initProgressCallback: onProgress || function () {}
       });
