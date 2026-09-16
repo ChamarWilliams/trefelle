@@ -6,7 +6,10 @@ const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_5WlJ1UtU7DOuLwkI2J7Kkg_zRUbgWfU
 let client;
 export function getSupabaseClient() {
   if (!client) {
-    client = createBrowserClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+    // off: avoids racing auth/callback.html's manual exchangeCodeForSession()
+    client = createBrowserClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+      auth: { detectSessionInUrl: false },
+    });
   }
   return client;
 }
