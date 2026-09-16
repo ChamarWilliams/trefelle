@@ -348,7 +348,38 @@
     });
   }
 
+  // The only WebLLM-prebuilt model that both reasons and fits a consumer
+  // GPU -- 1.5B distills were dropped upstream for correctness issues, and
+  // nothing else in the prebuilt list reasons at all (mlc-ai/web-llm#762).
+  var WEBLLM_MODEL_ID = 'DeepSeek-R1-Distill-Qwen-7B-q4f16_1-MLC';
+  var webllmEnginePromise = null;
+
+  function getWebLLMEngine(onProgress) {
+    if (webllmEnginePromise) return webllmEnginePromise;
+    webllmEnginePromise = import('https://esm.sh/@mlc-ai/web-llm').then(function (mod) {
+      return mod.CreateMLCEngine(WEBLLM_MODEL_ID, {
+        initProgressCallback: onProgress || function () {}
+      });
+    }).catch(function (err) {
+      webllmEnginePromise = null;
+      throw err;
+    });
+    return webllmEnginePromise;
+  }
+
+  function callWebLLM(entry, messages, signal) {
+    return getWebLLMEngine().then(function (engine) {
+      if (signal && signal.aborted) throw new DOMException('Aborted', 'AbortError');
+      return engine.chat.completions.create({ messages: messages, temperature: CALL_TEMPERATURE });
+    }).then(function (data) {
+      var text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+      if (!text) throw new Error('empty response');
+      return text;
+    });
+  }
+
   function callWithEntry(entry, messages, signal) {
+    if (entry.provider === 'webllm') return callWebLLM(entry, messages, signal);
     return entry.provider === 'anthropic' ? callAnthropic(entry, messages, signal) : callOpenAICompatible(entry, messages, signal);
   }
 
@@ -1124,7 +1155,8 @@
       body: 'Pick the wire format your key speaks — most providers (OpenAI, Groq, OpenRouter, Together, and others) use the same OpenAI-compatible format; Anthropic has its own.',
       options: [
         { label: 'OpenAI-compatible', hint: 'OpenAI, Groq, OpenRouter, Together, and most others', value: 'openai', next: 'byok_endpoint' },
-        { label: 'Anthropic', hint: 'Claude models', value: 'anthropic', next: 'byok_model' }
+        { label: 'Anthropic', hint: 'Claude models', value: 'anthropic', next: 'byok_model' },
+        { label: 'Run it in your browser', hint: 'WebLLM · free, needs a capable GPU', value: 'webllm', next: 'webllm_check' }
       ],
       onSelect: function (value) { answers.provider = value; },
       render: function (el) {
@@ -1142,7 +1174,7 @@
         var textarea = document.createElement('textarea');
         textarea.rows = 6;
         textarea.spellcheck = false;
-        textarea.placeholder = '[\n  { "provider": "openai", "byokEndpoint": "https://api.groq.com/openai/v1/chat/completions", "byokModel": "openai/gpt-oss-120b", "apiKey": "sk-..." },\n  { "provider": "anthropic", "byokModel": "claude-sonnet-5", "apiKey": "sk-ant-..." }\n]';
+        textarea.placeholder = '[\n  { "provider": "openai", "byokEndpoint": "https://api.groq.com/openai/v1/chat/completions", "byokModel": "openai/gpt-oss-120b", "apiKey": "sk-..." },\n  { "provider": "anthropic", "byokModel": "claude-sonnet-5", "apiKey": "sk-ant-..." },\n  { "provider": "webllm" }\n]';
         panel.appendChild(textarea);
 
         var uploadLabel = document.createElement('label');
@@ -1163,7 +1195,7 @@
 
         var hint = document.createElement('p');
         hint.className = 'setup-hint';
-        hint.textContent = 'A JSON array of key objects: provider ("openai" or "anthropic"), byokModel, apiKey, and byokEndpoint (openai-compatible keys only).';
+        hint.textContent = 'A JSON array of key objects: provider ("openai", "anthropic", or "webllm"), byokModel, apiKey, and byokEndpoint (openai-compatible keys only — webllm needs none of those).';
         panel.appendChild(hint);
 
         var error = document.createElement('p');
@@ -1189,12 +1221,12 @@
           }
           for (var i = 0; i < entries.length; i++) {
             var entry = entries[i] || {};
-            if (entry.provider !== 'openai' && entry.provider !== 'anthropic') {
-              error.textContent = 'Entry ' + (i + 1) + ': provider must be "openai" or "anthropic".';
+            if (entry.provider !== 'openai' && entry.provider !== 'anthropic' && entry.provider !== 'webllm') {
+              error.textContent = 'Entry ' + (i + 1) + ': provider must be "openai", "anthropic", or "webllm".';
               error.hidden = false;
               return;
             }
-            if (!entry.apiKey || !entry.byokModel) {
+            if (entry.provider !== 'webllm' && (!entry.apiKey || !entry.byokModel)) {
               error.textContent = 'Entry ' + (i + 1) + ': needs an apiKey and byokModel.';
               error.hidden = false;
               return;
@@ -1208,12 +1240,14 @@
           error.hidden = true;
           answers.keyStack = answers.keyStack || [];
           entries.forEach(function (entry) {
-            answers.keyStack.push({
-              provider: entry.provider,
-              byokEndpoint: entry.byokEndpoint || '',
-              byokModel: entry.byokModel,
-              apiKey: entry.apiKey
-            });
+            answers.keyStack.push(entry.provider === 'webllm'
+              ? { provider: 'webllm', byokEndpoint: '', byokModel: WEBLLM_MODEL_ID, apiKey: '' }
+              : {
+                provider: entry.provider,
+                byokEndpoint: entry.byokEndpoint || '',
+                byokModel: entry.byokModel,
+                apiKey: entry.apiKey
+              });
           });
           answers.provider = null;
           answers.byokEndpoint = '';
@@ -1278,6 +1312,58 @@
           go('assess_intro');
         }));
         el.appendChild(actions);
+      }
+    },
+    webllm_check: {
+      eyebrow: 'AI SETUP',
+      question: 'Checking your browser for WebGPU.',
+      body: 'The only model that both reasons and fits a normal GPU is ' + WEBLLM_MODEL_ID + ' — about 5GB to download once, cached in your browser after that. You’ll want 6GB+ of VRAM.',
+      render: function (el) {
+        var supported = !!navigator.gpu;
+        var note = document.createElement('p');
+        note.className = supported ? 'setup-note' : 'setup-note error';
+        note.textContent = supported
+          ? 'WebGPU is available in this browser.'
+          : 'This browser doesn’t support WebGPU — try a recent Chrome or Edge, or pick a different option.';
+        el.appendChild(note);
+        var actions = document.createElement('div');
+        actions.className = 'setup-actions';
+        if (supported) {
+          actions.appendChild(button('Download and use this model', 'setup-primary', function () { go('webllm_download'); }));
+        }
+        actions.appendChild(button('Back', 'setup-secondary', function () { go('byok_provider'); }));
+        el.appendChild(actions);
+      }
+    },
+    webllm_download: {
+      eyebrow: 'AI SETUP',
+      question: 'Loading ' + WEBLLM_MODEL_ID + '.',
+      render: function (el) {
+        var status = document.createElement('p');
+        status.className = 'step-body';
+        status.textContent = 'Starting…';
+        el.appendChild(status);
+        var errorNote = document.createElement('p');
+        errorNote.className = 'setup-note error';
+        errorNote.hidden = true;
+        el.appendChild(errorNote);
+        var actions = document.createElement('div');
+        actions.className = 'setup-actions';
+        el.appendChild(actions);
+
+        getWebLLMEngine(function (report) {
+          status.textContent = report && report.text ? report.text : 'Loading…';
+        }).then(function () {
+          answers.keyStack = answers.keyStack || [];
+          answers.keyStack.push({ provider: 'webllm', byokEndpoint: '', byokModel: WEBLLM_MODEL_ID, apiKey: '' });
+          go('byok_add_another');
+        }).catch(function (err) {
+          status.textContent = 'Couldn’t load the model.';
+          errorNote.textContent = (err && err.message) || 'Something went wrong — try again.';
+          errorNote.hidden = false;
+          actions.appendChild(button('Try again', 'setup-primary', function () { go('webllm_download', true); }));
+          actions.appendChild(button('Back', 'setup-secondary', function () { go('byok_provider'); }));
+        });
       }
     },
     assess_intro: {
