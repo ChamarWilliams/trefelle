@@ -301,100 +301,11 @@
   // one hits its rate limit mid-conversation, the same request is retried
   // against the next key automatically, carrying the conversation forward
   // since nothing is stored server-side per key — it's just resent.
-  function aiAvailable(ans) {
-    return !!(ans.keyStack && ans.keyStack.length);
-  }
-
-  // Same fixed temperature on every provider — since any reasoning model
-  // can be plugged in now, holding this constant (rather than leaving
-  // Anthropic on its default ~1.0 while OpenAI-compatible calls used 0.4)
-  // removes one more axis models could quietly disagree on.
-  var CALL_TEMPERATURE = 0.4;
-
-  function checkResponse(res) {
-    if (!res.ok) throw new Error('http ' + res.status);
-    return res;
-  }
-
-  function callAnthropic(entry, messages, signal) {
-    var system = messages.filter(function (m) { return m.role === 'system'; }).map(function (m) { return m.content; }).join('\n');
-    var rest = messages.filter(function (m) { return m.role !== 'system'; });
-    return fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST', signal: signal,
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': entry.apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({ model: entry.byokModel, max_tokens: 700, temperature: CALL_TEMPERATURE, system: system, messages: rest })
-    }).then(checkResponse).then(function (res) { return res.json(); }).then(function (data) {
-      var text = data.content && data.content[0] && data.content[0].text;
-      if (!text) throw new Error('empty response');
-      return text;
-    });
-  }
-
-  function callOpenAICompatible(entry, messages, signal) {
-    var headers = { 'Content-Type': 'application/json' };
-    if (entry.apiKey) headers.Authorization = 'Bearer ' + entry.apiKey;
-    return fetch(entry.byokEndpoint, {
-      method: 'POST', signal: signal, headers: headers,
-      body: JSON.stringify({ model: entry.byokModel, messages: messages, temperature: CALL_TEMPERATURE })
-    }).then(checkResponse).then(function (res) { return res.json(); }).then(function (data) {
-      var text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
-      if (!text) throw new Error('empty response');
-      return text;
-    });
-  }
-
-  // The only WebLLM-prebuilt model that both reasons and fits a consumer
-  // GPU -- 1.5B distills were dropped upstream for correctness issues, and
-  // nothing else in the prebuilt list reasons at all (mlc-ai/web-llm#762).
-  var WEBLLM_MODEL_ID = 'DeepSeek-R1-Distill-Qwen-7B-q4f16_1-MLC';
-  var webllmEnginePromise = null;
-
-  function getWebLLMEngine(onProgress) {
-    if (webllmEnginePromise) return webllmEnginePromise;
-    webllmEnginePromise = import('https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm/+esm').then(function (mod) {
-      return mod.CreateMLCEngine(WEBLLM_MODEL_ID, {
-        initProgressCallback: onProgress || function () {}
-      });
-    }).catch(function (err) {
-      webllmEnginePromise = null;
-      throw err;
-    });
-    return webllmEnginePromise;
-  }
-
-  function callWebLLM(entry, messages, signal) {
-    return getWebLLMEngine().then(function (engine) {
-      if (signal && signal.aborted) throw new DOMException('Aborted', 'AbortError');
-      return engine.chat.completions.create({ messages: messages, temperature: CALL_TEMPERATURE });
-    }).then(function (data) {
-      var text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
-      if (!text) throw new Error('empty response');
-      return text;
-    });
-  }
-
-  function callWithEntry(entry, messages, signal) {
-    if (entry.provider === 'webllm') return callWebLLM(entry, messages, signal);
-    return entry.provider === 'anthropic' ? callAnthropic(entry, messages, signal) : callOpenAICompatible(entry, messages, signal);
-  }
-
-  function callAI(messages, signal) {
-    var stack = answers.keyStack || [];
-    if (!stack.length) return Promise.reject(new Error('No AI model connected'));
-    function tryIndex(i, lastErr) {
-      if (i >= stack.length) return Promise.reject(lastErr || new Error('every connected key failed'));
-      return callWithEntry(stack[i], messages, signal).catch(function (err) {
-        if (err && err.name === 'AbortError') throw err;
-        return tryIndex(i + 1, err);
-      });
-    }
-    return tryIndex(0);
-  }
+  // The actual network/dispatch logic lives in ai-client.js (window.TrefelleAI)
+  // so /practice can reuse the same connected keys from a separate page load.
+  function aiAvailable(ans) { return window.TrefelleAI.aiAvailable(ans); }
+  function callAI(messages, signal) { return window.TrefelleAI.callAI(answers.keyStack, messages, signal); }
+  var WEBLLM_MODEL_ID = window.TrefelleAI.WEBLLM_MODEL_ID;
 
   function renderAIFlow(el, cfg) {
     if (!aiAvailable(answers)) {
@@ -1106,6 +1017,7 @@
       byokModel: answers.byokModel || '',
       apiKey: answers.apiKey
     });
+    saveAnswers();
   }
 
   var steps = {
@@ -1253,6 +1165,7 @@
           answers.byokEndpoint = '';
           answers.byokModel = '';
           answers.apiKey = '';
+          saveAnswers();
           go('byok_add_another');
         }));
         panel.appendChild(panelActions);
@@ -1351,11 +1264,12 @@
         actions.className = 'setup-actions';
         el.appendChild(actions);
 
-        getWebLLMEngine(function (report) {
+        window.TrefelleAI.getWebLLMEngine(function (report) {
           status.textContent = report && report.text ? report.text : 'Loading…';
         }).then(function () {
           answers.keyStack = answers.keyStack || [];
           answers.keyStack.push({ provider: 'webllm', byokEndpoint: '', byokModel: WEBLLM_MODEL_ID, apiKey: '' });
+          saveAnswers();
           go('byok_add_another');
         }).catch(function (err) {
           status.textContent = 'Couldn’t load the model.';
