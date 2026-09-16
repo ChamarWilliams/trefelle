@@ -24,7 +24,7 @@
   <body>
     <p id="status">Signing you in…</p>
     <script type="module">
-      import { getSupabaseClient } from '/supabase-client.js';
+      import { getSupabaseClient, getUser } from '/supabase-client.js';
 
       const next = sessionStorage.getItem('trefelle_auth_next') || '/workspace';
       sessionStorage.removeItem('trefelle_auth_next');
@@ -32,6 +32,12 @@
 
       (async () => {
         try {
+          // guards against a duplicate invocation racing an already-consumed code
+          const already = await getUser();
+          if (already) {
+            window.location.replace(next);
+            return;
+          }
           const { error } = await getSupabaseClient().auth.exchangeCodeForSession(
             window.location.href
           );
