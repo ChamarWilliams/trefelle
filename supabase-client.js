@@ -18,8 +18,10 @@ export async function getUser() {
 }
 
 export async function signInWithGitHub(next) {
+  // Redirect URLs in Supabase's allow-list are matched without query strings,
+  // so "next" travels via sessionStorage instead of a ?next= param.
+  if (next) sessionStorage.setItem('trefelle_auth_next', next);
   const redirectTo = new URL('/auth/callback', window.location.origin);
-  if (next) redirectTo.searchParams.set('next', next);
   await getSupabaseClient().auth.signInWithOAuth({
     provider: 'github',
     options: { redirectTo: redirectTo.toString() },

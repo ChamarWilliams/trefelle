@@ -26,8 +26,8 @@
     <script type="module">
       import { getSupabaseClient } from '/supabase-client.js';
 
-      const params = new URLSearchParams(window.location.search);
-      const next = params.get('next') || '/workspace';
+      const next = sessionStorage.getItem('trefelle_auth_next') || '/workspace';
+      sessionStorage.removeItem('trefelle_auth_next');
       const statusEl = document.getElementById('status');
 
       (async () => {
