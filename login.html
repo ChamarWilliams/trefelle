@@ -68,8 +68,11 @@
         background: #e6e2da;
       }
       form { display: grid; gap: 10px; text-align: left; }
+      .name-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .name-row[hidden] { display: none; }
       input[type='email'],
-      input[type='password'] {
+      input[type='password'],
+      input[type='text'] {
         width: 100%;
         padding: 12px 14px;
         border-radius: 10px;
@@ -81,7 +84,8 @@
         box-sizing: border-box;
       }
       input[type='email']:focus,
-      input[type='password']:focus {
+      input[type='password']:focus,
+      input[type='text']:focus {
         outline: 2px solid #1d241e;
         outline-offset: 1px;
       }
@@ -136,6 +140,10 @@
       </button>
       <div class="divider"><span>or</span></div>
       <form id="emailForm">
+        <div class="name-row" id="nameRow" hidden>
+          <input type="text" id="firstNameInput" placeholder="First name" autocomplete="given-name" />
+          <input type="text" id="lastNameInput" placeholder="Last name" autocomplete="family-name" />
+        </div>
         <input type="email" id="emailInput" placeholder="Email" autocomplete="email" required />
         <input
           type="password"
@@ -165,6 +173,9 @@
       const subtext = document.getElementById('subtext');
       const githubBtn = document.getElementById('githubBtn');
       const emailForm = document.getElementById('emailForm');
+      const nameRow = document.getElementById('nameRow');
+      const firstNameInput = document.getElementById('firstNameInput');
+      const lastNameInput = document.getElementById('lastNameInput');
       const emailInput = document.getElementById('emailInput');
       const passwordInput = document.getElementById('passwordInput');
       const emailSubmitBtn = document.getElementById('emailSubmitBtn');
@@ -183,6 +194,9 @@
           toggleText.textContent = "Don't have an account?";
           toggleModeBtn.textContent = 'Create one';
           passwordInput.autocomplete = 'current-password';
+          nameRow.hidden = true;
+          firstNameInput.required = false;
+          lastNameInput.required = false;
         } else {
           heading.textContent = 'Create your account';
           subtext.textContent = 'Takes a few seconds — no credit card, nothing to configure.';
@@ -190,6 +204,9 @@
           toggleText.textContent = 'Already have an account?';
           toggleModeBtn.textContent = 'Sign in instead';
           passwordInput.autocomplete = 'new-password';
+          nameRow.hidden = false;
+          firstNameInput.required = true;
+          lastNameInput.required = true;
         }
       }
       render();
@@ -231,7 +248,9 @@
             await signInWithEmail(email, password);
             window.location.replace(next);
           } else {
-            const data = await signUpWithEmail(email, password);
+            const firstName = firstNameInput.value.trim();
+            const lastName = lastNameInput.value.trim();
+            const data = await signUpWithEmail(email, password, { firstName, lastName });
             if (data.session) {
               window.location.replace(next);
             } else {

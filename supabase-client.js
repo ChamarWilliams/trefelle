@@ -32,12 +32,19 @@ export async function signInWithEmail(email, password) {
   return data;
 }
 
-export async function signUpWithEmail(email, password) {
+export async function signUpWithEmail(email, password, { firstName, lastName } = {}) {
   const redirectTo = new URL('/auth/callback', window.location.origin);
   const { data, error } = await getSupabaseClient().auth.signUp({
     email,
     password,
-    options: { emailRedirectTo: redirectTo.toString() },
+    options: {
+      emailRedirectTo: redirectTo.toString(),
+      data: {
+        first_name: firstName || null,
+        last_name: lastName || null,
+        full_name: [firstName, lastName].filter(Boolean).join(' ') || null,
+      },
+    },
   });
   if (error) throw error;
   return data;
