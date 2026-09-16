@@ -32,50 +32,70 @@
 
       <section class="plain-hero">
         <p class="eyebrow reveal"><span></span>AI MENTOR · FOR NOW</p>
-        <h1 class="reveal-up">Choose the AI that<br />powers your mentor.</h1>
+        <h1 class="reveal-up">Bring your own key—<br />any provider.</h1>
         <p class="reveal-up reveal-d1">
           Trefelle is unfunded, so there's no hosted AI mentor running on our
-          bill yet. Until a subscription version exists, the mentor runs on
-          an engine you choose and control—at no cost to us, and in most
-          cases no cost to you either.
+          bill yet. Instead of picking one provider for you, it runs on a key
+          you bring—any provider works, including free ones, as long as the
+          model you choose can reason. Vision isn't required.
+        </p>
+      </section>
+
+      <section class="audience reveal-up">
+        <p class="eyebrow">WHO THIS IS FOR, HONESTLY</p>
+        <h2>Right now, this is built for<br />the technical and the curious.</h2>
+        <p>
+          We're two people building this on the side—we don't have the
+          funding to run a hosted AI model for everyone, which is the actual
+          reason there's setup involved at all. Today, this is realistically
+          for people who want to support a small, early-stage project; who
+          are curious what a real professional workspace needs to be wired up
+          and configured; and who are comfortable enough with tech to get an
+          API key and paste it in.
+        </p>
+        <p>
+          If that's not you yet, that's completely fine—you're not the
+          problem, the setup is. A hosted, zero-setup mentor is the actual
+          long-term plan; this is just what's realistic before it exists.
         </p>
       </section>
 
       <section class="proof" id="options">
         <div class="proof-statement reveal-up">
-          <p class="eyebrow">THREE WAYS TO RUN IT</p>
-          <h2>Pick based on your<br /><em>hardware, not ours.</em></h2>
+          <p class="eyebrow">ONE REQUIREMENT</p>
+          <h2>Any key works,<br /><em>if the model can reason.</em></h2>
         </div>
         <div class="proof-list">
           <article class="reveal-up">
             <span>01</span>
             <div>
-              <h3>Bring your own key</h3>
+              <h3>Any provider, any key</h3>
               <p>
-                Connect an API key from a provider like OpenAI or Anthropic.
-                Requests go straight from your browser to them—we never see
-                the key or the bill.
+                OpenAI, Groq, OpenRouter, Anthropic, and most others all
+                work. Requests go straight from your browser to your
+                provider—we never see the key or the bill.
               </p>
             </div>
           </article>
           <article class="reveal-up reveal-d1">
             <span>02</span>
             <div>
-              <h3>WebLLM, in your browser</h3>
+              <h3>Reasoning, not vision</h3>
               <p>
-                A small model downloads once and runs locally via WebGPU.
-                No account, no key, no server—just your browser and your
-                device.
+                The model just needs extended thinking / chain-of-reasoning
+                to follow the assessment reliably. Vision isn't used, so
+                free reasoning-only models work fine.
               </p>
             </div>
           </article>
           <article class="reveal-up reveal-d2">
             <span>03</span>
             <div>
-              <h3>A local model you already run</h3>
+              <h3>Stack multiple free keys</h3>
               <p>
-                If you already have Ollama or LM Studio open, Trefelle can
-                talk to it directly for the fastest, most private option.
+                Add a few free-tier keys and Trefelle rotates to the next one
+                automatically when one hits its rate limit—mid-conversation,
+                without losing your place.
               </p>
             </div>
           </article>
@@ -84,115 +104,67 @@
 
       <section class="principles">
         <header class="reveal-up">
-          <p class="eyebrow">SYSTEM REQUIREMENTS</p>
-          <p>What each option actually needs from your machine.</p>
+          <p class="eyebrow">A FEW FREE OPTIONS</p>
+          <p>Verified against each provider's current docs—check before you commit, limits change.</p>
         </header>
         <div class="option-grid">
           <div class="option-card reveal-up">
             <small>OPTION 01</small>
-            <h3>Bring your own key</h3>
-            <p>Best answer quality. Costs you per use, billed by the provider directly.</p>
+            <h3>Groq</h3>
+            <p>Reasoning models on a genuinely free tier, no card required.</p>
             <ul>
-              <li>An API key from OpenAI, Anthropic, or a similar provider</li>
-              <li>Any modern browser, any device</li>
-              <li>An internet connection</li>
-              <li>A card on file with the provider for usage billing</li>
+              <li>e.g. <code>openai/gpt-oss-120b</code>, <code>qwen/qwen3.x-27b</code></li>
+              <li>1,000 requests/day, 200K tokens/day (free tier)</li>
+              <li>OpenAI-compatible endpoint</li>
             </ul>
-            <span class="tag">Setup: ~2 minutes</span>
+            <span class="tag">No vision needed—works as-is</span>
           </div>
           <div class="option-card reveal-up reveal-d1">
             <small>OPTION 02</small>
-            <h3>WebLLM in-browser</h3>
-            <p>Free and private, with a lighter model and a one-time download.</p>
+            <h3>OpenRouter</h3>
+            <p>Aggregates many providers; look for models tagged <code>:free</code>.</p>
             <ul>
-              <li>Chrome or Edge 113+ (WebGPU required—no iOS Safari)</li>
-              <li>8 GB+ RAM recommended</li>
-              <li>2–4 GB free storage for the model download</li>
-              <li>A dedicated or capable integrated GPU helps a lot</li>
+              <li>20 requests/minute always</li>
+              <li>50 requests/day (0 credits purchased)</li>
+              <li>1,000 requests/day (once $10+ purchased lifetime)</li>
             </ul>
-            <span class="tag">Setup: one-time download</span>
+            <span class="tag">Free lineup changes—check openrouter.ai/models</span>
           </div>
           <div class="option-card reveal-up reveal-d2">
             <small>OPTION 03</small>
-            <h3>Your own local model</h3>
-            <p>Free, fast, and fully private—if you're already set up for it.</p>
+            <h3>Google Gemini</h3>
+            <p>Flash-tier models have reasoning built in, on a long-standing free tier.</p>
             <ul>
-              <li>Ollama or LM Studio installed and running</li>
-              <li>A pulled model (e.g. Llama 3, Qwen 2.5, Mistral)</li>
-              <li>16 GB+ RAM for comfortable 7B–8B models</li>
-              <li>Browser permission to reach localhost</li>
+              <li>e.g. Gemini Flash "thinking" models</li>
+              <li>Google no longer publishes exact free limits—check your own AI Studio dashboard</li>
+              <li>Has an OpenAI-compatible endpoint too</li>
             </ul>
-            <span class="tag">Setup: for existing local-AI users</span>
+            <span class="tag">Real free tier, opaque exact limits</span>
           </div>
-        </div>
-      </section>
-
-      <section class="compare">
-        <div class="reveal-up">
-          <p class="eyebrow">SIDE BY SIDE</p>
-          <h2>No option is strictly best—<em>it depends what you already have.</em></h2>
-        </div>
-        <div class="compare-scroll reveal-up reveal-d1">
-          <table>
-            <thead>
-              <tr>
-                <th>&nbsp;</th>
-                <th>Bring your own key</th>
-                <th>WebLLM</th>
-                <th>Local model</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Cost to you</td>
-                <td>Pay-per-use to provider</td>
-                <td>Free</td>
-                <td>Free</td>
-              </tr>
-              <tr>
-                <td>Answer quality</td>
-                <td>Frontier-model quality</td>
-                <td>Small-model quality</td>
-                <td>Depends on model chosen</td>
-              </tr>
-              <tr>
-                <td>Setup effort</td>
-                <td>Paste a key</td>
-                <td>None—just wait for download</td>
-                <td>Requires app already installed</td>
-              </tr>
-              <tr>
-                <td>Works offline</td>
-                <td>No</td>
-                <td>Yes, after first load</td>
-                <td>Yes</td>
-              </tr>
-              <tr>
-                <td>Privacy</td>
-                <td>Data sent to provider</td>
-                <td>Fully local</td>
-                <td>Fully local</td>
-              </tr>
-              <tr>
-                <td>Best for</td>
-                <td>Anyone wanting top quality</td>
-                <td>Anyone, zero setup</td>
-                <td>Existing local-AI users</td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="option-card reveal-up reveal-d2">
+            <small>OPTION 04</small>
+            <h3>Mistral (La Plateforme)</h3>
+            <p>An "Experiment" free tier—use their <code>Magistral</code> model, their reasoning-focused line.</p>
+            <ul>
+              <li>Reported ~1B tokens/month cap (not from Mistral's own docs—verify yourself)</li>
+              <li>No card, just phone verification</li>
+              <li>Lowest-confidence pick on this list</li>
+            </ul>
+            <span class="tag">Worth checking, not fully confirmed</span>
+          </div>
         </div>
       </section>
 
       <section class="roadmap">
         <div class="reveal-up">
           <p class="eyebrow">WHAT CHANGES LATER</p>
-          <h2>A hosted, subscription mentor<br />is the long-term plan.</h2>
+          <h2>A hosted, zero-setup mentor<br />is the long-term plan.</h2>
           <p>
             Once Trefelle can sustainably cover inference costs, a hosted
-            mentor will remove the setup entirely—no key, no download, no
-            local app. Until then, these three options keep the mentor free
-            for us to offer and honest about what it costs you.
+            mentor will remove the setup entirely—no key, no provider
+            choice, no rate limits to think about. Until then, bringing your
+            own key keeps the mentor free for us to offer and honest about
+            what it costs you.
           </p>
           <a href="/approach" class="primary">See the approach <b>→</b></a>
         </div>

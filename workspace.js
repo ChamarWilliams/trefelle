@@ -168,9 +168,71 @@ import {
 
   var QUESTION_FORMATS = 'Respond with ONLY strict JSON, nothing else, no markdown fences, no prose outside the JSON.\nEvery item, option, or bucket label must be short — a phrase, not a sentence (aim for under 6 words / ~40 characters) — so it fits cleanly in a compact card; put any necessary nuance in the question or instruction text instead, never in the item labels.\nAssume the person may be completely new to this — many have never worked a single day in it and don\'t know its vocabulary. Never use jargon, acronyms, tool names, or role-specific terms without plainly explaining what they mean in the same sentence. Describe what a thing does before you name it, not the other way around. Write every scenario like you\'re explaining it to a smart friend who has zero background, in warm plain language — never textbook or corporate-sounding.\nPrefer small interactive exercises over asking directly whenever one would fit — a self-reported answer to "are you organized?" is easy to answer aspirationally; watching someone rank, stack, sort, tap, or allocate under a lightly-framed prompt reveals it more honestly, because they are not consciously aware of exactly what the exercise is measuring. Reach for "stack", "sort", "tiles", "allocate", or "quickpick" first; use "choice" only when you genuinely need to compare a few named options head-on, and "text" or "slider" when only their own words or a spectrum position would reveal something else. Do not lean on "choice" as the default. You can also use a second exercise to quietly cross-check an earlier answer that felt uncertain or too clean.\nPrefer closed hypotheticals over questions about their actual real life. Do not ask "what are your top tasks today" or anything else that requires them to expose real personal or work details — most people are more comfortable, and more honest, answering "imagine X situation, what would you do" than being asked to describe their own life. Build a specific fictional-but-plausible scenario ("you\'ve just joined a team and inherit a system with no documentation," "a client calls saying the product broke right before a demo") and ask what they\'d do inside it. EVERY question needs its own new scenario — never reuse the same premise you just used for the previous question, even in a different format. If you already asked about "joining a team and inheriting an undocumented system" once, that premise is now spent — the next question needs a genuinely different situation, not the same one wrapped in a different exercise type. Repeating a premise teaches you nothing new and wastes a question. The items inside any exercise must be concrete and specific to that invented scenario — never generic productivity-app filler like "reply to email," "grocery shopping," "dinner with friends," or a bland real-life to-do list. Either build on something they already said in this conversation, or invent something specific to real technical/engineering work (a specific kind of bug, a specific kind of decision, a specific trade-off) inside a hypothetical scenario — something that could only belong in an assessment for their field, not a life-admin app, and never a direct ask about their actual day.\nStack — a vertical list they physically drag to reorder, top to bottom; this is the premium version of ranking and should be your default choice for any ranking exercise: {"type":"question","format":"stack","eyebrow":"SHORT LABEL","question":"...","instruction":"a short framing like \'Drag to put these in the order you\'d actually reach for them\'","items":["item 1","item 2","item 3","item 4","item 5"]}\nRank — a lighter-weight tap-in-order version of the same idea, for when a full drag-to-reorder stack would be overkill: {"type":"question","format":"rank","eyebrow":"SHORT LABEL","question":"...","instruction":"...","items":["item 1","item 2","item 3","item 4"]}\nSort — they drag items into one of two boxes; which box, and the order they sort in, is the signal: {"type":"question","format":"sort","eyebrow":"SHORT LABEL","question":"...","boxA":"label for box A","boxB":"label for box B","items":["item 1","item 2","item 3","item 4","item 5"]}\nTiles — they tap as many or as few as resonate, no forced order or count; good for gauging what genuinely pulls them without asking outright: {"type":"question","format":"tiles","eyebrow":"SHORT LABEL","question":"...","instruction":"optional short framing","items":["item 1","item 2","item 3","item 4","item 5","item 6"]}\nAllocate — they distribute a fixed pool of points across a few buckets, revealing relative priority instead of a single pick: {"type":"question","format":"allocate","eyebrow":"SHORT LABEL","question":"...","points":10,"buckets":["bucket 1","bucket 2","bucket 3","bucket 4"]}\nQuickpick — looks like an ordinary multiple-choice question, but reaction time is measured invisibly; use it when hesitation itself (gut instinct vs deliberation) is the interesting signal — never tell the user timing is involved: {"type":"question","format":"quickpick","eyebrow":"SHORT LABEL","question":"...","options":["...","...","...","..."]}\nMultiple choice, only when comparing a few genuinely distinct named approaches: {"type":"question","format":"choice","eyebrow":"SHORT LABEL","question":"...","options":["...","...","...","..."]}\nOpen-ended, only when their own words would reveal something no list or exercise could: {"type":"question","format":"text","eyebrow":"SHORT LABEL","question":"...","placeholder":"short example of the kind of answer you want"}\nSlider, for a spectrum between two opposing traits: {"type":"question","format":"slider","eyebrow":"SHORT LABEL","question":"...","minLabel":"left end of the spectrum","maxLabel":"right end of the spectrum"}\nIf someone gives a vague or uncertain answer, don’t just move on — dig deeper on the same topic, ideally with a different exercise than before, rather than repeating the same format.\nEvery ranking, sorting, or dragging exercise has a "none of these apply to me" escape hatch — expect people to use it when your items assumed something untrue about their life (a job they don\'t have, tasks they don\'t do). If that happens, do not repeat a similar exercise with similarly guessed items — switch to something more open-ended ("text") or more clearly scoped to what you actually know about them, and treat the mismatch itself as a signal you guessed wrong about their situation.';
 
-  var PERSONALITY_PROMPT = 'You are an intake assessor for Trefelle, a hands-on career-exploration platform. Right now your ONLY goal is to understand how this specific person thinks, solves problems, handles ambiguity, and learns best — their personality and learning style. You must INFER all of this — never ask about it directly. Never ask "how do you prefer to learn?", "are you a visual learner?", "what is your learning style?", or any variant — that is a meta-question about the thing you are trying to measure, and self-report on it is nearly worthless. Instead, put them inside a concrete, specific, slightly odd little HYPOTHETICAL scenario or exercise and watch what they actually do — order, timing, which box something lands in, what they reach for first — then draw the conclusion yourself afterward; they should never be able to guess what trait a given exercise is measuring. Prefer a closed hypothetical ("imagine X happens, what would you do") over any question that asks about their actual real life or day — people answer more honestly, and feel more comfortable, responding inside a fictional scenario than being asked to expose real personal details. Avoid generic template exercises ("sort these by energy," "rank your tasks for today") — invent a specific fictional-but-plausible situation vivid enough that it could only have come from this conversation, ideally building on something they already said. This is NOT about picking a technical field yet, and it is not a fixed script — invent whatever exercise, in whatever order, actually gets you there fastest for THIS person. Keep every scenario understandable to someone with no professional experience in any field yet — plain everyday situations, never workplace jargon. Aim for around 10 questions total, but if you are still genuinely unsure after 10, keep going — accuracy matters more than speed. Stop as soon as you have a confident, specific picture.\n' + QUESTION_FORMATS + '\nWhen confident, respond with exactly: {"type":"done","summary":"2-3 sentence summary of how they think, solve problems, and learn — written as your own inference, not as if they told you","learningStyle":"short label","workStyle":"short label"}';
+  var PERSONALITY_PROMPT = 'You are an intake assessor for Trefelle, a hands-on career-exploration platform. Right now your ONLY goal is to understand how this specific person thinks, solves problems, handles ambiguity, and learns best — their personality and learning style. You must INFER all of this — never ask about it directly. Never ask "how do you prefer to learn?", "are you a visual learner?", "what is your learning style?", or any variant — that is a meta-question about the thing you are trying to measure, and self-report on it is nearly worthless. Instead, put them inside a concrete, specific, slightly odd little HYPOTHETICAL scenario or exercise and watch what they actually do — order, timing, which box something lands in, what they reach for first — then draw the conclusion yourself afterward; they should never be able to guess what trait a given exercise is measuring. Prefer a closed hypothetical ("imagine X happens, what would you do") over any question that asks about their actual real life or day — people answer more honestly, and feel more comfortable, responding inside a fictional scenario than being asked to expose real personal details. Avoid generic template exercises ("sort these by energy," "rank your tasks for today") — invent a specific fictional-but-plausible situation vivid enough that it could only have come from this conversation, ideally building on something they already said. This is NOT about picking a technical field yet, and it is not a fixed script — invent whatever exercise, in whatever order, actually gets you there fastest for THIS person. Keep every scenario understandable to someone with no professional experience in any field yet — plain everyday situations, never workplace jargon. Aim for around 6 questions total, but if you are still genuinely unsure after 6, keep going — accuracy matters more than speed. Before you conclude, you must be able to point to at least two separate exercises whose results directly support the learningStyle and workStyle you are about to report — a single ambiguous signal is not enough, ask another question instead of concluding early on a guess. This check matters more than it looks: it is what keeps your read of this person consistent with what a different AI model would have concluded from the same conversation, rather than each model settling on a different guess. Stop as soon as you have that evidence, not before.\n' + QUESTION_FORMATS + '\nWhen confident, respond with exactly: {"type":"done","summary":"2-3 sentence summary of how they think, solve problems, and learn — written as your own inference, not as if they told you","learningStyle":"short label","workStyle":"short label"}';
 
-  var FIELDS_PROMPT_BASE = 'Your goal now is to determine which specific field(s) and roles genuinely fit this person. The scope is EVERY STEM and technical discipline, not a short list — software, data science, mechanical, electrical, civil, aerospace, biomedical, chemical, industrial, materials science, environmental engineering, robotics, nuclear, marine/ocean engineering, mining, geology and earth science, agriculture and agtech, energy systems, physics, mathematics and statistics, actuarial work, network and telecom engineering, pharma and biotech, manufacturing, and anything else STEM or technical — including ones not listed here. Never default to software unless it genuinely fits best.\nAssume they may know almost nothing about this field yet — most people picking a broad field of interest are going on curiosity or a vague pull toward it, not hands-on background. Every scenario must be understandable to a total beginner: the moment you mention a tool, role, process, or piece of jargon, explain in plain words what it is or does — never assume they already know. Judge fit by their instincts, curiosity, and what kind of problem excites them, not by whether they already speak the field\'s insider vocabulary.\nField and career stage are FACTS, not personality traits — you have already been told which broad field they\'re interested in and their career stage below; these were asked directly before you started, so never ask about either again. Use them as the fixed setting for every hypothetical you build from here on — a hypothetical for an undergrad mechanical engineering student should look nothing like one for a working professional in biomedical devices, and a scenario that assumes the wrong field wastes the question entirely.\nIf their stage is "graduated and/or working professionally," dig further with direct factual questions (job title, how many years, do they hold a degree or certifications and in what) before you rely on any exercise result to justify "mid" or "senior" — a job title and years of real experience is what earns "mid" or "senior", credentials and confidence alone are not enough. If their stage is "haven\'t started a degree yet" or "undergrad," the level is "student" or "early" respectively unless they describe real professional work on top of that — do not round up.\nWithin the given field and stage, keep narrowing toward a specific sub-field and concrete role (e.g. not just "mechanical," but which corner: thermal systems, robotics, manufacturing, automotive, aerospace structures) and keep verifying claims with small exercises scoped to that exact field and stage — never reuse a scenario you already asked about, even for a different exercise type, and never repeat the same item twice within one exercise\'s list.\nAim for around 15 to 20 questions total, but if you are still genuinely unsure after that, keep going — accuracy matters more than speed. Stop as soon as you are confident.\n' + QUESTION_FORMATS + '\nWhen confident, respond with exactly: {"type":"done","level":"student|early|mid|senior","fields":[{"name":"Field name","why":"one sentence on why this fits them","blurb":"one sentence describing the field","demand":"rough demand label","pay":"rough pay range","roles":[{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"}]}]} with up to 3 fields ranked best fit first.';
+  var FIELDS_PROMPT_BASE = 'Your goal now is to determine which specific field(s) and roles genuinely fit this person. The scope is EVERY STEM and technical discipline, not a short list — software, data science, mechanical, electrical, civil, aerospace, biomedical, chemical, industrial, materials science, environmental engineering, robotics, nuclear, marine/ocean engineering, mining, geology and earth science, agriculture and agtech, energy systems, physics, mathematics and statistics, actuarial work, network and telecom engineering, pharma and biotech, manufacturing, and anything else STEM or technical — including ones not listed here. Never default to software unless it genuinely fits best.\nAssume they may know almost nothing about this field yet — most people picking a broad field of interest are going on curiosity or a vague pull toward it, not hands-on background. Every scenario must be understandable to a total beginner: the moment you mention a tool, role, process, or piece of jargon, explain in plain words what it is or does — never assume they already know. Judge fit by their instincts, curiosity, and what kind of problem excites them, not by whether they already speak the field\'s insider vocabulary.\nField(s) and career stage are FACTS, not personality traits — you have already been told which broad field(s) they\'re interested in (sometimes more than one) and their career stage below; these were asked directly before you started, so never ask about either again. Use them as the fixed setting for every hypothetical you build from here on — a hypothetical for an undergrad mechanical engineering student should look nothing like one for a working professional in biomedical devices, and a scenario that assumes the wrong field wastes the question entirely. If they named multiple fields, explore across all of them rather than silently picking one as primary — the point is to find out which actually fits best, not to assume you already know.\nIf their stage is "graduated and/or working professionally," dig further with direct factual questions (job title, how many years, do they hold a degree or certifications and in what) before you rely on any exercise result to justify "mid" or "senior" — a job title and years of real experience is what earns "mid" or "senior", credentials and confidence alone are not enough. If their stage is "haven\'t started a degree yet" or "undergrad," the level is "student" or "early" respectively unless they describe real professional work on top of that — do not round up.\nUse this as a checkable rubric, not a vibe — before you assign a level, name the specific fact that earns it: "student" = no professional work in the field yet; "early" = professional role held, but under ~2 years and no independently-owned production work; "mid" = roughly 3–6 years of professional work, or clearly demonstrated independent ownership of real systems; "senior" = 7+ years, or demonstrated technical leadership/mentorship of others. If you cannot name the one fact that justifies the level, you are not ready to conclude — ask one more direct question instead of rounding up on confidence or credentials alone. The same goes for each field recommendation: it must trace to a specific answer or exercise result, not to what sounds like a safe, popular default. This discipline is what keeps different AI models landing on the same conclusion from the same conversation, rather than each one drifting to its own guess.\nWithin the given field and stage, keep narrowing toward a specific sub-field and concrete role (e.g. not just "mechanical," but which corner: thermal systems, robotics, manufacturing, automotive, aerospace structures) and keep verifying claims with small exercises scoped to that exact field and stage — never reuse a scenario you already asked about, even for a different exercise type, and never repeat the same item twice within one exercise\'s list.\nAim for around 8 to 10 questions total, but if you are still genuinely unsure after that, keep going — accuracy matters more than speed. Stop as soon as you are confident.\n' + QUESTION_FORMATS + '\nWhen confident, respond with exactly: {"type":"done","level":"student|early|mid|senior","fields":[{"name":"Field name","why":"one sentence on why this fits them","blurb":"one sentence describing the field","demand":"rough demand label","pay":"rough pay range","roles":[{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"}]}]} with up to 3 fields ranked best fit first.';
+
+  var MAX_RESUME_BYTES = 5 * 1024 * 1024;
+
+  function loadScriptOnce(src) {
+    return new Promise(function (resolve, reject) {
+      if (document.querySelector('script[src="' + src + '"]')) { resolve(); return; }
+      var s = document.createElement('script');
+      s.src = src;
+      s.onload = function () { resolve(); };
+      s.onerror = function () { reject(new Error('Couldn’t load a required library — check your connection and try again.')); };
+      document.head.appendChild(s);
+    });
+  }
+
+  function fileToText(file) {
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function () { resolve(String(reader.result || '')); };
+      reader.onerror = function () { reject(new Error('Couldn’t read that file — try pasting the text instead.')); };
+      reader.readAsText(file);
+    });
+  }
+
+  function extractPdfText(file) {
+    return loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js').then(function () {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      return file.arrayBuffer();
+    }).then(function (buf) {
+      return window.pdfjsLib.getDocument({ data: buf }).promise;
+    }).then(function (pdf) {
+      var pageNums = [];
+      for (var i = 1; i <= pdf.numPages; i++) pageNums.push(i);
+      return pageNums.reduce(function (chain, pageNum) {
+        return chain.then(function (acc) {
+          return pdf.getPage(pageNum).then(function (page) { return page.getTextContent(); }).then(function (content) {
+            acc.push(content.items.map(function (it) { return it.str; }).join(' '));
+            return acc;
+          });
+        });
+      }, Promise.resolve([])).then(function (pages) { return pages.join('\n'); });
+    });
+  }
+
+  // No supported model is guaranteed to have vision anymore, so a resume
+  // file is just read into plain text and dropped into the paste box —
+  // simple, and the person can see/edit exactly what got captured.
+  function readProfileFile(file) {
+    var name = (file.name || '').toLowerCase();
+    if (name.endsWith('.txt')) return fileToText(file);
+    if (name.endsWith('.pdf')) return extractPdfText(file);
+    if (name.endsWith('.docx')) {
+      return loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js').then(function () {
+        return file.arrayBuffer();
+      }).then(function (buf) {
+        return window.mammoth.extractRawText({ arrayBuffer: buf });
+      }).then(function (result) { return result.value || ''; });
+    }
+    if (name.endsWith('.doc')) {
+      return Promise.reject(new Error('.doc files aren’t supported — save as .docx or .pdf, or paste the text instead.'));
+    }
+    return Promise.reject(new Error('Unsupported file type — use .pdf, .docx, or .txt, or paste the text instead.'));
+  }
 
   function slugify(s) {
     return (s || 'field').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'field';
@@ -241,79 +303,74 @@ import {
     return null;
   }
 
+  // Trefelle runs entirely on keys you bring — any provider works (OpenAI,
+  // Groq, OpenRouter, Anthropic, and most others), as long as the model
+  // supports reasoning; vision isn't required. Keys can be stacked: when
+  // one hits its rate limit mid-conversation, the same request is retried
+  // against the next key automatically, carrying the conversation forward
+  // since nothing is stored server-side per key — it's just resent.
   function aiAvailable(ans) {
-    if (ans.engine === 'local') return !!ans.serverAddress && !!ans.localModel;
-    if (ans.engine === 'byok') {
-      if (!ans.apiKey) return false;
-      return ans.provider === 'openai' || ans.provider === 'anthropic' || (ans.provider === 'other' && !!ans.byokEndpoint);
-    }
-    return false;
+    return !!(ans.keyStack && ans.keyStack.length);
   }
 
-  function callOpenAICompatible(url, apiKey, messages, signal) {
-    var headers = { 'Content-Type': 'application/json' };
-    if (apiKey) headers.Authorization = 'Bearer ' + apiKey;
-    return fetch(url, {
-      method: 'POST', headers: headers, signal: signal,
-      body: JSON.stringify({ model: answers.localModel || 'gpt-4o-mini', messages: messages, temperature: 0.4 })
-    }).then(function (res) {
-      if (!res.ok) throw new Error('http ' + res.status);
-      return res.json();
-    }).then(function (data) {
-      var text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
-      if (!text) throw new Error('empty response');
-      return text;
-    });
+  // Same fixed temperature on every provider — since any reasoning model
+  // can be plugged in now, holding this constant (rather than leaving
+  // Anthropic on its default ~1.0 while OpenAI-compatible calls used 0.4)
+  // removes one more axis models could quietly disagree on.
+  var CALL_TEMPERATURE = 0.4;
+
+  function checkResponse(res) {
+    if (!res.ok) throw new Error('http ' + res.status);
+    return res;
   }
 
-  function callAnthropic(messages, signal) {
+  function callAnthropic(entry, messages, signal) {
     var system = messages.filter(function (m) { return m.role === 'system'; }).map(function (m) { return m.content; }).join('\n');
-    var rest = messages.filter(function (m) { return m.role !== 'system'; }).map(function (m) { return { role: m.role, content: m.content }; });
+    var rest = messages.filter(function (m) { return m.role !== 'system'; });
     return fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST', signal: signal,
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': answers.apiKey,
+        'x-api-key': entry.apiKey,
         'anthropic-version': '2023-06-01',
         'anthropic-dangerous-direct-browser-access': 'true'
       },
-      body: JSON.stringify({ model: 'claude-3-5-haiku-latest', max_tokens: 700, system: system, messages: rest })
-    }).then(function (res) {
-      if (!res.ok) throw new Error('http ' + res.status);
-      return res.json();
-    }).then(function (data) {
+      body: JSON.stringify({ model: entry.byokModel, max_tokens: 700, temperature: CALL_TEMPERATURE, system: system, messages: rest })
+    }).then(checkResponse).then(function (res) { return res.json(); }).then(function (data) {
       var text = data.content && data.content[0] && data.content[0].text;
       if (!text) throw new Error('empty response');
       return text;
     });
   }
 
-  function callLocal(messages, signal) {
-    var base = (answers.serverAddress || '').replace(/\/+$/, '');
-    if (answers.runtime === 'ollama') {
-      return fetch(base + '/api/chat', {
-        method: 'POST', signal: signal, headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: answers.localModel, messages: messages, stream: false, format: 'json' })
-      }).then(function (res) {
-        if (!res.ok) throw new Error('http ' + res.status);
-        return res.json();
-      }).then(function (data) {
-        var text = data.message && data.message.content;
-        if (!text) throw new Error('empty response');
-        return text;
-      });
-    }
-    return callOpenAICompatible(base + '/v1/chat/completions', null, messages, signal);
+  function callOpenAICompatible(entry, messages, signal) {
+    var headers = { 'Content-Type': 'application/json' };
+    if (entry.apiKey) headers.Authorization = 'Bearer ' + entry.apiKey;
+    return fetch(entry.byokEndpoint, {
+      method: 'POST', signal: signal, headers: headers,
+      body: JSON.stringify({ model: entry.byokModel, messages: messages, temperature: CALL_TEMPERATURE })
+    }).then(checkResponse).then(function (res) { return res.json(); }).then(function (data) {
+      var text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+      if (!text) throw new Error('empty response');
+      return text;
+    });
+  }
+
+  function callWithEntry(entry, messages, signal) {
+    return entry.provider === 'anthropic' ? callAnthropic(entry, messages, signal) : callOpenAICompatible(entry, messages, signal);
   }
 
   function callAI(messages, signal) {
-    if (answers.engine === 'local' && answers.serverAddress && answers.localModel) return callLocal(messages, signal);
-    if (answers.engine === 'byok' && answers.apiKey) {
-      if (answers.provider === 'anthropic') return callAnthropic(messages, signal);
-      if (answers.provider === 'other' && answers.byokEndpoint) return callOpenAICompatible(answers.byokEndpoint, answers.apiKey, messages, signal);
-      return callOpenAICompatible('https://api.openai.com/v1/chat/completions', answers.apiKey, messages, signal);
+    var stack = answers.keyStack || [];
+    if (!stack.length) return Promise.reject(new Error('No AI model connected'));
+    function tryIndex(i, lastErr) {
+      if (i >= stack.length) return Promise.reject(lastErr || new Error('every connected key failed'));
+      return callWithEntry(stack[i], messages, signal).catch(function (err) {
+        if (err && err.name === 'AbortError') throw err;
+        return tryIndex(i + 1, err);
+      });
     }
-    return Promise.reject(new Error('No AI model connected'));
+    return tryIndex(0);
   }
 
   function renderAIFlow(el, cfg) {
@@ -418,6 +475,10 @@ import {
       body.appendChild(eyebrow);
       var h1 = document.createElement('h1');
       h1.textContent = q.question;
+      var qLen = (q.question || '').length;
+      if (qLen > 260) h1.style.fontSize = 'clamp(19px,2.3vw,24px)';
+      else if (qLen > 180) h1.style.fontSize = 'clamp(22px,2.8vw,28px)';
+      else if (qLen > 110) h1.style.fontSize = 'clamp(25px,3.4vw,33px)';
       body.appendChild(h1);
 
       var format = q.format || 'choice';
@@ -483,9 +544,14 @@ import {
         stackList.className = 'stack-list';
         var rowMap = {};
 
+        var stackPlaceholder = document.createElement('div');
+        stackPlaceholder.className = 'stack-placeholder';
+        stackPlaceholder.textContent = 'Drop here';
+
         function buildRow(stackItem) {
           var row = document.createElement('div');
           row.className = 'stack-item';
+          row.dataset.item = stackItem;
           var badge = document.createElement('span');
           badge.className = 'stack-badge';
           var label = document.createElement('span');
@@ -565,12 +631,41 @@ import {
         }
 
         function renderStack(draggingItem) {
+          var prevRects = {};
+          Array.prototype.forEach.call(stackList.children, function (child) {
+            if (child.dataset && child.dataset.item) prevRects[child.dataset.item] = child.getBoundingClientRect();
+          });
+
           stackList.innerHTML = '';
           stackOrder.forEach(function (stackItem, idx) {
-            if (stackItem === draggingItem) return;
+            if (stackItem === draggingItem) {
+              stackList.appendChild(stackPlaceholder);
+              return;
+            }
             var row = rowMap[stackItem] || (rowMap[stackItem] = buildRow(stackItem));
-            row.querySelector('.stack-badge').textContent = idx + 1;
+            var badge = row.querySelector('.stack-badge');
+            if (badge.textContent && badge.textContent !== String(idx + 1)) {
+              badge.classList.add('bump');
+              setTimeout(function () { badge.classList.remove('bump'); }, 220);
+            }
+            badge.textContent = idx + 1;
             stackList.appendChild(row);
+          });
+
+          Array.prototype.forEach.call(stackList.children, function (child) {
+            if (!child.dataset || !child.dataset.item) return;
+            var prev = prevRects[child.dataset.item];
+            if (!prev) return;
+            var next = child.getBoundingClientRect();
+            var deltaY = prev.top - next.top;
+            if (deltaY) {
+              child.style.transition = 'none';
+              child.style.transform = 'translateY(' + deltaY + 'px)';
+              requestAnimationFrame(function () {
+                child.style.transition = '';
+                child.style.transform = '';
+              });
+            }
           });
         }
         renderStack(null);
@@ -609,7 +704,8 @@ import {
           tile.addEventListener('click', function () {
             if (tile.classList.contains('picked')) return;
             order.push(item);
-            tile.classList.add('picked');
+            tile.classList.add('picked', 'pop');
+            setTimeout(function () { tile.classList.remove('pop'); }, 260);
             badge.textContent = order.length;
             if (order.length === tiles.length) {
               setTimeout(function () {
@@ -682,9 +778,11 @@ import {
         function placeChip(chip, item, zone) {
           if (!placement[item]) moveOrder.push(item);
           placement[item] = zone;
-          chip.classList.remove('drag-a', 'drag-b');
+          chip.classList.remove('drag-a', 'drag-b', 'landed');
           chip.classList.add(zone === 'A' ? 'drag-a' : 'drag-b');
           (zone === 'A' ? boxA : boxB).appendChild(chip);
+          chip.classList.add('landed');
+          setTimeout(function () { chip.classList.remove('landed'); }, 300);
           doneBtn.disabled = Object.keys(placement).length < total;
           updateEmptyHints();
         }
@@ -819,11 +917,28 @@ import {
           var label = document.createElement('span');
           label.className = 'rank-label';
           label.textContent = item;
+          var tBadge = document.createElement('span');
+          tBadge.className = 'rank-badge';
+          tile.appendChild(tBadge);
           tile.appendChild(label);
+          function refreshBadges() {
+            tGrid.querySelectorAll('.rank-tile.picked').forEach(function (t) {
+              t.querySelector('.rank-badge').textContent = tOrder.indexOf(t.dataset.item) + 1;
+            });
+          }
+          tile.dataset.item = item;
           tile.addEventListener('click', function () {
             var idx = tOrder.indexOf(item);
-            if (idx > -1) { tOrder.splice(idx, 1); tile.classList.remove('picked'); }
-            else { tOrder.push(item); tile.classList.add('picked'); }
+            if (idx > -1) {
+              tOrder.splice(idx, 1);
+              tile.classList.remove('picked');
+              tBadge.textContent = '';
+            } else {
+              tOrder.push(item);
+              tile.classList.add('picked', 'pop');
+              setTimeout(function () { tile.classList.remove('pop'); }, 260);
+            }
+            refreshBadges();
           });
           tGrid.appendChild(tile);
         });
@@ -855,20 +970,28 @@ import {
           var label = document.createElement('span');
           label.className = 'allocate-label';
           label.textContent = bLabel;
+          var fill = document.createElement('span');
+          fill.className = 'allocate-fill';
           var val = document.createElement('span');
           val.className = 'allocate-value';
           val.textContent = '0';
+          function bump() { val.classList.remove('pop'); void val.offsetWidth; val.classList.add('pop'); }
+          function updateFill() { fill.style.width = (totalPoints ? (values[i] / totalPoints * 100) : 0) + '%'; }
           var minus = button('–', 'allocate-btn', function () {
-            if (values[i] > 0) { values[i]--; val.textContent = values[i]; updateRemaining(); }
+            if (values[i] > 0) { values[i]--; val.textContent = values[i]; bump(); updateFill(); updateRemaining(); }
           });
           var plus = button('+', 'allocate-btn', function () {
             var used = values.reduce(function (a, c) { return a + c; }, 0);
-            if (used < totalPoints) { values[i]++; val.textContent = values[i]; updateRemaining(); }
+            if (used < totalPoints) { values[i]++; val.textContent = values[i]; bump(); updateFill(); updateRemaining(); }
           });
           row.appendChild(label);
           row.appendChild(minus);
           row.appendChild(val);
           row.appendChild(plus);
+          var track = document.createElement('span');
+          track.className = 'allocate-track';
+          track.appendChild(fill);
+          row.appendChild(track);
           aGrid.appendChild(row);
         });
         var aActions = document.createElement('div');
@@ -935,12 +1058,31 @@ import {
         renderQuestion(data);
       }).catch(function (err) {
         if (err && err.name === 'AbortError') return;
+        // A local model can occasionally run out of room mid-turn (long
+        // system prompt + its own reasoning) and come back empty — that's
+        // transient, not a real connection problem, so retry a couple of
+        // times before giving up rather than hard-failing on the first blip.
+        if (retryNum < 2) {
+          attempt(msgs, atHard, retryNum + 1);
+          return;
+        }
         clearSlowTimer();
         renderError('Couldn’t reach your AI model (' + (err && err.message ? err.message : 'unknown error') + ').');
       });
     }
 
     step();
+  }
+
+  function pushKeyEntry() {
+    if (!answers.provider || !answers.apiKey) return;
+    answers.keyStack = answers.keyStack || [];
+    answers.keyStack.push({
+      provider: answers.provider,
+      byokEndpoint: answers.byokEndpoint || '',
+      byokModel: answers.byokModel || '',
+      apiKey: answers.apiKey
+    });
   }
 
   var steps = {
@@ -968,165 +1110,182 @@ import {
     },
     engine: {
       eyebrow: 'AI SETUP',
-      question: 'How should your AI mentor run?',
-      options: [
-        { label: 'Bring my own API key', hint: 'Best answer quality · pay-per-use', value: 'byok', next: 'byok_provider' },
-        { label: 'Run a small model in my browser', hint: 'WebLLM · free, needs WebGPU', value: 'webllm', next: 'webllm_size' },
-        { label: 'Connect to a local model I already run', hint: 'Ollama or LM Studio', value: 'local', next: 'local_runtime' },
-        { label: 'I’m not sure yet', hint: 'See a side-by-side comparison', value: 'unsure', next: 'unsure_info' }
-      ],
-      onSelect: function (value) { answers.engine = value; }
-    },
-    unsure_info: {
-      eyebrow: 'AI SETUP',
-      question: 'No rush — you can decide anytime.',
-      body: 'Each option trades off cost, quality, and setup effort differently. The full comparison is one click away, or keep going and change this later.',
+      question: 'Connect an AI key.',
+      body: 'Trefelle runs on a key you bring — any provider works (OpenAI, Groq, OpenRouter, Anthropic, and most others). No hosted mentor exists yet, so this is the only path in for now. The one requirement: your model needs to support reasoning (extended thinking / chain-of-thought). Vision is not required, so free reasoning-only models work fine.',
       render: function (el) {
         var actions = document.createElement('div');
         actions.className = 'setup-actions';
+        actions.appendChild(button('Get started', 'setup-primary', function () { go('byok_provider'); }));
+        el.appendChild(actions);
         var link = document.createElement('a');
         link.href = '/requirements';
-        link.className = 'setup-primary';
-        link.textContent = 'See the options';
-        actions.appendChild(link);
-        actions.appendChild(button('Continue setup', 'setup-secondary', function () { go('assess_intro'); }));
-        el.appendChild(actions);
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.className = 'setup-note-link';
+        link.textContent = 'Why an API key, and who this is for right now →';
+        el.appendChild(link);
       }
     },
     byok_provider: {
       eyebrow: 'AI SETUP',
       question: 'Which provider are you using?',
+      body: 'Pick the wire format your key speaks — most providers (OpenAI, Groq, OpenRouter, Together, and others) use the same OpenAI-compatible format; Anthropic has its own.',
       options: [
-        { label: 'OpenAI', value: 'openai', next: 'byok_key' },
-        { label: 'Anthropic', value: 'anthropic', next: 'byok_key' },
-        { label: 'Something else', hint: 'Custom-compatible endpoint', value: 'other', next: 'byok_endpoint' }
+        { label: 'OpenAI-compatible', hint: 'OpenAI, Groq, OpenRouter, Together, and most others', value: 'openai', next: 'byok_endpoint' },
+        { label: 'Anthropic', hint: 'Claude models', value: 'anthropic', next: 'byok_model' }
       ],
-      onSelect: function (value) { answers.provider = value; }
+      onSelect: function (value) { answers.provider = value; },
+      render: function (el) {
+        var toggle = document.createElement('a');
+        toggle.href = '#';
+        toggle.className = 'setup-note-link';
+        toggle.textContent = 'Or import a list of keys as JSON →';
+        el.appendChild(toggle);
+
+        var panel = document.createElement('div');
+        panel.className = 'setup-field';
+        panel.style.marginTop = '14px';
+        panel.hidden = true;
+
+        var textarea = document.createElement('textarea');
+        textarea.rows = 6;
+        textarea.spellcheck = false;
+        textarea.placeholder = '[\n  { "provider": "openai", "byokEndpoint": "https://api.groq.com/openai/v1/chat/completions", "byokModel": "openai/gpt-oss-120b", "apiKey": "sk-..." },\n  { "provider": "anthropic", "byokModel": "claude-sonnet-5", "apiKey": "sk-ant-..." }\n]';
+        panel.appendChild(textarea);
+
+        var uploadLabel = document.createElement('label');
+        uploadLabel.className = 'setup-upload-btn';
+        uploadLabel.textContent = 'Or choose a .json file';
+        var fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'application/json,.json';
+        fileInput.addEventListener('change', function () {
+          var file = fileInput.files && fileInput.files[0];
+          if (!file) return;
+          var reader = new FileReader();
+          reader.onload = function () { textarea.value = String(reader.result || ''); };
+          reader.readAsText(file);
+        });
+        uploadLabel.appendChild(fileInput);
+        panel.appendChild(uploadLabel);
+
+        var hint = document.createElement('p');
+        hint.className = 'setup-hint';
+        hint.textContent = 'A JSON array of key objects: provider ("openai" or "anthropic"), byokModel, apiKey, and byokEndpoint (openai-compatible keys only).';
+        panel.appendChild(hint);
+
+        var error = document.createElement('p');
+        error.className = 'setup-note error';
+        error.hidden = true;
+        panel.appendChild(error);
+
+        var panelActions = document.createElement('div');
+        panelActions.className = 'setup-actions';
+        panelActions.appendChild(button('Import keys', 'setup-primary', function () {
+          var entries;
+          try {
+            entries = JSON.parse(textarea.value);
+          } catch (e) {
+            error.textContent = 'That isn’t valid JSON.';
+            error.hidden = false;
+            return;
+          }
+          if (!Array.isArray(entries) || !entries.length) {
+            error.textContent = 'Expected a JSON array with at least one key.';
+            error.hidden = false;
+            return;
+          }
+          for (var i = 0; i < entries.length; i++) {
+            var entry = entries[i] || {};
+            if (entry.provider !== 'openai' && entry.provider !== 'anthropic') {
+              error.textContent = 'Entry ' + (i + 1) + ': provider must be "openai" or "anthropic".';
+              error.hidden = false;
+              return;
+            }
+            if (!entry.apiKey || !entry.byokModel) {
+              error.textContent = 'Entry ' + (i + 1) + ': needs an apiKey and byokModel.';
+              error.hidden = false;
+              return;
+            }
+            if (entry.provider === 'openai' && !entry.byokEndpoint) {
+              error.textContent = 'Entry ' + (i + 1) + ': openai-compatible keys need a byokEndpoint.';
+              error.hidden = false;
+              return;
+            }
+          }
+          error.hidden = true;
+          answers.keyStack = answers.keyStack || [];
+          entries.forEach(function (entry) {
+            answers.keyStack.push({
+              provider: entry.provider,
+              byokEndpoint: entry.byokEndpoint || '',
+              byokModel: entry.byokModel,
+              apiKey: entry.apiKey
+            });
+          });
+          answers.provider = null;
+          answers.byokEndpoint = '';
+          answers.byokModel = '';
+          answers.apiKey = '';
+          go('byok_add_another');
+        }));
+        panel.appendChild(panelActions);
+
+        toggle.addEventListener('click', function (e) {
+          e.preventDefault();
+          panel.hidden = !panel.hidden;
+          toggle.textContent = panel.hidden ? 'Or import a list of keys as JSON →' : 'Hide JSON import';
+        });
+
+        el.appendChild(panel);
+      }
     },
     byok_endpoint: {
       eyebrow: 'AI SETUP',
       question: 'What’s the API base URL?',
-      field: { placeholder: 'https://api.example.com/v1/chat/completions', hint: 'Must be an OpenAI-compatible chat completions endpoint.', key: 'byokEndpoint', type: 'text' },
+      field: { placeholder: 'https://api.groq.com/openai/v1/chat/completions', hint: 'The full chat-completions URL — check your provider’s docs for the exact address.', key: 'byokEndpoint', type: 'text' },
+      next: 'byok_model'
+    },
+    byok_model: {
+      eyebrow: 'AI SETUP',
+      question: 'Which model are you using?',
+      body: 'It needs to support reasoning (extended thinking / chain-of-thought) — vision is not required.',
+      field: { placeholder: 'e.g. openai/gpt-oss-120b, claude-sonnet-5, gpt-4o', hint: 'Type the exact model name/ID your provider expects.', key: 'byokModel', type: 'text' },
       next: 'byok_key'
     },
     byok_key: {
       eyebrow: 'AI SETUP',
       question: 'Paste your API key.',
       field: { placeholder: 'sk-...', hint: 'Stored only in your browser. Never sent to Trefelle.', key: 'apiKey', type: 'password' },
-      next: 'assess_intro'
+      next: 'byok_add_another'
     },
-    webllm_size: {
+    byok_add_another: {
       eyebrow: 'AI SETUP',
-      question: 'Which model size fits your device?',
-      options: [
-        { label: 'Small', hint: 'Fastest · about 1GB download', value: 'small', next: 'webllm_check' },
-        { label: 'Balanced', hint: 'Recommended · about 2GB download', value: 'balanced', next: 'webllm_check' },
-        { label: 'Larger', hint: 'Best quality · about 4GB, needs a strong GPU', value: 'large', next: 'webllm_check' }
-      ],
-      onSelect: function (value) { answers.modelSize = value; }
-    },
-    webllm_check: {
-      eyebrow: 'AI SETUP',
-      question: 'Check this browser for WebGPU support?',
-      options: [
-        { label: 'Check now', value: 'check', next: 'assess_intro', action: function (done) {
-            var supported = !!(navigator.gpu);
-            answers.webgpu = supported ? 'supported' : 'unsupported';
-            done();
-          } },
-        { label: 'Skip for now', value: 'skip', next: 'assess_intro' }
-      ]
-    },
-    local_runtime: {
-      eyebrow: 'AI SETUP',
-      question: 'Which local runtime are you using?',
-      options: [
-        { label: 'Ollama', hint: 'localhost:11434', value: 'ollama', next: 'local_address' },
-        { label: 'LM Studio', hint: 'localhost:1234', value: 'lmstudio', next: 'local_address' },
-        { label: 'Something else', value: 'custom', next: 'local_address' }
-      ],
-      onSelect: function (value) { answers.runtime = value; }
-    },
-    local_address: {
-      eyebrow: 'AI SETUP',
-      question: 'Confirm the server address.',
-      field: { placeholder: 'http://localhost:11434', hint: 'Your browser will need permission to reach this address.', key: 'serverAddress', type: 'text',
-        default: function () {
-          if (answers.runtime === 'ollama') return 'http://localhost:11434';
-          if (answers.runtime === 'lmstudio') return 'http://localhost:1234';
-          return '';
-        } },
-      next: 'local_model'
-    },
-    local_model: {
-      eyebrow: 'AI SETUP',
-      question: 'Which model have you pulled?',
+      question: 'Add a backup key?',
+      body: 'When one key hits its rate limit mid-conversation, Trefelle automatically retries with the next key and keeps the same conversation going — handy if you’re stacking a few free-tier keys.',
       render: function (el) {
-        var status = document.createElement('p');
-        status.className = 'step-body';
-        status.textContent = 'Checking ' + (answers.serverAddress || 'your server') + ' for available models…';
-        el.appendChild(status);
-
-        function showManualField() {
-          status.textContent = 'Couldn’t auto-detect models — type the name instead.';
-          var form = document.createElement('form');
-          form.className = 'setup-field';
-          var input = document.createElement('input');
-          input.type = 'text';
-          input.placeholder = 'e.g. llama3, qwen2.5, mistral';
-          input.autocomplete = 'off';
-          input.value = answers.localModel || '';
-          form.appendChild(input);
-          var actions = document.createElement('div');
-          actions.className = 'setup-actions';
-          var submit = document.createElement('button');
-          submit.type = 'submit';
-          submit.className = 'setup-primary';
-          submit.textContent = 'Continue';
-          actions.appendChild(submit);
-          form.appendChild(actions);
-          form.addEventListener('submit', function (e) {
-            e.preventDefault();
-            answers.localModel = input.value.trim();
-            go('assess_intro');
-          });
-          el.appendChild(form);
-          setTimeout(function () { input.focus(); }, 100);
+        var effectiveCount = (answers.keyStack ? answers.keyStack.length : 0) + (answers.provider && answers.apiKey ? 1 : 0);
+        if (effectiveCount) {
+          var summary = document.createElement('p');
+          summary.className = 'setup-note';
+          summary.textContent = effectiveCount + ' key' + (effectiveCount === 1 ? '' : 's') + ' connected so far.';
+          el.appendChild(summary);
         }
-
-        var base = (answers.serverAddress || '').replace(/\/+$/, '');
-        if (!base) { showManualField(); return; }
-
-        fetch(base + '/api/tags').then(function (res) {
-          if (!res.ok) throw new Error('bad response');
-          return res.json();
-        }).then(function (data) {
-          var models = (data.models || []).map(function (m) { return m.name || m.model; }).filter(Boolean);
-          if (!models.length) throw new Error('no models');
-          status.textContent = 'Found on ' + base + ':';
-          var list = document.createElement('div');
-          list.className = 'setup-options';
-          models.forEach(function (name) {
-            var b = document.createElement('button');
-            b.type = 'button';
-            b.className = 'setup-option';
-            var span = document.createElement('span');
-            span.textContent = name;
-            var arrow = document.createElement('span');
-            arrow.className = 'arrow';
-            arrow.textContent = '→';
-            b.appendChild(span);
-            b.appendChild(arrow);
-            b.addEventListener('click', function () {
-              answers.localModel = name;
-              go('assess_intro');
-            });
-            list.appendChild(b);
-          });
-          el.appendChild(list);
-        }).catch(function () {
-          showManualField();
-        });
+        var actions = document.createElement('div');
+        actions.className = 'setup-actions';
+        actions.appendChild(button('Add another key', 'setup-secondary', function () {
+          pushKeyEntry();
+          answers.provider = null;
+          answers.byokEndpoint = '';
+          answers.byokModel = '';
+          answers.apiKey = '';
+          go('byok_provider');
+        }));
+        actions.appendChild(button('Continue', 'setup-primary', function () {
+          pushKeyEntry();
+          go('assess_intro');
+        }));
+        el.appendChild(actions);
       }
     },
     assess_intro: {
@@ -1144,13 +1303,80 @@ import {
     assess_profile_import: {
       eyebrow: 'SPEED THINGS UP',
       question: 'Have a resume or LinkedIn on hand?',
-      body: 'Paste your resume text, your LinkedIn URL, or your LinkedIn About/Experience section. We\'ll use it to skip questions the answer already covers — totally optional.',
-      field: {
-        type: 'textarea',
-        key: 'profileImport',
-        placeholder: 'Paste resume text, a LinkedIn URL, or your About/Experience section…'
-      },
-      next: 'assess_personality'
+      body: 'Paste your resume text or LinkedIn URL, or upload a file and we\'ll drop its text in below for you to check. Totally optional.',
+      render: function (el) {
+        var form = document.createElement('form');
+        form.className = 'setup-field';
+
+        var textarea = document.createElement('textarea');
+        textarea.placeholder = 'Paste resume text, a LinkedIn URL, or your About/Experience section…';
+        textarea.value = answers.profileImport || '';
+        form.appendChild(textarea);
+
+        var uploadRow = document.createElement('div');
+        uploadRow.className = 'setup-upload';
+        var uploadLabel = document.createElement('label');
+        uploadLabel.className = 'setup-upload-btn';
+        uploadLabel.textContent = 'Or upload a file (.pdf, .docx, .txt)';
+        var fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = '.pdf,.doc,.docx,.txt';
+        uploadLabel.appendChild(fileInput);
+        uploadRow.appendChild(uploadLabel);
+        var uploadStatus = document.createElement('p');
+        uploadStatus.className = 'setup-note';
+        uploadStatus.textContent = 'Max 5 MB.';
+        form.appendChild(uploadRow);
+        form.appendChild(uploadStatus);
+
+        fileInput.addEventListener('change', function () {
+          var file = fileInput.files && fileInput.files[0];
+          fileInput.value = '';
+          if (!file) return;
+          uploadStatus.classList.remove('error');
+          if (file.size > MAX_RESUME_BYTES) {
+            uploadStatus.classList.add('error');
+            uploadStatus.textContent = 'That file is over 5 MB — try a smaller file or paste the text instead.';
+            return;
+          }
+          uploadStatus.textContent = 'Reading ' + file.name + '…';
+          readProfileFile(file).then(function (text) {
+            text = (text || '').trim();
+            if (!text) {
+              uploadStatus.classList.add('error');
+              uploadStatus.textContent = 'Couldn’t find any text in that file — try pasting instead.';
+              return;
+            }
+            textarea.value = text;
+            uploadStatus.textContent = 'Loaded ' + file.name + '.';
+          }, function (err) {
+            uploadStatus.classList.add('error');
+            uploadStatus.textContent = (err && err.message) || 'Couldn’t read that file — try pasting instead.';
+          });
+        });
+
+        var actions = document.createElement('div');
+        actions.className = 'setup-actions';
+        var submit = document.createElement('button');
+        submit.type = 'submit';
+        submit.className = 'setup-primary';
+        submit.textContent = 'Continue';
+        actions.appendChild(submit);
+        actions.appendChild(button('Skip', 'setup-secondary', function () {
+          answers.profileImport = '';
+          go('assess_personality');
+        }));
+        form.appendChild(actions);
+
+        form.addEventListener('submit', function (e) {
+          e.preventDefault();
+          answers.profileImport = textarea.value.trim();
+          go('assess_personality');
+        });
+
+        el.appendChild(form);
+        setTimeout(function () { textarea.focus(); }, 260);
+      }
     },
     assess_personality: {
       hideHeader: true,
@@ -1161,8 +1387,8 @@ import {
         renderAIFlow(el, {
           eyebrow: 'GETTING TO KNOW YOU',
           systemPrompt: profileContext + PERSONALITY_PROMPT,
-          softTarget: 10,
-          hardCap: 16,
+          softTarget: 6,
+          hardCap: 9,
           fallbackStepId: 'assess_bug',
           onDone: function (doneObj) {
             answers.personalitySummary = doneObj.summary || '';
@@ -1175,31 +1401,21 @@ import {
     },
     assess_field_choice: {
       eyebrow: 'YOUR FIELD',
-      question: 'Which broad field pulls you in most right now?',
-      options: [
-        { label: 'Software & Computer Science', value: 'Software & Computer Science', next: 'assess_stage_choice' },
-        { label: 'Data Science, AI & ML', value: 'Data Science, AI & ML', next: 'assess_stage_choice' },
-        { label: 'Mechanical Engineering', value: 'Mechanical Engineering', next: 'assess_stage_choice' },
-        { label: 'Electrical / Computer Engineering', value: 'Electrical / Computer Engineering', next: 'assess_stage_choice' },
-        { label: 'Civil / Structural Engineering', value: 'Civil / Structural Engineering', next: 'assess_stage_choice' },
-        { label: 'Aerospace Engineering', value: 'Aerospace Engineering', next: 'assess_stage_choice' },
-        { label: 'Biomedical / Health Tech', value: 'Biomedical / Health Tech', next: 'assess_stage_choice' },
-        { label: 'Chemical / Materials / Process', value: 'Chemical / Materials / Process', next: 'assess_stage_choice' },
-        { label: 'Industrial / Manufacturing / Robotics', value: 'Industrial / Manufacturing / Robotics', next: 'assess_stage_choice' },
-        { label: 'Environmental / Energy / Earth Science', value: 'Environmental / Energy / Earth Science', next: 'assess_stage_choice' },
-        { label: 'Math, Physics, or Actuarial / Quant', value: 'Math, Physics, or Actuarial / Quant', next: 'assess_stage_choice' },
-        { label: 'Not sure yet / something else', hint: 'Tell us a bit more', value: 'other', next: 'assess_field_custom' }
-      ],
-      onSelect: function (value) { if (value !== 'other') answers.chosenField = value; }
-    },
-    assess_field_custom: {
-      eyebrow: 'YOUR FIELD',
-      question: 'What field are you curious about, or what would you add?',
-      field: {
-        placeholder: 'e.g. Robotics, Neuroscience, or "not sure yet — open to anything technical"', key: 'chosenFieldCustom', type: 'text',
-        onSubmit: function (value) { answers.chosenField = value || 'Not sure yet — open to anything technical'; }
-      },
-      next: 'assess_stage_choice'
+      question: 'Which broad fields pull you in right now?',
+      body: 'Pick as many as genuinely interest you — plenty of people are drawn to more than one.',
+      multi: {
+        key: 'chosenFields',
+        next: 'assess_stage_choice',
+        custom: true,
+        customKey: 'chosenFieldsCustom',
+        customPlaceholder: 'Or type one not listed (optional)',
+        options: [
+          'Software & Computer Science', 'Data Science, AI & ML', 'Mechanical Engineering',
+          'Electrical / Computer Engineering', 'Civil / Structural Engineering', 'Aerospace Engineering',
+          'Biomedical / Health Tech', 'Chemical / Materials / Process', 'Industrial / Manufacturing / Robotics',
+          'Environmental / Energy / Earth Science', 'Math, Physics, or Actuarial / Quant'
+        ]
+      }
     },
     assess_stage_choice: {
       eyebrow: 'YOUR STAGE',
@@ -1218,15 +1434,18 @@ import {
         var context = answers.personalitySummary
           ? ('Here is what you already learned about how this person thinks and learns: "' + answers.personalitySummary + '" Use it — do not re-ask about personality or learning style. ')
           : '';
-        context += 'Their stated field of interest is "' + (answers.chosenField || 'not yet known') + '" and their career stage is "' + (stageLabels[answers.stage] || answers.stage || 'not yet known') + '". These were already asked directly — never ask about either again. ';
+        var chosenFieldsList = (answers.chosenFields || []).slice();
+        if (answers.chosenFieldsCustom) chosenFieldsList.push(answers.chosenFieldsCustom);
+        var fieldsText = chosenFieldsList.length ? chosenFieldsList.join(', ') : 'not yet known';
+        context += 'Their stated field(s) of interest: "' + fieldsText + '"' + (chosenFieldsList.length > 1 ? ' — they picked more than one, so explore across all of them rather than assuming the first is primary' : '') + '. Their career stage is "' + (stageLabels[answers.stage] || answers.stage || 'not yet known') + '". These were already asked directly — never ask about either again. ';
         if (answers.profileImport) {
-          context += 'They also pasted this resume/LinkedIn content before you started: "' + answers.profileImport + '" Use it to skip questions it already answers plainly (e.g. don\'t ask what their current job title is if it says so) and to target your verification exercises at the specific skills, tools, and claims it makes — but treat every claim in it as something to verify with a real exercise, not something to take at face value, exactly as you would a spoken claim. A resume never earns "mid" or "senior" by itself. ';
+          context += 'They also pasted this resume/LinkedIn content before you started: "' + answers.profileImport + '" This is past/background context, not a declaration of what they want next — it can include old jobs, school projects, or one-off gigs in fields they have no interest in continuing. Never assume the field(s) they picked above are wrong because the resume leans a different direction, and never build a scenario around a field or role that only appears in the resume and was NOT one of the field(s) they explicitly chose — if the resume mentions something outside their stated field(s), ignore it for scenario-building purposes; it is not evidence of intent. Use it only to skip questions it already answers plainly (e.g. don\'t ask what their current job title is if it says so) and to target verification exercises at specific skills/tools/claims within their CHOSEN field(s) — but treat every claim in it as something to verify with a real exercise, not something to take at face value, exactly as you would a spoken claim. A resume never earns "mid" or "senior" by itself. ';
         }
         renderAIFlow(el, {
           eyebrow: 'FINDING YOUR FIT',
           systemPrompt: context + FIELDS_PROMPT_BASE,
-          softTarget: 17,
-          hardCap: 26,
+          softTarget: 10,
+          hardCap: 14,
           fallbackStepId: 'assess_level',
           onDone: function (doneObj) {
             if (doneObj.level && LEVEL_PREFIX[doneObj.level] !== undefined) answers.level = doneObj.level;
@@ -1579,15 +1798,82 @@ import {
         back.textContent = 'Back to Trefelle';
         actions.appendChild(back);
         el.appendChild(actions);
+
+        var stack = answers.keyStack || [];
+        if (stack.length) {
+          var toggle = document.createElement('a');
+          toggle.href = '#';
+          toggle.className = 'setup-note-link';
+          toggle.textContent = 'Show my keys as JSON (for backup / re-import) →';
+          el.appendChild(toggle);
+
+          var panel = document.createElement('div');
+          panel.className = 'setup-field';
+          panel.style.marginTop = '14px';
+          panel.hidden = true;
+
+          var note = document.createElement('p');
+          note.className = 'setup-note error';
+          note.textContent = 'This is rendered only in your browser — it’s never sent to Trefelle or anyone else. Only you can see it. Keep it private: anyone with these keys can spend your API credits.';
+          panel.appendChild(note);
+
+          var textarea = document.createElement('textarea');
+          textarea.rows = Math.min(12, 3 + stack.length * 2);
+          textarea.readOnly = true;
+          textarea.spellcheck = false;
+          textarea.value = JSON.stringify(stack, null, 2);
+          panel.appendChild(textarea);
+
+          var panelActions = document.createElement('div');
+          panelActions.className = 'setup-actions';
+          var copyBtn = button('Copy to clipboard', 'setup-secondary', function () {
+            var done = function () {
+              copyBtn.textContent = 'Copied';
+              setTimeout(function () { copyBtn.textContent = 'Copy to clipboard'; }, 1800);
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(textarea.value).then(done, function () {
+                textarea.select();
+                document.execCommand('copy');
+                done();
+              });
+            } else {
+              textarea.select();
+              document.execCommand('copy');
+              done();
+            }
+          });
+          panelActions.appendChild(copyBtn);
+          panelActions.appendChild(button('Download .json', 'setup-secondary', function () {
+            var blob = new Blob([textarea.value], { type: 'application/json' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'trefelle-keys.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }));
+          panel.appendChild(panelActions);
+
+          toggle.addEventListener('click', function (e) {
+            e.preventDefault();
+            panel.hidden = !panel.hidden;
+            toggle.textContent = panel.hidden ? 'Show my keys as JSON (for backup / re-import) →' : 'Hide my keys';
+          });
+
+          el.appendChild(panel);
+        }
       }
     }
   };
 
   function engineLabel() {
-    if (answers.engine === 'byok') return 'Bring your own key' + (answers.provider ? ' · ' + answers.provider : '');
-    if (answers.engine === 'webllm') return 'WebLLM in-browser' + (answers.modelSize ? ' · ' + answers.modelSize : '');
-    if (answers.engine === 'local') return 'Local model' + (answers.runtime ? ' · ' + answers.runtime : '');
-    return 'Not chosen yet';
+    var stack = answers.keyStack || [];
+    if (!stack.length) return 'Not connected yet';
+    if (stack.length === 1) return stack[0].byokModel || (stack[0].provider === 'anthropic' ? 'Anthropic' : 'OpenAI-compatible');
+    return stack.length + ' keys connected';
   }
 
   function levelLabel(value) {
@@ -1725,14 +2011,15 @@ import {
       });
       wrap.appendChild(multiList);
 
+      var customKey = step.multi.customKey || 'customInterest';
       if (step.multi.custom) {
         var customWrap = document.createElement('div');
         customWrap.className = 'setup-field';
         customInput = document.createElement('input');
         customInput.type = 'text';
-        customInput.placeholder = 'Or type a field not listed (optional)';
+        customInput.placeholder = step.multi.customPlaceholder || 'Or type one not listed (optional)';
         customInput.autocomplete = 'off';
-        customInput.value = answers.customInterest || '';
+        customInput.value = answers[customKey] || '';
         customInput.addEventListener('input', updateContinueState);
         customWrap.appendChild(customInput);
         wrap.appendChild(customWrap);
@@ -1742,7 +2029,7 @@ import {
       multiActions.className = 'setup-actions';
       continueBtn = button('Continue', 'setup-primary', function () {
         answers[step.multi.key] = Array.from(selected);
-        if (step.multi.custom) answers.customInterest = customInput.value.trim();
+        if (step.multi.custom) answers[customKey] = customInput.value.trim();
         go(step.multi.next);
       });
       multiActions.appendChild(continueBtn);
