@@ -27,6 +27,21 @@
     try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
   }
 
+  // Everything except the actual key material is safe to save to the
+  // account -- apiKey/keyStack hold real credentials and stay device-only.
+  function sanitizedAnswers() {
+    var copy = {};
+    Object.keys(answers).forEach(function (k) {
+      if (k === 'apiKey' || k === 'keyStack') return;
+      copy[k] = answers[k];
+    });
+    return copy;
+  }
+  function saveAccountProgress() {
+    if (!window.TrefelleProgress) return;
+    window.TrefelleProgress.saveProgress('done', sanitizedAnswers());
+  }
+
   var FIELD_CATALOG = [
     { id: 'backend', name: 'Backend / APIs', demand: 'Very high', entryPay: '$85k', tools: ['PostgreSQL', 'Docker', 'Node.js or Django'], blurb: 'You build the services, data models, and APIs that everything else depends on. Correctness and reliability matter more than pixels.' },
     { id: 'frontend', name: 'Frontend', demand: 'High', entryPay: '$75k', tools: ['React', 'TypeScript', 'Chrome DevTools'], blurb: 'You turn designs and data into interfaces people actually use — performance, accessibility, and state management are the daily craft.' },
@@ -314,28 +329,6 @@
   }
 
   var steps = {
-    welcome_back: {
-      eyebrow: 'WELCOME BACK',
-      question: 'Continue with your saved setup?',
-      body: function () {
-        return summaryLine();
-      },
-      render: function (el) {
-        var actions = document.createElement('div');
-        actions.className = 'setup-actions';
-        actions.appendChild(button('Continue', 'setup-primary', function () {
-          history = [];
-          go('done', true);
-        }));
-        actions.appendChild(button('Start over', 'setup-secondary', function () {
-          answers = {};
-          clearAnswers();
-          history = [];
-          go('engine', true);
-        }));
-        el.appendChild(actions);
-      }
-    },
     engine: {
       eyebrow: 'AI SETUP',
       question: 'Connect an AI key.',
@@ -1288,21 +1281,24 @@
     },
     save_ask: {
       eyebrow: 'SAVE & FINISH',
-      question: 'Save this setup on this device?',
+      question: 'Your setup is saved to your account.',
+      body: 'Your fields, roles, and assessment answers are saved to your Trefelle account automatically — nothing that should stay private, like your API key, ever leaves this device.',
       options: [
-        { label: 'Yes, remember it', value: 'yes', next: 'done' },
-        { label: 'No, ask me next time', value: 'no', next: 'done' }
+        { label: 'Also save it on this device', hint: 'Skips this whole flow next time you’re on this browser', value: 'yes', next: 'done' },
+        { label: 'No, just my account', value: 'no', next: 'done' }
       ],
       onSelect: function (value) {
         answers.remember = value;
         if (value === 'yes') { saveAnswers(); } else { clearAnswers(); }
-      }
+      },
+      render: function () { saveAccountProgress(); }
     },
     done: {
       eyebrow: 'ALL SET',
       question: 'Your mentor is ready.',
       body: function () { return summaryLine(); },
       render: function (el) {
+        saveAccountProgress();
         var actions = document.createElement('div');
         actions.className = 'setup-actions';
         actions.appendChild(button('Edit setup', 'setup-secondary', function () { go('engine'); }));
@@ -1409,7 +1405,8 @@
     } else if (answers.role) {
       rows.push(['Target role', answers.role]);
     }
-    rows.push(['Remember setup', answers.remember === 'yes' ? 'Yes' : 'No']);
+    rows.push(['Saved to account', 'Yes']);
+    rows.push(['Also saved on this device', answers.remember === 'yes' ? 'Yes' : 'No']);
     var wrap = document.createElement('div');
     wrap.className = 'summary-list';
     rows.forEach(function (row) {
@@ -1643,11 +1640,13 @@
 
   backBtn.addEventListener('click', back);
 
+  // A saved setup with a key already on this device means the mentor can
+  // run right now -- no reason to make them click back through the wizard.
+  // (A save with no local key still needs the connect step, so that case
+  // falls through to the normal wizard instead of a dead-end redirect.)
   var saved = loadAnswers();
-  if (saved && saved.engine) {
-    answers = saved;
-    currentId = 'welcome_back';
-    renderStep('welcome_back');
+  if (saved && saved.keyStack && saved.keyStack.length) {
+    window.location.href = '/practice';
   } else {
     currentId = 'engine';
     renderStep('engine');
