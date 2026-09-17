@@ -83,6 +83,47 @@
     });
   }
 
+  // A request to a private address can hang instead of failing fast (a proxy
+  // or firewall silently dropping it rather than refusing the connection),
+  // so each attempt is capped with its own timeout.
+  function fetchWithTimeout(url, ms) {
+    var controller = new AbortController();
+    var timer = setTimeout(function () { controller.abort(); }, ms);
+    return fetch(url, { signal: controller.signal }).then(function (res) {
+      clearTimeout(timer);
+      return res;
+    }, function (err) {
+      clearTimeout(timer);
+      throw err;
+    });
+  }
+
+  // Tries the OpenAI-style /v1/models list first, then Ollama's native
+  // /api/tags -- covers the two most common local-server shapes without
+  // needing the person to say which one they're running.
+  function discoverLocalModels(endpoint) {
+    var modelsUrl = endpoint.replace(/\/?chat\/completions\/?$/, '/models');
+    var tagsUrl = null;
+    try { tagsUrl = new URL(endpoint).origin + '/api/tags'; } catch (e) {}
+
+    function tryOpenAIStyle() {
+      return fetchWithTimeout(modelsUrl, 4000).then(checkResponse).then(function (res) { return res.json(); }).then(function (data) {
+        var list = (data.data || []).map(function (m) { return m.id; }).filter(Boolean);
+        if (!list.length) throw new Error('no models');
+        return list;
+      });
+    }
+    function tryOllamaStyle() {
+      if (!tagsUrl) return Promise.reject(new Error('no local origin'));
+      return fetchWithTimeout(tagsUrl, 4000).then(checkResponse).then(function (res) { return res.json(); }).then(function (data) {
+        var list = (data.models || []).map(function (m) { return m.name; }).filter(Boolean);
+        if (!list.length) throw new Error('no models');
+        return list;
+      });
+    }
+    return tryOpenAIStyle().catch(tryOllamaStyle);
+  }
+
   function callWithEntry(entry, messages, signal) {
     if (entry.provider === 'webllm') return callWebLLM(entry, messages, signal);
     return entry.provider === 'anthropic' ? callAnthropic(entry, messages, signal) : callOpenAICompatible(entry, messages, signal);
@@ -107,6 +148,7 @@
     callAI: callAI,
     callWithEntry: callWithEntry,
     getWebLLMEngine: getWebLLMEngine,
+    discoverLocalModels: discoverLocalModels,
     CALL_TEMPERATURE: CALL_TEMPERATURE,
     WEBLLM_MODEL_ID: WEBLLM_MODEL_ID
   };
