@@ -685,7 +685,7 @@
         var actions = document.createElement('div');
         actions.className = 'setup-actions';
         actions.appendChild(button('Start', 'setup-primary', function () { go('assess_profile_import'); }));
-        actions.appendChild(button('Skip for now', 'setup-secondary', function () { go('voice_ask'); }));
+        actions.appendChild(button('Skip for now', 'setup-secondary', function () { go('save_ask'); }));
         el.appendChild(actions);
       }
     },
@@ -1234,7 +1234,7 @@
         var actions = document.createElement('div');
         actions.className = 'setup-actions';
         actions.appendChild(button('None of these — I’ll specify my own role', 'setup-secondary', function () { go('role_manual'); }));
-        actions.appendChild(button('Continue', 'setup-primary', function () { go('voice_ask'); }));
+        actions.appendChild(button('Continue', 'setup-primary', function () { go('save_ask'); }));
         el.appendChild(actions);
 
         if (!aiAvailable(answers)) { cards.forEach(function (c) { c.loading.remove(); }); return; }
@@ -1284,65 +1284,7 @@
       eyebrow: 'ROLE MATCH',
       question: 'What role are you aiming for?',
       field: { placeholder: 'e.g. Backend Engineer, QA Analyst', hint: 'Whatever you type is saved as your target role.', key: 'role', type: 'text' },
-      next: 'voice_ask'
-    },
-    voice_ask: {
-      eyebrow: 'VOICE',
-      question: 'Want to talk with your mentor instead of typing?',
-      options: [
-        { label: 'Yes, enable microphone', value: 'yes', next: 'voice_permission' },
-        { label: 'No, keep it text-only', value: 'no', next: 'save_ask' }
-      ],
-      onSelect: function (value) { answers.voice = value; }
-    },
-    voice_permission: {
-      eyebrow: 'VOICE',
-      question: 'Allow microphone access.',
-      render: function (el) {
-        var note = document.createElement('p');
-        note.className = 'setup-note';
-        note.textContent = 'Trefelle only listens while you’re actively talking to your mentor.';
-        el.appendChild(note);
-        var actions = document.createElement('div');
-        actions.className = 'setup-actions';
-        var allowBtn = button('Allow microphone', 'setup-primary', function () {
-          allowBtn.disabled = true;
-          allowBtn.textContent = 'Requesting…';
-          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            answers.microphone = 'unsupported';
-            note.textContent = 'This browser can’t request microphone access.';
-            note.classList.add('error');
-            setTimeout(function () { go('save_ask'); }, 700);
-            return;
-          }
-          navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
-            stream.getTracks().forEach(function (t) { t.stop(); });
-            answers.microphone = 'granted';
-            go('voice_mode');
-          }).catch(function () {
-            answers.microphone = 'denied';
-            note.textContent = 'Microphone access was denied. You can enable it later in your browser settings.';
-            note.classList.add('error');
-            allowBtn.disabled = false;
-            allowBtn.textContent = 'Allow microphone';
-          });
-        });
-        actions.appendChild(allowBtn);
-        actions.appendChild(button('Not now', 'setup-secondary', function () {
-          answers.microphone = 'skipped';
-          go('save_ask');
-        }));
-        el.appendChild(actions);
-      }
-    },
-    voice_mode: {
-      eyebrow: 'VOICE',
-      question: 'How should listening work?',
-      options: [
-        { label: 'Push to talk', hint: 'Hold a key while you speak', value: 'push', next: 'save_ask' },
-        { label: 'Always listening', hint: 'While the mentor panel is open', value: 'always', next: 'save_ask' }
-      ],
-      onSelect: function (value) { answers.listenMode = value; }
+      next: 'save_ask'
     },
     save_ask: {
       eyebrow: 'SAVE & FINISH',
@@ -1467,7 +1409,6 @@
     } else if (answers.role) {
       rows.push(['Target role', answers.role]);
     }
-    rows.push(['Voice', answers.voice === 'yes' ? (answers.microphone === 'granted' ? 'Enabled' : 'Requested, not granted') : 'Text-only']);
     rows.push(['Remember setup', answers.remember === 'yes' ? 'Yes' : 'No']);
     var wrap = document.createElement('div');
     wrap.className = 'summary-list';
