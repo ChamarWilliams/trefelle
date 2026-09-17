@@ -29,6 +29,14 @@
             { name: 'drops invalid', args: [['no-at-sign.com', 'two@@at.com', 'no.dot@com', 'ok@site.com']], expected: ['ok@site.com'] },
             { name: 'drops whitespace-containing', args: [['bad email@site.com', 'good@site.com']], expected: ['good@site.com'] },
             { name: 'sorts result', args: [['zed@site.com', 'amy@site.com']], expected: ['amy@site.com', 'zed@site.com'] }
+          ],
+          reference: [
+            { term: 'strip', usage: 'str.strip()', explain: 'Returns a copy of the string with leading and trailing whitespace removed.' },
+            { term: 'lower', usage: 'str.lower()', explain: 'Returns a lowercased copy of the string.' },
+            { term: 'count', usage: 'str.count(sub)', explain: 'Counts how many times a substring appears in the string.' },
+            { term: 'partition', usage: 'str.partition(sep)', explain: 'Splits the string at the first sep, returning a 3-item tuple (before, sep, after).' },
+            { term: 'set', usage: 'set()', explain: 'A collection of unique, unordered values \u2014 adding a duplicate has no effect.' },
+            { term: 'sorted', usage: 'sorted(iterable)', explain: 'Returns a new, sorted list built from any iterable (a list, a set, etc).' }
           ]
         },
         {
@@ -54,6 +62,10 @@
             { name: 'at limit', args: [[10, 12, 14], 15, 3, 10], expected: false },
             { name: 'old requests age out', args: [[1, 2, 3], 15, 3, 10], expected: true },
             { name: 'exact window edge included', args: [[5], 15, 1, 10], expected: false }
+          ],
+          reference: [
+            { term: 'for', usage: 'for x in items:', explain: 'Runs the loop body once per item in a list, binding x to each item in turn.' },
+            { term: 'len', usage: 'len(items)', explain: 'Returns how many items are in a list, string, or other sequence.' }
           ]
         },
         {
@@ -79,6 +91,12 @@
             { name: 'touching counts as overlap', args: [[[1, 4], [4, 5]]], expected: [[1, 5]] },
             { name: 'single slot', args: [[[5, 10]]], expected: [[5, 10]] },
             { name: 'fully contained', args: [[[1, 10], [2, 3]]], expected: [[1, 10]] }
+          ],
+          reference: [
+            { term: 'sort', usage: 'arr.sort((a, b) => a - b)', explain: 'The comparator returns negative to put a before b, positive for b before a.' },
+            { term: 'push', usage: 'arr.push(item)', explain: 'Adds an item to the end of an array, mutating it in place.' },
+            { term: 'max', usage: 'Math.max(a, b)', explain: 'Returns the largest of the given numbers.' },
+            { term: 'length', usage: 'arr.length', explain: 'How many items are in the array.' }
           ]
         },
         {
@@ -102,6 +120,11 @@
             "INSERT INTO orders VALUES (1,1,'2026-09-10'),(2,1,'2026-02-15'),(3,2,'2026-03-01'),(4,3,'2026-08-20');",
           tests: [
             { name: 'customers with no orders', expected: [[4, 'Devon Brooks'], [5, 'Jordan Kim']] }
+          ],
+          reference: [
+            { term: 'JOIN', usage: 'FROM a LEFT JOIN b ON ...', explain: 'Keeps every row from the left table, filling NULLs where the right table has no match.' },
+            { term: 'NULL', usage: 'col IS NULL', explain: 'True when a column has no value \u2014 use this instead of = NULL, which never matches.' },
+            { term: 'ORDER', usage: 'ORDER BY col', explain: 'Sorts the result rows by the given column(s), ascending by default.' }
           ]
         }
       ]
@@ -288,12 +311,110 @@
     });
   }
 
+  // ---- Tutor: explains concepts via whatever AI is connected, never solves the problem ----
+  function stripHtml(html) {
+    return String(html).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  function tutorSystemPrompt(project) {
+    return 'You are a patient, encouraging programming tutor inside Trefelle, a coding practice ' +
+      'platform. The student is working on this ' + project.language + ' problem, titled "' +
+      project.title + '": ' + stripHtml(project.spec) + '\n\n' +
+      'Rules:\n' +
+      '- Never write, complete, or output code that solves this problem, in whole or in part, ' +
+      'even if asked directly or indirectly.\n' +
+      '- If asked to solve it, explain the relevant concept, built-in method, or pattern instead, ' +
+      'and encourage the student to write the code themselves.\n' +
+      '- You may freely explain general language features, syntax, built-in functions/methods, ' +
+      'and debugging strategies, using short examples unrelated to this specific problem.\n' +
+      '- Keep answers short and concrete.';
+  }
+
+  function cmModeFor(language) {
+    if (language === 'python') return 'python';
+    if (language === 'javascript') return 'javascript';
+    if (language === 'sql') return 'text/x-sql';
+    return null;
+  }
+
+  function findReference(project, term) {
+    if (!project.reference || !term) return null;
+    var t = term.toLowerCase();
+    for (var i = 0; i < project.reference.length; i++) {
+      if (project.reference[i].term.toLowerCase() === t) return project.reference[i];
+    }
+    return null;
+  }
+
   var sideEl = document.getElementById('side');
   var mainEl = document.getElementById('main');
   var topTitle = document.getElementById('topTitle');
   var completed = {};
   try { completed = JSON.parse(localStorage.getItem('trefelle_practice_done') || '{}'); } catch (e) {}
   var activeId = null;
+
+  // ---- module-level UI state: one project is ever open at a time ----
+  var tabButtons = [];
+  var tabPanels = [];
+  var tutorSend = null;
+  var popoverEl = null;
+
+  function switchTab(name) {
+    tabButtons.forEach(function (btn) { btn.classList.toggle('active', btn.dataset.tab === name); });
+    tabPanels.forEach(function (panel) { panel.hidden = panel.dataset.panel !== name; });
+  }
+
+  function hidePopover() {
+    if (popoverEl) { popoverEl.remove(); popoverEl = null; }
+  }
+
+  function showPopover(x, y, project, term) {
+    hidePopover();
+    var entry = findReference(project, term);
+    var pop = document.createElement('div');
+    pop.className = 'pr-token-popover';
+    if (entry) {
+      var usage = document.createElement('div');
+      usage.className = 'pr-token-usage';
+      usage.textContent = entry.usage;
+      var explain = document.createElement('div');
+      explain.className = 'pr-token-explain';
+      explain.textContent = entry.explain;
+      pop.appendChild(usage);
+      pop.appendChild(explain);
+    } else {
+      var note = document.createElement('div');
+      note.className = 'pr-token-explain';
+      note.textContent = 'No reference entry for \u201c' + term + '\u201d yet.';
+      pop.appendChild(note);
+      var askBtn = document.createElement('button');
+      askBtn.type = 'button';
+      askBtn.className = 'pr-token-ask';
+      askBtn.textContent = 'Ask AI to explain';
+      askBtn.addEventListener('click', function () {
+        hidePopover();
+        askTutor('Explain "' + term + '" in ' + project.language + '. Just explain this one thing \u2014 don\u2019t solve my assignment.');
+      });
+      pop.appendChild(askBtn);
+    }
+    var vw = window.innerWidth, vh = window.innerHeight;
+    pop.style.left = Math.min(x, vw - 280) + 'px';
+    pop.style.top = Math.min(y + 12, vh - 140) + 'px';
+    document.body.appendChild(pop);
+    popoverEl = pop;
+  }
+
+  function askTutor(text) {
+    switchTab('tutor');
+    if (tutorSend) tutorSend(text);
+  }
+
+  document.addEventListener('mousedown', function (e) {
+    if (popoverEl && !popoverEl.contains(e.target) && !(e.target.closest && e.target.closest('.CodeMirror'))) hidePopover();
+  }, true);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') hidePopover();
+  });
 
   function markDone(id) {
     completed[id] = true;
@@ -334,23 +455,180 @@
     renderMain(project);
   }
 
+  function renderTutorPanel(container, project) {
+    container.innerHTML = '';
+    tutorSend = null;
+    var stack = window.TrefelleAI.loadKeyStack();
+    if (!stack.length) {
+      var locked = document.createElement('div');
+      locked.className = 'pr-tutor-locked';
+      var p = document.createElement('p');
+      p.textContent = 'Connect an AI key, WebLLM, or local model to use the tutor.';
+      var a = document.createElement('a');
+      a.href = '/workspace';
+      a.className = 'pr-tutor-locked-link';
+      a.textContent = 'Connect one \u2192';
+      locked.appendChild(p);
+      locked.appendChild(a);
+      container.appendChild(locked);
+      return;
+    }
+
+    var conversation = [];
+    var msgs = document.createElement('div');
+    msgs.className = 'pr-tutor-msgs';
+    var intro = document.createElement('div');
+    intro.className = 'pr-tutor-msg assistant';
+    intro.textContent = 'Ask me about syntax, built-ins, or concepts \u2014 I\u2019ll help you understand, but I won\u2019t solve this problem for you.';
+    msgs.appendChild(intro);
+    container.appendChild(msgs);
+
+    var status = document.createElement('p');
+    status.className = 'pr-status';
+    status.hidden = true;
+    container.appendChild(status);
+
+    var row = document.createElement('div');
+    row.className = 'pr-tutor-input-row';
+    var input = document.createElement('textarea');
+    input.className = 'pr-tutor-input';
+    input.placeholder = 'Ask a question\u2026';
+    var sendBtn = document.createElement('button');
+    sendBtn.type = 'button';
+    sendBtn.className = 'pr-run-btn';
+    sendBtn.textContent = 'Send';
+    row.appendChild(input);
+    row.appendChild(sendBtn);
+    container.appendChild(row);
+
+    function setStatus(text, isError) {
+      status.hidden = !text;
+      status.textContent = text || '';
+      status.className = 'pr-status' + (isError ? ' error' : '');
+    }
+
+    function appendMsg(role, text) {
+      var m = document.createElement('div');
+      m.className = 'pr-tutor-msg ' + role;
+      m.textContent = text;
+      msgs.appendChild(m);
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    function send(preset) {
+      var text = (preset || input.value).trim();
+      if (!text) return;
+      input.value = '';
+      sendBtn.disabled = true;
+      appendMsg('user', text);
+      conversation.push({ role: 'user', content: text });
+      setStatus('Thinking\u2026');
+      window.TrefelleAI.callAI(window.TrefelleAI.loadKeyStack(), [{ role: 'system', content: tutorSystemPrompt(project) }].concat(conversation))
+        .then(function (reply) {
+          setStatus('');
+          appendMsg('assistant', reply);
+          conversation.push({ role: 'assistant', content: reply });
+        })
+        .catch(function (err) {
+          setStatus((err && err.message) || 'Something went wrong asking the tutor.', true);
+        })
+        .then(function () { sendBtn.disabled = false; });
+    }
+
+    sendBtn.addEventListener('click', function () { send(); });
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+    });
+
+    tutorSend = send;
+  }
+
   function renderMain(project) {
     mainEl.innerHTML = '';
+    hidePopover();
+
+    var split = document.createElement('div');
+    split.className = 'pr-split';
+
+    // ---- left: Description / Reference / Tutor tabs ----
+    var info = document.createElement('div');
+    info.className = 'pr-info';
+
+    var tabs = document.createElement('div');
+    tabs.className = 'pr-tabs';
+    var tabDefs = [
+      { id: 'description', label: 'Description' },
+      { id: 'reference', label: 'Reference' },
+      { id: 'tutor', label: 'Tutor' }
+    ];
+    tabButtons = [];
+    tabDefs.forEach(function (t) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'pr-tab' + (t.id === 'description' ? ' active' : '');
+      btn.dataset.tab = t.id;
+      btn.textContent = t.label;
+      btn.addEventListener('click', function () { switchTab(t.id); });
+      tabs.appendChild(btn);
+      tabButtons.push(btn);
+    });
+    info.appendChild(tabs);
+
+    var descPanel = document.createElement('div');
+    descPanel.className = 'pr-panel';
+    descPanel.dataset.panel = 'description';
 
     var eyebrow = document.createElement('p');
     eyebrow.className = 'pr-eyebrow';
     eyebrow.textContent = project.skill;
-    mainEl.appendChild(eyebrow);
+    descPanel.appendChild(eyebrow);
 
     var h1 = document.createElement('h1');
     h1.className = 'pr-h1';
     h1.textContent = project.title;
-    mainEl.appendChild(h1);
+    descPanel.appendChild(h1);
 
     var spec = document.createElement('div');
     spec.className = 'pr-spec';
     spec.innerHTML = project.spec;
-    mainEl.appendChild(spec);
+    descPanel.appendChild(spec);
+
+    var refPanel = document.createElement('div');
+    refPanel.className = 'pr-panel';
+    refPanel.dataset.panel = 'reference';
+    refPanel.hidden = true;
+    var refList = document.createElement('div');
+    refList.className = 'pr-ref-list';
+    (project.reference || []).forEach(function (entry) {
+      var item = document.createElement('div');
+      item.className = 'pr-ref-item';
+      var usage = document.createElement('div');
+      usage.className = 'pr-ref-usage';
+      usage.textContent = entry.usage;
+      var explain = document.createElement('div');
+      explain.className = 'pr-ref-explain';
+      explain.textContent = entry.explain;
+      item.appendChild(usage);
+      item.appendChild(explain);
+      refList.appendChild(item);
+    });
+    refPanel.appendChild(refList);
+
+    var tutorPanel = document.createElement('div');
+    tutorPanel.className = 'pr-panel';
+    tutorPanel.dataset.panel = 'tutor';
+    tutorPanel.hidden = true;
+    renderTutorPanel(tutorPanel, project);
+
+    tabPanels = [descPanel, refPanel, tutorPanel];
+    info.appendChild(descPanel);
+    info.appendChild(refPanel);
+    info.appendChild(tutorPanel);
+    split.appendChild(info);
+
+    // ---- right: editor + run/submit + results ----
+    var workbench = document.createElement('div');
+    workbench.className = 'pr-workbench';
 
     var wrap = document.createElement('div');
     wrap.className = 'pr-editor-wrap';
@@ -375,30 +653,50 @@
     bar.appendChild(actions);
     wrap.appendChild(bar);
 
-    var editor = document.createElement('textarea');
-    editor.className = 'pr-editor';
-    editor.spellcheck = false;
-    editor.value = loadSavedCode(project.id, project.starter);
-    editor.addEventListener('input', function () { saveCode(project.id, editor.value); });
-    editor.addEventListener('keydown', function (e) {
-      if (e.key === 'Tab') {
-        e.preventDefault();
-        var start = editor.selectionStart, end = editor.selectionEnd;
-        editor.value = editor.value.slice(0, start) + '    ' + editor.value.slice(end);
-        editor.selectionStart = editor.selectionEnd = start + 4;
+    var editorHost = document.createElement('div');
+    editorHost.className = 'pr-editor-host';
+    wrap.appendChild(editorHost);
+    workbench.appendChild(wrap);
+
+    var cm = CodeMirror(editorHost, {
+      value: loadSavedCode(project.id, project.starter),
+      mode: cmModeFor(project.language),
+      lineNumbers: true,
+      indentUnit: 4,
+      tabSize: 4,
+      viewportMargin: Infinity,
+      // Enter inserts a plain newline -- CodeMirror's mode-aware auto-indent
+      // stacks with a student's own leading spaces and breaks Python indentation.
+      extraKeys: {
+        Tab: function (inst) { inst.replaceSelection('    '); },
+        Enter: function (inst) { inst.replaceSelection('\n'); }
       }
     });
-    wrap.appendChild(editor);
-    mainEl.appendChild(wrap);
+    cm.on('change', function () { saveCode(project.id, cm.getValue()); });
+    editorHost.addEventListener('mousedown', function (e) {
+      setTimeout(function () {
+        var pos = cm.coordsChar({ left: e.clientX, top: e.clientY }, 'window');
+        var token = cm.getTokenAt(pos);
+        var term = token && token.string ? token.string.replace(/[^\w]/g, '') : '';
+        if (!term) { hidePopover(); return; }
+        showPopover(e.clientX, e.clientY, project, term);
+      }, 0);
+    });
 
     var status = document.createElement('p');
     status.className = 'pr-status';
     status.hidden = true;
-    mainEl.appendChild(status);
+    workbench.appendChild(status);
 
     var results = document.createElement('div');
     results.className = 'pr-results';
-    mainEl.appendChild(results);
+    workbench.appendChild(results);
+
+    split.appendChild(workbench);
+    mainEl.appendChild(split);
+    // CodeMirror measures its container on construction; it was off-DOM until
+    // the line above, so it needs one refresh now that it has real layout.
+    cm.refresh();
 
     function setStatus(text, isError) {
       status.hidden = !text;
@@ -407,16 +705,18 @@
     }
 
     function runRaw() {
-      if (project.language === 'javascript') return runJSRaw(editor.value);
-      if (project.language === 'python') return runPythonRaw(editor.value);
-      if (project.language === 'sql') return runSqlRaw(editor.value, project);
+      var code = cm.getValue();
+      if (project.language === 'javascript') return runJSRaw(code);
+      if (project.language === 'python') return runPythonRaw(code);
+      if (project.language === 'sql') return runSqlRaw(code, project);
       return Promise.reject(new Error('Unsupported language: ' + project.language));
     }
 
     function runTests() {
-      if (project.language === 'javascript') return runJSTests(editor.value, project);
-      if (project.language === 'python') return runPythonTests(editor.value, project);
-      if (project.language === 'sql') return runSqlTests(editor.value, project);
+      var code = cm.getValue();
+      if (project.language === 'javascript') return runJSTests(code, project);
+      if (project.language === 'python') return runPythonTests(code, project);
+      if (project.language === 'sql') return runSqlTests(code, project);
       return Promise.reject(new Error('Unsupported language: ' + project.language));
     }
 
@@ -501,6 +801,7 @@
 
   function renderEmpty() {
     mainEl.innerHTML = '';
+    hidePopover();
     var wrap = document.createElement('div');
     wrap.className = 'pr-empty';
     var h1 = document.createElement('h1');
