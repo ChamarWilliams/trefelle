@@ -218,13 +218,17 @@
   var WEBLLM_MODEL_ID = window.TrefelleAI.WEBLLM_MODEL_ID;
 
   function pushKeyEntry() {
-    if (!answers.provider || !answers.apiKey) return;
+    if (!answers.provider) return;
+    // Anthropic always needs a key; an openai-compatible endpoint (including
+    // a local server) usually doesn't, so only that one is required.
+    if (answers.provider === 'anthropic' && !answers.apiKey) return;
+    if (answers.provider === 'openai' && !answers.byokEndpoint) return;
     answers.keyStack = answers.keyStack || [];
     answers.keyStack.push({
       provider: answers.provider,
       byokEndpoint: answers.byokEndpoint || '',
       byokModel: answers.byokModel || '',
-      apiKey: answers.apiKey
+      apiKey: answers.apiKey || ''
     });
     saveAnswers();
   }
@@ -276,16 +280,32 @@
       body: 'Pick the wire format your key speaks — most providers (OpenAI, Groq, OpenRouter, Together, and others) use the same OpenAI-compatible format; Anthropic has its own.',
       options: [
         { label: 'OpenAI-compatible', hint: 'OpenAI, Groq, OpenRouter, Together, and most others', value: 'openai', next: 'byok_endpoint' },
+        { label: 'Run it locally', hint: 'Ollama, LM Studio, or any local server · free, no key needed', value: 'openai', action: function (done) { answers.apiKey = ''; done(); }, next: 'byok_local_endpoint' },
         { label: 'Anthropic', hint: 'Claude models', value: 'anthropic', next: 'byok_model' },
         { label: 'Run it in your browser', hint: 'WebLLM · free, needs a capable GPU', value: 'webllm', next: 'webllm_check' }
       ],
       onSelect: function (value) { answers.provider = value; },
       render: function (el) {
-        var toggle = document.createElement('a');
-        toggle.href = '#';
-        toggle.className = 'setup-note-link';
-        toggle.textContent = 'Or import a list of keys as JSON →';
-        el.appendChild(toggle);
+        var toggleWrap = document.createElement('div');
+        toggleWrap.className = 'setup-options';
+        toggleWrap.style.marginTop = '10px';
+        var toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.className = 'setup-option';
+        var toggleText = document.createElement('span');
+        var toggleMain = document.createElement('span');
+        toggleMain.textContent = 'Import saved keys';
+        toggleText.appendChild(toggleMain);
+        var toggleHint = document.createElement('small');
+        toggleHint.textContent = 'Paste or upload a JSON file of keys you saved before';
+        toggleText.appendChild(toggleHint);
+        var toggleArrow = document.createElement('span');
+        toggleArrow.className = 'arrow';
+        toggleArrow.textContent = '→';
+        toggle.appendChild(toggleText);
+        toggle.appendChild(toggleArrow);
+        toggleWrap.appendChild(toggle);
+        el.appendChild(toggleWrap);
 
         var panel = document.createElement('div');
         panel.className = 'setup-field';
@@ -347,13 +367,18 @@
               error.hidden = false;
               return;
             }
-            if (entry.provider !== 'webllm' && (!entry.apiKey || !entry.byokModel)) {
-              error.textContent = 'Entry ' + (i + 1) + ': needs an apiKey and byokModel.';
+            if (entry.provider !== 'webllm' && !entry.byokModel) {
+              error.textContent = 'Entry ' + (i + 1) + ': needs a byokModel.';
+              error.hidden = false;
+              return;
+            }
+            if (entry.provider === 'anthropic' && !entry.apiKey) {
+              error.textContent = 'Entry ' + (i + 1) + ': Anthropic keys need an apiKey.';
               error.hidden = false;
               return;
             }
             if (entry.provider === 'openai' && !entry.byokEndpoint) {
-              error.textContent = 'Entry ' + (i + 1) + ': openai-compatible keys need a byokEndpoint.';
+              error.textContent = 'Entry ' + (i + 1) + ': openai-compatible keys need a byokEndpoint (apiKey is optional for local servers).';
               error.hidden = false;
               return;
             }
@@ -367,7 +392,7 @@
                 provider: entry.provider,
                 byokEndpoint: entry.byokEndpoint || '',
                 byokModel: entry.byokModel,
-                apiKey: entry.apiKey
+                apiKey: entry.apiKey || ''
               });
           });
           answers.provider = null;
@@ -379,10 +404,12 @@
         }));
         panel.appendChild(panelActions);
 
-        toggle.addEventListener('click', function (e) {
-          e.preventDefault();
+        toggle.addEventListener('click', function () {
           panel.hidden = !panel.hidden;
-          toggle.textContent = panel.hidden ? 'Or import a list of keys as JSON →' : 'Hide JSON import';
+          toggleMain.textContent = panel.hidden ? 'Import saved keys' : 'Hide import panel';
+          toggleHint.textContent = panel.hidden ? 'Paste or upload a JSON file of keys you saved before' : 'Collapse this panel';
+          toggleArrow.textContent = panel.hidden ? '→' : '×';
+          if (!panel.hidden) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         });
 
         el.appendChild(panel);
@@ -393,6 +420,87 @@
       question: 'What’s the API base URL?',
       field: { placeholder: 'https://api.groq.com/openai/v1/chat/completions', hint: 'The full chat-completions URL — check your provider’s docs for the exact address.', key: 'byokEndpoint', type: 'text' },
       next: 'byok_model'
+    },
+    byok_local_endpoint: {
+      eyebrow: 'AI SETUP',
+      question: 'Where’s it running?',
+      body: 'Ollama’s default is http://localhost:11434/v1/chat/completions — LM Studio’s is usually http://localhost:1234/v1/chat/completions.',
+      field: {
+        placeholder: 'http://localhost:11434/v1/chat/completions', key: 'byokEndpoint', type: 'text',
+        hint: 'Most local servers don’t need a key — you can skip that step next.',
+        default: function () { return 'http://localhost:11434/v1/chat/completions'; }
+      },
+      next: 'byok_local_discover'
+    },
+    byok_local_discover: {
+      hideHeader: true,
+      render: function (el) {
+        var eyebrow = document.createElement('p');
+        eyebrow.className = 'step-eyebrow';
+        eyebrow.textContent = 'AI SETUP';
+        el.appendChild(eyebrow);
+        var h1 = document.createElement('h1');
+        h1.textContent = 'Looking for models on your local server…';
+        el.appendChild(h1);
+        var status = document.createElement('p');
+        status.className = 'step-body';
+        status.textContent = 'Checking ' + answers.byokEndpoint;
+        el.appendChild(status);
+        var body = document.createElement('div');
+        el.appendChild(body);
+
+        window.TrefelleAI.discoverLocalModels(answers.byokEndpoint).then(function (models) {
+          status.remove();
+          var note = document.createElement('p');
+          note.className = 'setup-hint';
+          note.textContent = 'Found ' + models.length + ' model' + (models.length === 1 ? '' : 's') + ' — pick one:';
+          body.appendChild(note);
+          var list = document.createElement('div');
+          list.className = 'setup-options';
+          models.forEach(function (name) {
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'setup-option';
+            var span = document.createElement('span');
+            span.textContent = name;
+            var arrow = document.createElement('span');
+            arrow.className = 'arrow';
+            arrow.textContent = '→';
+            b.appendChild(span);
+            b.appendChild(arrow);
+            b.addEventListener('click', function () {
+              answers.byokModel = name;
+              go('byok_add_another');
+            });
+            list.appendChild(b);
+          });
+          body.appendChild(list);
+          var manualLink = document.createElement('a');
+          manualLink.href = '#';
+          manualLink.className = 'setup-note-link';
+          manualLink.textContent = 'Type a model name instead →';
+          manualLink.addEventListener('click', function (e) { e.preventDefault(); go('byok_local_model'); });
+          body.appendChild(manualLink);
+        }).catch(function () {
+          status.textContent = '';
+          var note = document.createElement('p');
+          note.className = 'setup-note error';
+          note.textContent = 'Couldn’t reach a local server automatically — make sure it’s running, or enter the model name yourself.';
+          body.appendChild(note);
+          var actions = document.createElement('div');
+          actions.className = 'setup-actions';
+          actions.appendChild(button('Try again', 'setup-primary', function () { go('byok_local_discover', true); }));
+          actions.appendChild(button('Type it manually', 'setup-secondary', function () { go('byok_local_model'); }));
+          body.appendChild(actions);
+        });
+      }
+    },
+    byok_local_model: {
+      eyebrow: 'AI SETUP',
+      question: 'Which model are you using?',
+      body: 'It needs to support reasoning (extended thinking / chain-of-thought) — vision is not required.',
+      field: { placeholder: 'e.g. llama3.1:70b, mistral, qwen2.5-coder', hint: 'Type the exact model name/ID your local server expects.', key: 'byokModel', type: 'text' },
+      next: 'byok_add_another'
     },
     byok_model: {
       eyebrow: 'AI SETUP',
