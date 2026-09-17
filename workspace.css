@@ -58,6 +58,8 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,Arial,s
 .field-group-label{font:10px 'DM Mono',monospace;letter-spacing:1px;color:#77965d;text-transform:uppercase;margin:26px 0 10px}
 .field-group-label:first-child{margin-top:0}
 
+.compare-search{width:100%;max-width:320px;padding:11px 14px;margin-bottom:18px;border:1px solid var(--line);border-radius:8px;font:13.5px 'DM Mono',monospace;color:var(--ink);background:#fff}
+.compare-search:focus{outline:2px solid var(--green);outline-offset:1px}
 .compare-layout{display:flex;gap:32px;align-items:flex-start}
 .compare-drop-col{width:280px;flex-shrink:0;position:sticky;top:60px}
 .compare-source-col{flex:1;min-width:0}
@@ -89,6 +91,14 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,Arial,s
 .quali-content{flex:1}
 .quali-content p{font-size:13.5px;line-height:1.65;color:#3a4038;margin:0 0 8px}
 .quali-task-prompt{font-weight:600;color:var(--ink)}
-.quali-task-input{width:100%;min-height:70px;padding:12px 14px;border:1px solid var(--line);border-radius:8px;font:13px/1.6 'DM Mono',monospace;color:var(--ink);background:#fff;resize:vertical;margin-bottom:8px}
-.quali-task-input:focus{outline:2px solid var(--green);outline-offset:1px}
+.quali-editor-host{border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:8px}
+.quali-editor-host .CodeMirror{height:auto;min-height:110px;font:13px/1.6 'DM Mono',monospace;color:var(--ink);background:#fff}
+.quali-editor-host .CodeMirror-gutters{background:#fff;border-right:1px solid var(--mist)}
+.quali-editor-host .CodeMirror-linenumber{color:#a7ae9d}
+.quali-run-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.quali-lang{font:600 10px 'DM Mono',monospace;color:#79866f;text-transform:uppercase;letter-spacing:.5px}
+.quali-run-btn{font:600 11px 'DM Mono',monospace;padding:6px 14px;border-radius:6px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer}
+.quali-run-btn:hover{border-color:var(--green)}
+.quali-run-btn:disabled{opacity:.5;cursor:not-allowed}
+.quali-run-out{background:var(--ink);color:#e7ece2;border-radius:8px;padding:12px 14px;font:12px/1.6 'DM Mono',monospace;white-space:pre-wrap;word-break:break-word;max-height:180px;overflow:auto;margin-bottom:8px}
 @media(max-width:520px){.setup-top{height:65px}.setup-option{padding:15px 16px}.field-head{padding:14px 15px}.field-stats{gap:18px}}

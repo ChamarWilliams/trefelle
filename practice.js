@@ -1,7 +1,5 @@
 (function () {
   var STORAGE_KEY = 'trefelle_practice_code';
-  var PYODIDE_URL = 'https://cdn.jsdelivr.net/pyodide/v314.0.7/full/pyodide.js';
-  var SQLJS_BASE = 'https://cdn.jsdelivr.net/npm/sql.js@1.14.2/dist/';
 
   // hardcoded to prove the pipeline; AI-generated per-field projects come next
   var PATHWAYS = [
@@ -131,32 +129,12 @@
     }
   ];
 
-  function loadScriptOnce(src) {
-    return new Promise(function (resolve, reject) {
-      if (document.querySelector('script[src="' + src + '"]')) { resolve(); return; }
-      var s = document.createElement('script');
-      s.src = src;
-      s.onload = function () { resolve(); };
-      s.onerror = function () { reject(new Error('Couldn\u2019t load ' + src)); };
-      document.head.appendChild(s);
-    });
-  }
-
-  var pyodidePromise = null;
-  function getPyodide() {
-    if (pyodidePromise) return pyodidePromise;
-    pyodidePromise = loadScriptOnce(PYODIDE_URL).then(function () { return window.loadPyodide(); });
-    return pyodidePromise;
-  }
-
-  var sqlJsPromise = null;
-  function getSqlJs() {
-    if (sqlJsPromise) return sqlJsPromise;
-    sqlJsPromise = loadScriptOnce(SQLJS_BASE + 'sql-wasm.js').then(function () {
-      return window.initSqlJs({ locateFile: function (f) { return SQLJS_BASE + f; } });
-    });
-    return sqlJsPromise;
-  }
+  // The actual engines (Pyodide/sql.js/JS Worker) live in code-runner.js
+  // (window.TrefelleRunner) so the workspace assessment's qualifications
+  // sampler can run real code too, instead of duplicating this.
+  var getPyodide = window.TrefelleRunner.getPyodide;
+  var getSqlJs = window.TrefelleRunner.getSqlJs;
+  var runJSWorker = window.TrefelleRunner.runJSWorker;
 
   function loadSavedCode(projectId, fallback) {
     try {
@@ -174,39 +152,7 @@
 
   function deepEqual(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
 
-  // ---- JavaScript: runs in a Worker so a bad loop can't freeze the page ----
-  function runJSWorker(script, timeoutMs) {
-    return new Promise(function (resolve, reject) {
-      var blob = new Blob([script], { type: 'application/javascript' });
-      var url = URL.createObjectURL(blob);
-      var worker = new Worker(url);
-      var timer = setTimeout(function () {
-        worker.terminate();
-        reject(new Error('Timed out after ' + (timeoutMs / 1000) + 's \u2014 check for an infinite loop.'));
-      }, timeoutMs);
-      worker.onmessage = function (e) {
-        clearTimeout(timer);
-        worker.terminate();
-        URL.revokeObjectURL(url);
-        resolve(e.data);
-      };
-      worker.onerror = function (e) {
-        clearTimeout(timer);
-        worker.terminate();
-        URL.revokeObjectURL(url);
-        reject(new Error(e.message || 'Script error'));
-      };
-    });
-  }
-
-  function runJSRaw(code) {
-    var script =
-      'var __log = [];\n' +
-      'console.log = function () { __log.push(Array.prototype.slice.call(arguments).map(String).join(" ")); };\n' +
-      'try {\n' + code + '\n} catch (e) { __log.push("Error: " + e.message); }\n' +
-      'postMessage(__log.join("\\n"));';
-    return runJSWorker(script, 5000);
-  }
+  function runJSRaw(code) { return window.TrefelleRunner.runJSRaw(code); }
 
   function runJSTests(code, project) {
     var script =
@@ -224,20 +170,7 @@
     return runJSWorker(script, 5000);
   }
 
-  // ---- Python: runs in-browser via Pyodide, no server involved ----
-  function runPythonRaw(code) {
-    return getPyodide().then(function (pyodide) {
-      var out = [];
-      pyodide.setStdout({ batched: function (s) { out.push(s); } });
-      pyodide.setStderr({ batched: function (s) { out.push(s); } });
-      try {
-        pyodide.runPython(code);
-      } catch (e) {
-        out.push(String(e));
-      }
-      return out.join('\n');
-    });
-  }
+  function runPythonRaw(code) { return window.TrefelleRunner.runPythonRaw(code); }
 
   function runPythonTests(code, project) {
     return getPyodide().then(function (pyodide) {
@@ -274,24 +207,7 @@
     });
   }
 
-  // ---- SQL: runs against an in-memory SQLite database via sql.js ----
-  function runSqlRaw(code, project) {
-    return getSqlJs().then(function (SQL) {
-      var db = new SQL.Database();
-      db.run(project.schema);
-      var out;
-      try {
-        var res = db.exec(code);
-        out = res.length
-          ? res[0].columns.join(' | ') + '\n' + res[0].values.map(function (r) { return r.join(' | '); }).join('\n')
-          : '(no rows)';
-      } catch (e) {
-        out = 'Error: ' + e.message;
-      }
-      db.close();
-      return out;
-    });
-  }
+  function runSqlRaw(code, project) { return window.TrefelleRunner.runSqlRaw(code, project.schema); }
 
   function runSqlTests(code, project) {
     return getSqlJs().then(function (SQL) {
@@ -723,7 +639,7 @@
     runBtn.addEventListener('click', function () {
       runBtn.disabled = true;
       submitBtn.disabled = true;
-      setStatus(project.language === 'python' && !pyodidePromise ? 'Loading Python (first run only)\u2026' : 'Running\u2026');
+      setStatus(project.language === 'python' && !window.TrefelleRunner.hasStartedPyodide() ? 'Loading Python (first run only)\u2026' : 'Running\u2026');
       results.innerHTML = '';
       runRaw().then(function (text) {
         setStatus('');
@@ -742,7 +658,7 @@
     submitBtn.addEventListener('click', function () {
       runBtn.disabled = true;
       submitBtn.disabled = true;
-      setStatus(project.language === 'python' && !pyodidePromise ? 'Loading Python (first run only)\u2026' : 'Running tests\u2026');
+      setStatus(project.language === 'python' && !window.TrefelleRunner.hasStartedPyodide() ? 'Loading Python (first run only)\u2026' : 'Running tests\u2026');
       results.innerHTML = '';
       runTests().then(function (outcome) {
         if (!outcome || !outcome.results) {

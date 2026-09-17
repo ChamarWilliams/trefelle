@@ -40,7 +40,19 @@
     { id: 'qa', name: 'QA / Test Engineering', demand: 'Moderate', entryPay: '$70k', tools: ['Selenium or Playwright', 'Postman', 'Jira'], blurb: 'You make sure software actually works before it ships — writing automated tests and hunting for what breaks it.' },
     { id: 'it-sysadmin', name: 'IT / Systems Administration', demand: 'High', entryPay: '$55k', tools: ['Linux', 'Active Directory', 'PowerShell or Bash'], blurb: 'You keep an organization’s computers, networks, and accounts running — the first call when something’s broken.' },
     { id: 'game-dev', name: 'Game Development', demand: 'Moderate', entryPay: '$70k', tools: ['Unity or Unreal Engine', 'C# or C++', 'Git'], blurb: 'You build the interactive systems, physics, and logic that make a game actually playable.' },
-    { id: 'product-ux', name: 'Product / UX design', demand: 'Moderate', entryPay: '$75k', tools: ['Figma', 'Miro', 'User research tools'], blurb: 'You shape how the product feels to use — research, flows, and the handoff between design and engineering.' }
+    { id: 'product-ux', name: 'Product / UX design', demand: 'Moderate', entryPay: '$75k', tools: ['Figma', 'Miro', 'User research tools'], blurb: 'You shape how the product feels to use — research, flows, and the handoff between design and engineering.' },
+    { id: 'sre', name: 'Site Reliability Engineering', demand: 'Very high', entryPay: '$95k', tools: ['Kubernetes', 'Prometheus', 'Terraform'], blurb: 'You keep production systems fast and available, treating operations as a software engineering problem — automation over manual fixes.' },
+    { id: 'embedded', name: 'Embedded Systems / Firmware', demand: 'High', entryPay: '$80k', tools: ['C', 'RTOS', 'Oscilloscope / debugger'], blurb: 'You write the low-level software that runs directly on hardware — sensors, microcontrollers, and the devices around us.' },
+    { id: 'dba', name: 'Database Administration', demand: 'Moderate', entryPay: '$70k', tools: ['PostgreSQL', 'MySQL', 'pgAdmin'], blurb: 'You keep an organization’s databases fast, backed up, and available — tuning queries and planning for scale.' },
+    { id: 'network', name: 'Network Engineering', demand: 'High', entryPay: '$65k', tools: ['Cisco IOS', 'Wireshark', 'BGP / routing protocols'], blurb: 'You design and maintain the networks that connect everything — routers, firewalls, and the traffic between them.' },
+    { id: 'cloud-architect', name: 'Cloud Architecture', demand: 'High', entryPay: '$110k', tools: ['AWS / Azure / GCP', 'Terraform', 'Well-Architected frameworks'], blurb: 'You design the overall cloud systems a company runs on — cost, security, and scalability decisions, not day-to-day ops.' },
+    { id: 'computer-vision', name: 'Computer Vision Engineering', demand: 'High', entryPay: '$105k', tools: ['OpenCV', 'PyTorch', 'CUDA'], blurb: 'You build systems that interpret images and video — object detection, tracking, and visual understanding.' },
+    { id: 'blockchain', name: 'Blockchain / Web3 Development', demand: 'Moderate', entryPay: '$90k', tools: ['Solidity', 'Hardhat / Foundry', 'Ethers.js'], blurb: 'You build decentralized applications and smart contracts — a young field with its own tooling and security concerns.' },
+    { id: 'ar-vr', name: 'AR / VR Development', demand: 'Moderate', entryPay: '$80k', tools: ['Unity', 'Unreal Engine', 'ARKit / ARCore'], blurb: 'You build immersive experiences for headsets and mobile AR — spatial computing that’s still finding its footing.' },
+    { id: 'robotics', name: 'Robotics Software Engineering', demand: 'Moderate', entryPay: '$85k', tools: ['ROS', 'C++', 'Python'], blurb: 'You write the software that senses, plans, and controls physical robots — equal parts software and real-world physics.' },
+    { id: 'solutions-eng', name: 'Solutions Engineering', demand: 'High', entryPay: '$85k', tools: ['APIs / SDKs', 'Demo environments', 'CRM tools'], blurb: 'You’re the technical voice in the sales process — demoing, prototyping, and answering "can your product actually do X."' },
+    { id: 'devrel', name: 'Developer Relations', demand: 'Moderate', entryPay: '$75k', tools: ['Documentation tools', 'Sample apps', 'Community platforms'], blurb: 'You help other developers succeed with a product — writing docs, building demos, speaking, and gathering feedback.' },
+    { id: 'eng-management', name: 'Engineering Management', demand: 'High', entryPay: '$110k', tools: ['1:1s and planning tools', 'Code review', 'Roadmapping'], blurb: 'You lead a team of engineers — unblocking them, planning work, and staying technical enough to make good calls.' }
   ];
 
   var ROLE_TEMPLATES = {
@@ -109,6 +121,66 @@
       { title: 'Game Engine Programmer', blurb: 'Build and maintain the underlying engine tools and systems.' },
       { title: 'Technical Game Designer', blurb: 'Bridge design and code to prototype and tune how a game feels.' }
     ],
+    sre: [
+      { title: 'Site Reliability Engineer', blurb: 'Keep production systems up, fast, and observable, automating away repeat fixes.' },
+      { title: 'Reliability Engineer', blurb: 'Build the monitoring and incident-response systems that catch problems early.' },
+      { title: 'Infrastructure Engineer', blurb: 'Build and maintain the platform other engineers deploy on.' }
+    ],
+    embedded: [
+      { title: 'Embedded Software Engineer', blurb: 'Write the firmware that runs directly on hardware.' },
+      { title: 'Firmware Engineer', blurb: 'Build the low-level code that boots and controls a device.' },
+      { title: 'IoT Engineer', blurb: 'Connect physical devices to the internet and to each other.' }
+    ],
+    dba: [
+      { title: 'Database Administrator', blurb: 'Keep databases fast, backed up, and available.' },
+      { title: 'Database Engineer', blurb: 'Design schemas and tune queries for systems at scale.' },
+      { title: 'Data Reliability Engineer', blurb: 'Make sure the data pipeline itself never becomes the outage.' }
+    ],
+    network: [
+      { title: 'Network Engineer', blurb: 'Design and maintain the networks that connect everything.' },
+      { title: 'Network Administrator', blurb: 'Keep an organization’s network running day to day.' },
+      { title: 'Network Security Engineer', blurb: 'Defend the network layer against intrusion and misuse.' }
+    ],
+    'cloud-architect': [
+      { title: 'Cloud Architect', blurb: 'Design the overall cloud systems a company runs on.' },
+      { title: 'Solutions Architect', blurb: 'Design technical systems that meet a specific business need.' },
+      { title: 'Platform Architect', blurb: 'Design the shared platform other teams build their systems on.' }
+    ],
+    'computer-vision': [
+      { title: 'Computer Vision Engineer', blurb: 'Build systems that interpret images and video.' },
+      { title: 'Perception Engineer', blurb: 'Build the sensing systems that let machines understand their surroundings.' },
+      { title: 'ML Engineer, Vision', blurb: 'Take vision models from research to a shipped product.' }
+    ],
+    blockchain: [
+      { title: 'Blockchain Developer', blurb: 'Build decentralized applications and smart contracts.' },
+      { title: 'Smart Contract Engineer', blurb: 'Write and audit the contracts that run on-chain.' },
+      { title: 'Web3 Engineer', blurb: 'Build the frontend and infrastructure around decentralized apps.' }
+    ],
+    'ar-vr': [
+      { title: 'AR/VR Engineer', blurb: 'Build immersive experiences for headsets and mobile AR.' },
+      { title: 'Game Engine Programmer', blurb: 'Build and maintain the underlying engine tools and systems.' },
+      { title: 'Spatial Computing Engineer', blurb: 'Build software that understands and reacts to physical space.' }
+    ],
+    robotics: [
+      { title: 'Robotics Software Engineer', blurb: 'Write the software that senses, plans, and controls physical robots.' },
+      { title: 'Controls Engineer', blurb: 'Design the systems that keep a robot’s movement stable and precise.' },
+      { title: 'Autonomy Engineer', blurb: 'Build the decision-making systems behind self-directed robots or vehicles.' }
+    ],
+    'solutions-eng': [
+      { title: 'Solutions Engineer', blurb: 'Be the technical voice in the sales process — demos, prototypes, answers.' },
+      { title: 'Sales Engineer', blurb: 'Help prospective customers see exactly how a product solves their problem.' },
+      { title: 'Implementation Engineer', blurb: 'Get a new customer’s setup actually working after the sale closes.' }
+    ],
+    devrel: [
+      { title: 'Developer Advocate', blurb: 'Help other developers succeed with a product — docs, demos, talks.' },
+      { title: 'Technical Writer', blurb: 'Write the documentation developers actually rely on.' },
+      { title: 'Community Engineer', blurb: 'Build tools and content that support a developer community.' }
+    ],
+    'eng-management': [
+      { title: 'Engineering Manager', blurb: 'Lead a team of engineers — unblocking them and planning the work.' },
+      { title: 'Tech Lead', blurb: 'Set technical direction for a team while still writing code.' },
+      { title: 'Director of Engineering', blurb: 'Set direction across multiple teams and their managers.' }
+    ],
     custom: [
       { title: 'Explore this on your own', blurb: 'There’s no role ladder for a custom field yet — specify a role directly instead.' }
     ]
@@ -125,12 +197,12 @@
   // One-shot: the person fills in a short profile form once, this is sent as
   // a single message, and the model returns a JSON recommendation directly —
   // no back-and-forth conversation, so there's only ever one AI wait.
-  var FIELDS_PROMPT_BASE = 'You are a career-fit assessor for Trefelle, a hands-on career-exploration platform for computer science, IT, and data-related fields. You are given one description of a person\'s background in a single message: their experience level, languages/tools used, past roles or internships, education, and anything they said interests them, plus optionally pasted resume/LinkedIn text. Based on this alone, recommend which specific field(s) genuinely fit them — you get exactly one read, so use everything given and make a real judgment rather than defaulting to the most generic-sounding option.\nThe scope is computer science, information technology, and data-related fields ONLY: backend/API development, frontend development, full-stack development, mobile development, data engineering, data science/analytics, machine learning/AI engineering, cloud/DevOps engineering, security/cybersecurity, QA/test engineering, IT/systems administration, game development, and product/UX design — plus closely related fields not listed here if they clearly fit better. Never recommend a field outside this scope (no mechanical, civil, electrical, aerospace, or other non-computing engineering disciplines), even if their background mentions one.\nAssume they may know little about a field\'s daily reality yet — judge fit from their stated experience, tools, and curiosity, not from whether they already use the field\'s insider vocabulary.\nRecommend as many fields as genuinely fit well — usually 2 to 4, never more than 6 — ranked best fit first. Do not pad the list with a poor fit just to reach a round number, and do not recommend only one unless everything else given is a clearly poor match.\nFor "level": "student" = no professional work in the field yet; "early" = professional role held, under ~2 years; "mid" = roughly 3-6 years of professional work; "senior" = 7+ years or demonstrated technical leadership. If their stated experience level already answers this, use it directly rather than re-deriving it.\nRespond with ONLY strict JSON, nothing else, no markdown fences, no prose outside the JSON, in exactly this shape: {"type":"done","level":"student|early|mid|senior","fields":[{"name":"Field name","why":"one sentence on why this fits them specifically, referencing something from their background","blurb":"one sentence describing what someone in this field actually does day to day","demand":"rough demand label","entryPay":"a single rough entry-level figure, e.g. \\"$75k\\"","tools":["2 to 3 real tools or technologies commonly used in this field"],"roles":[{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"}]}]}';
+  var FIELDS_PROMPT_BASE = 'You are a career-fit assessor for Trefelle, a hands-on career-exploration platform for computer science, IT, and data-related fields. You are given one description of a person\'s background in a single message: their experience level, languages/tools used, past roles or internships, education, and anything they said interests them, plus optionally pasted resume/LinkedIn text. Based on this alone, recommend which specific field(s) genuinely fit them — you get exactly one read, so use everything given and make a real judgment rather than defaulting to the most generic-sounding option.\nThe scope is computer science, information technology, and data-related fields ONLY: backend/API development, frontend development, full-stack development, mobile development, data engineering, data science/analytics, machine learning/AI engineering, computer vision, cloud/DevOps engineering, site reliability engineering, cloud architecture, security/cybersecurity, network engineering, database administration, embedded systems/firmware, robotics software, blockchain/web3 development, AR/VR development, QA/test engineering, IT/systems administration, game development, product/UX design, solutions engineering, developer relations, and engineering management — plus closely related fields not listed here if they clearly fit better. Never recommend a field outside this scope (no mechanical, civil, electrical, aerospace, or other non-computing engineering disciplines), even if their background mentions one.\nAssume they may know little about a field\'s daily reality yet — judge fit from their stated experience, tools, and curiosity, not from whether they already use the field\'s insider vocabulary.\nRecommend as many fields as genuinely fit well — usually 2 to 4, never more than 6 — ranked best fit first. Do not pad the list with a poor fit just to reach a round number, and do not recommend only one unless everything else given is a clearly poor match.\nFor "level": "student" = no professional work in the field yet; "early" = professional role held, under ~2 years; "mid" = roughly 3-6 years of professional work; "senior" = 7+ years or demonstrated technical leadership. If their stated experience level already answers this, use it directly rather than re-deriving it.\nRespond with ONLY strict JSON, nothing else, no markdown fences, no prose outside the JSON, in exactly this shape: {"type":"done","level":"student|early|mid|senior","fields":[{"name":"Field name","why":"one sentence on why this fits them specifically, referencing something from their background","blurb":"one sentence describing what someone in this field actually does day to day","demand":"rough demand label","entryPay":"a single rough entry-level figure, e.g. \\"$75k\\"","tools":["2 to 3 real tools or technologies commonly used in this field"],"roles":[{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"}]}]}';
 
   // Generates a short, interactive "day in the life" for one field the
   // person is considering, before they commit to it — a handful of story
   // beats, some of which are tiny hands-on exercises rather than just text.
-  var QUALIFICATIONS_PROMPT = 'You are building a short, honest "day in the life" simulation for someone considering a specific field, inside Trefelle, a career-exploration platform. Given the field name and a one-sentence description of what it involves, write 4 to 6 beats forming one realistic workday, in order. Most beats are short narrative ("beat") setting a scene or moment — plain language, no unexplained jargon. At least 2 beats must be a tiny interactive task ("task") where the person actually does a simplified version of real work from that moment — a one-to-three-line snippet or short realistic technical decision to fill in or complete. A task beat gives a "prompt" (what to do), a "starter" (the starting point, with a blank or TODO for them to fill in), and a "hint" (a short nudge revealed on demand) — this is exploratory and ungraded, not a formal test. Keep the whole thing skimmable.\nRespond with ONLY strict JSON, nothing else, no markdown fences, in exactly this shape: {"type":"done","beats":[{"type":"beat","time":"9:00 AM","text":"..."},{"type":"task","time":"10:30 AM","prompt":"...","starter":"...","hint":"..."}]}';
+  var QUALIFICATIONS_PROMPT = 'You are building a short, honest "day in the life" simulation for someone considering a specific field, inside Trefelle, a career-exploration platform. Given the field name and a one-sentence description of what it involves, write 4 to 6 beats forming one realistic workday, in order. Most beats are short narrative ("beat") setting a scene or moment — plain language, no unexplained jargon. At least 2 beats must be a tiny interactive task ("task") where the person actually writes and RUNS a simplified version of real work from that moment — a one-to-five-line real, runnable snippet with a blank or TODO for them to fill in, in whichever of "python", "javascript", or "sql" best fits the field and this moment (use javascript if nothing else fits better — it needs no setup). A task beat gives "language", a "prompt" (what to do), a "starter" (the exact starting code — must actually run as-is even before their edit, e.g. print/console.log a placeholder or return a stub, never a syntax fragment), and a "hint" (a short nudge revealed on demand). If "language" is "sql", also include a "schema" string of CREATE TABLE/INSERT statements the query can run against. This is exploratory and ungraded, not a formal test — there is no expected output to check against, just real code the person can run and see work. Keep the whole thing skimmable.\nRespond with ONLY strict JSON, nothing else, no markdown fences, in exactly this shape: {"type":"done","beats":[{"type":"beat","time":"9:00 AM","text":"..."},{"type":"task","time":"10:30 AM","language":"python|javascript|sql","prompt":"...","starter":"...","schema":"(sql only, omit otherwise)","hint":"..."}]}';
 
   var MAX_RESUME_BYTES = 5 * 1024 * 1024;
 
@@ -889,6 +961,18 @@
         bodyP.textContent = 'Drag or click any role into the box to compare it — hover a card for pay and demand.';
         el.appendChild(bodyP);
 
+        var searchTerm = '';
+        var searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.className = 'compare-search';
+        searchInput.placeholder = 'Search fields…';
+        // Lives outside the re-rendered container so typing never loses focus.
+        searchInput.addEventListener('input', function () {
+          searchTerm = searchInput.value.trim().toLowerCase();
+          renderContent();
+        });
+        el.appendChild(searchInput);
+
         var container = document.createElement('div');
         el.appendChild(container);
 
@@ -1074,10 +1158,19 @@
           var recs = answers.aiFieldRecs || [];
           var recIds = {};
           recs.forEach(function (f) { recIds[f.id] = true; });
-          var others = FIELD_CATALOG.filter(function (f) { return !recIds[f.id]; });
+          var others = FIELD_CATALOG.filter(function (f) {
+            if (recIds[f.id]) return false;
+            return !searchTerm || f.name.toLowerCase().indexOf(searchTerm) > -1;
+          });
 
           renderGroup('Recommended for you', recs, true);
           renderGroup('Other fields', others, false);
+          if (searchTerm && !others.length) {
+            var noMatch = document.createElement('p');
+            noMatch.className = 'setup-hint';
+            noMatch.textContent = 'No fields match "' + searchTerm + '".';
+            sourceCol.appendChild(noMatch);
+          }
 
           var customLink = document.createElement('a');
           customLink.href = '#';
@@ -1136,15 +1229,64 @@
             var content = document.createElement('div');
             content.className = 'quali-content';
             if (beat.type === 'task') {
+              var lang = beat.language === 'python' || beat.language === 'sql' ? beat.language : 'javascript';
               var prompt = document.createElement('p');
               prompt.className = 'quali-task-prompt';
               prompt.textContent = beat.prompt || '';
               content.appendChild(prompt);
-              var textarea = document.createElement('textarea');
-              textarea.className = 'quali-task-input';
-              textarea.spellcheck = false;
-              textarea.value = beat.starter || '';
-              content.appendChild(textarea);
+
+              var editorHost = document.createElement('div');
+              editorHost.className = 'quali-editor-host';
+              content.appendChild(editorHost);
+              var cm = CodeMirror(editorHost, {
+                value: beat.starter || '',
+                mode: lang === 'python' ? 'python' : lang === 'sql' ? 'text/x-sql' : 'javascript',
+                lineNumbers: true,
+                indentUnit: 4,
+                tabSize: 4,
+                viewportMargin: Infinity,
+                extraKeys: {
+                  Tab: function (inst) { inst.replaceSelection('    '); },
+                  Enter: function (inst) { inst.replaceSelection('\n'); }
+                }
+              });
+              cm.refresh();
+
+              var runRow = document.createElement('div');
+              runRow.className = 'quali-run-row';
+              var langTag = document.createElement('span');
+              langTag.className = 'quali-lang';
+              langTag.textContent = lang;
+              var runBtn = document.createElement('button');
+              runBtn.type = 'button';
+              runBtn.className = 'quali-run-btn';
+              runBtn.textContent = 'Run';
+              runRow.appendChild(langTag);
+              runRow.appendChild(runBtn);
+              content.appendChild(runRow);
+
+              var runOut = document.createElement('pre');
+              runOut.className = 'quali-run-out';
+              runOut.hidden = true;
+              content.appendChild(runOut);
+
+              runBtn.addEventListener('click', function () {
+                runBtn.disabled = true;
+                runOut.hidden = false;
+                runOut.textContent = lang === 'python' && !window.TrefelleRunner.hasStartedPyodide() ? 'Loading Python (first run only)…' : 'Running…';
+                var code = cm.getValue();
+                var runPromise = lang === 'python' ? window.TrefelleRunner.runPythonRaw(code)
+                  : lang === 'sql' ? window.TrefelleRunner.runSqlRaw(code, beat.schema || '')
+                  : window.TrefelleRunner.runJSRaw(code);
+                runPromise.then(function (text) {
+                  runOut.textContent = text || '(no output)';
+                }).catch(function (err) {
+                  runOut.textContent = 'Error: ' + ((err && err.message) || err);
+                }).then(function () {
+                  runBtn.disabled = false;
+                });
+              });
+
               if (beat.hint) {
                 var hintToggle = document.createElement('a');
                 hintToggle.href = '#';
