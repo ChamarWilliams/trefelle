@@ -788,7 +788,7 @@
           note.className = 'setup-note';
           note.textContent = 'No connected AI model yet — pick a field directly instead.';
           el.appendChild(note);
-          setTimeout(function () { go('field_manual', true); }, 900);
+          setTimeout(function () { go('field_results', true); }, 900);
           return;
         }
 
@@ -848,7 +848,7 @@
             var actions = document.createElement('div');
             actions.className = 'setup-actions';
             actions.appendChild(button('Try again', 'setup-primary', function () { go('assess_fields', true); }));
-            actions.appendChild(button('Pick a field directly instead', 'setup-secondary', function () { go('field_manual'); }));
+            actions.appendChild(button('Pick a field directly instead', 'setup-secondary', function () { go('field_results'); }));
             errorBox.appendChild(actions);
           });
         }
@@ -864,117 +864,228 @@
       }
     },
     field_results: {
-      eyebrow: 'YOUR FIELDS',
-      question: 'Based on your answers, these fit.',
+      hideHeader: true,
+      wide: true,
       render: function (el) {
-        var recs = answers.aiFieldRecs || [];
-        var selected = [];
-        var continueBtn;
-        var list = document.createElement('div');
-        list.className = 'field-list';
+        answers.comparingFields = answers.comparingFields || [];
 
-        recs.forEach(function (f) {
-          var card = document.createElement('div');
-          card.className = 'field-card';
+        var eyebrow = document.createElement('p');
+        eyebrow.className = 'step-eyebrow';
+        eyebrow.textContent = 'YOUR FIELDS';
+        el.appendChild(eyebrow);
+        var h1 = document.createElement('h1');
+        h1.textContent = 'Compare fields before you commit.';
+        el.appendChild(h1);
+        var bodyP = document.createElement('p');
+        bodyP.className = 'step-body';
+        bodyP.textContent = 'Drag or click any role into the box to compare it — hover a card for pay and demand.';
+        el.appendChild(bodyP);
 
-          var head = document.createElement('div');
-          head.className = 'field-head';
+        var container = document.createElement('div');
+        el.appendChild(container);
 
-          var sel = document.createElement('span');
-          sel.className = 'field-select';
-
-          var textWrap = document.createElement('div');
-          textWrap.className = 'field-head-text';
-          var name = document.createElement('b');
-          name.textContent = f.name;
-          var why = document.createElement('span');
-          why.textContent = f.why;
-          textWrap.appendChild(name);
-          textWrap.appendChild(why);
-
-          var chevron = document.createElement('span');
-          chevron.className = 'field-chevron';
-          chevron.textContent = '⌄';
-
-          head.appendChild(sel);
-          head.appendChild(textWrap);
-          head.appendChild(chevron);
-
-          var details = document.createElement('div');
-          details.className = 'field-details';
-          var inner = document.createElement('div');
-          inner.className = 'field-details-inner';
-          var stats = document.createElement('div');
-          stats.className = 'field-stats';
-
-          function statBlock(label, value) {
-            var d = document.createElement('div');
-            var s = document.createElement('span');
-            s.textContent = label;
-            var v = document.createElement('b');
-            v.textContent = value;
-            d.appendChild(s);
-            d.appendChild(v);
-            return d;
-          }
-          stats.appendChild(statBlock('DEMAND', f.demand));
-          stats.appendChild(statBlock('ENTRY-LEVEL PAY', f.entryPay));
-          var desc = document.createElement('p');
-          desc.textContent = f.blurb;
-          inner.appendChild(stats);
-          inner.appendChild(desc);
-          if (f.tools && f.tools.length) {
-            var toolsP = document.createElement('p');
-            toolsP.className = 'field-tools';
-            toolsP.textContent = 'Tools: ' + f.tools.join(', ');
-            inner.appendChild(toolsP);
-          }
-          var tryBtn = button('Try a day in this role →', 'setup-secondary', function (e) {
-            e.stopPropagation();
-            answers.qualifyingField = f;
-            go('qualifications');
+        var tooltipEl = null;
+        function hideTooltip() { if (tooltipEl) { tooltipEl.remove(); tooltipEl = null; } }
+        function wireTooltip(node, f) {
+          node.addEventListener('mouseenter', function () {
+            hideTooltip();
+            var tip = document.createElement('div');
+            tip.className = 'compare-tooltip';
+            var rows = [['Entry-level pay', f.entryPay || 'Varies'], ['Demand', f.demand || 'Not tracked']];
+            if (f.tools && f.tools.length) rows.push(['Tools', f.tools.join(', ')]);
+            rows.forEach(function (row) {
+              var r = document.createElement('div');
+              r.className = 'compare-tooltip-row';
+              var label = document.createElement('b');
+              label.textContent = row[0] + ': ';
+              var val = document.createElement('span');
+              val.textContent = row[1];
+              r.appendChild(label);
+              r.appendChild(val);
+              tip.appendChild(r);
+            });
+            var rect = node.getBoundingClientRect();
+            tip.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 260)) + 'px';
+            tip.style.top = (rect.bottom + 8) + 'px';
+            document.body.appendChild(tip);
+            tooltipEl = tip;
           });
-          inner.appendChild(tryBtn);
-          details.appendChild(inner);
+          node.addEventListener('mouseleave', hideTooltip);
+        }
 
-          card.appendChild(head);
-          card.appendChild(details);
+        function renderContent() {
+          container.innerHTML = '';
+          hideTooltip();
 
-          sel.addEventListener('click', function (e) {
-            e.stopPropagation();
-            var idx = selected.indexOf(f);
-            if (idx > -1) {
-              selected.splice(idx, 1);
-              card.classList.remove('selected');
-            } else {
-              if (selected.length >= 3) return;
-              selected.push(f);
-              card.classList.add('selected');
+          var layout = document.createElement('div');
+          layout.className = 'compare-layout';
+
+          var dropCol = document.createElement('div');
+          dropCol.className = 'compare-drop-col';
+          var dropZone = document.createElement('div');
+          dropZone.className = 'compare-drop';
+          if (!answers.comparingFields.length) {
+            var placeholder = document.createElement('p');
+            placeholder.className = 'compare-placeholder';
+            placeholder.textContent = 'Drag roles here to compare them';
+            dropZone.appendChild(placeholder);
+          }
+          answers.comparingFields.forEach(function (f) {
+            var chip = document.createElement('div');
+            chip.className = 'compare-chip';
+            var span = document.createElement('span');
+            span.textContent = f.name;
+            var remove = document.createElement('button');
+            remove.type = 'button';
+            remove.className = 'compare-chip-remove';
+            remove.textContent = '×';
+            remove.addEventListener('click', function () {
+              answers.comparingFields = answers.comparingFields.filter(function (x) { return x !== f; });
+              renderContent();
+            });
+            chip.appendChild(span);
+            chip.appendChild(remove);
+            wireTooltip(chip, f);
+            dropZone.appendChild(chip);
+          });
+          dropCol.appendChild(dropZone);
+
+          var dropActions = document.createElement('div');
+          dropActions.className = 'setup-actions';
+          var continueBtn = button('Continue', 'setup-primary', function () {
+            answers.selectedFields = answers.comparingFields.slice();
+            go('role_results');
+          });
+          continueBtn.disabled = answers.comparingFields.length === 0;
+          dropActions.appendChild(continueBtn);
+          dropCol.appendChild(dropActions);
+
+          var sourceCol = document.createElement('div');
+          sourceCol.className = 'compare-source-col';
+
+          function isComparing(f) { return answers.comparingFields.indexOf(f) > -1; }
+
+          function addToComparing(f) {
+            if (isComparing(f) || answers.comparingFields.length >= 6) return;
+            answers.comparingFields.push(f);
+            renderContent();
+          }
+
+          function buildSourceCard(f) {
+            var card = document.createElement('div');
+            card.className = 'compare-card';
+            var name = document.createElement('b');
+            name.textContent = f.name;
+            card.appendChild(name);
+            if (f.why) {
+              var why = document.createElement('span');
+              why.className = 'compare-card-why';
+              why.textContent = f.why;
+              card.appendChild(why);
             }
-            continueBtn.disabled = selected.length === 0;
-          });
-          textWrap.addEventListener('click', function () { card.classList.toggle('open'); });
-          chevron.addEventListener('click', function () { card.classList.toggle('open'); });
+            var preview = document.createElement('button');
+            preview.type = 'button';
+            preview.className = 'compare-card-preview';
+            preview.textContent = 'Preview a day →';
+            preview.addEventListener('mousedown', function (e) { e.stopPropagation(); });
+            preview.addEventListener('touchstart', function (e) { e.stopPropagation(); }, { passive: true });
+            preview.addEventListener('click', function (e) {
+              e.stopPropagation();
+              answers.qualifyingField = f;
+              go('qualifications');
+            });
+            card.appendChild(preview);
+            wireTooltip(card, f);
 
-          list.appendChild(card);
-        });
-        el.appendChild(list);
+            // A card is both draggable and clickable: a short pointer path with
+            // no real movement counts as "click to add"; past a small threshold
+            // it becomes a drag, tracked with a floating clone of the card.
+            var startX, startY, dragging = false, clone = null;
+            function move(e) {
+              var pt = e.touches ? e.touches[0] : e;
+              if (!dragging && Math.hypot(pt.clientX - startX, pt.clientY - startY) > 6) {
+                dragging = true;
+                hideTooltip();
+                clone = card.cloneNode(true);
+                clone.className = 'compare-card compare-card-drag-clone';
+                document.body.appendChild(clone);
+              }
+              if (dragging && clone) {
+                clone.style.left = pt.clientX + 'px';
+                clone.style.top = pt.clientY + 'px';
+                var r = dropZone.getBoundingClientRect();
+                var over = pt.clientX >= r.left && pt.clientX <= r.right && pt.clientY >= r.top && pt.clientY <= r.bottom;
+                dropZone.classList.toggle('drag-hover', over);
+              }
+            }
+            function up(e) {
+              document.removeEventListener('mousemove', move);
+              document.removeEventListener('mouseup', up);
+              document.removeEventListener('touchmove', move);
+              document.removeEventListener('touchend', up);
+              var pt = (e.changedTouches && e.changedTouches[0]) || e;
+              var wasDragging = dragging;
+              if (clone) clone.remove();
+              dropZone.classList.remove('drag-hover');
+              if (wasDragging) {
+                var r = dropZone.getBoundingClientRect();
+                var over = pt.clientX >= r.left && pt.clientX <= r.right && pt.clientY >= r.top && pt.clientY <= r.bottom;
+                if (over) addToComparing(f);
+              } else {
+                addToComparing(f);
+              }
+              dragging = false; clone = null;
+            }
+            function down(e) {
+              var pt = e.touches ? e.touches[0] : e;
+              startX = pt.clientX; startY = pt.clientY; dragging = false;
+              document.addEventListener('mousemove', move);
+              document.addEventListener('mouseup', up);
+              document.addEventListener('touchmove', move, { passive: true });
+              document.addEventListener('touchend', up);
+            }
+            card.addEventListener('mousedown', down);
+            card.addEventListener('touchstart', down, { passive: true });
+            return card;
+          }
 
-        var note = document.createElement('p');
-        note.className = 'setup-hint';
-        note.textContent = 'Pick 1–3 fields — try a day in the role first if you’re not sure. Pay and demand are rough, US-market ballparks.';
-        el.appendChild(note);
+          function renderGroup(title, fields, boxed) {
+            var visible = fields.filter(function (f) { return !isComparing(f); });
+            if (!visible.length) return;
+            var wrap = document.createElement('div');
+            wrap.className = 'compare-group' + (boxed ? ' boxed' : '');
+            var label = document.createElement('p');
+            label.className = 'field-group-label';
+            label.textContent = title;
+            wrap.appendChild(label);
+            var listEl = document.createElement('div');
+            listEl.className = 'compare-card-list';
+            visible.forEach(function (f) { listEl.appendChild(buildSourceCard(f)); });
+            wrap.appendChild(listEl);
+            sourceCol.appendChild(wrap);
+          }
 
-        var actions = document.createElement('div');
-        actions.className = 'setup-actions';
-        continueBtn = button('Continue', 'setup-primary', function () {
-          answers.selectedFields = selected.slice();
-          go('role_results');
-        });
-        continueBtn.disabled = true;
-        actions.appendChild(continueBtn);
-        actions.appendChild(button('None of these — choose my own field', 'setup-secondary', function () { go('field_manual'); }));
-        el.appendChild(actions);
+          var recs = answers.aiFieldRecs || [];
+          var recIds = {};
+          recs.forEach(function (f) { recIds[f.id] = true; });
+          var others = FIELD_CATALOG.filter(function (f) { return !recIds[f.id]; });
+
+          renderGroup('Recommended for you', recs, true);
+          renderGroup('Other fields', others, false);
+
+          var customLink = document.createElement('a');
+          customLink.href = '#';
+          customLink.className = 'setup-note-link';
+          customLink.textContent = '+ Type a field not listed';
+          customLink.addEventListener('click', function (e) { e.preventDefault(); go('field_custom'); });
+          sourceCol.appendChild(customLink);
+
+          layout.appendChild(dropCol);
+          layout.appendChild(sourceCol);
+          container.appendChild(layout);
+        }
+
+        renderContent();
       }
     },
     qualifications: {
@@ -1064,26 +1175,17 @@
         });
       }
     },
-    field_manual: {
-      eyebrow: 'YOUR FIELDS',
-      question: 'Pick a field directly.',
-      options: FIELD_CATALOG.map(function (f) {
-        return { label: f.name, hint: f.demand + ' demand · ' + f.entryPay + ' entry-level', value: f.id, next: 'role_results' };
-      }).concat([{ label: 'Type a field not listed', value: 'custom', next: 'field_custom' }]),
-      onSelect: function (value) {
-        if (value === 'custom') return;
-        var match = FIELD_CATALOG.filter(function (f) { return f.id === value; })[0];
-        answers.selectedFields = match ? [match] : [];
-      }
-    },
     field_custom: {
       eyebrow: 'YOUR FIELDS',
       question: 'What field are you thinking of?',
       field: {
         placeholder: 'e.g. Game development, Robotics, Embedded systems', key: 'customField', type: 'text',
-        onSubmit: function (value) { answers.selectedFields = [{ id: 'custom', name: value || 'Your field', custom: true }]; }
+        onSubmit: function (value) {
+          answers.comparingFields = answers.comparingFields || [];
+          answers.comparingFields.push({ id: 'custom', name: value || 'Your field', custom: true });
+        }
       },
-      next: 'role_results'
+      next: 'field_results'
     },
     role_results: {
       eyebrow: 'ROLE MATCH',
@@ -1343,7 +1445,7 @@
     var step = steps[id];
     stage.innerHTML = '';
     var wrap = document.createElement('div');
-    wrap.className = 'step';
+    wrap.className = 'step' + (step.wide ? ' step-wide' : '');
 
     if (!step.hideHeader) {
       var eyebrow = document.createElement('p');
