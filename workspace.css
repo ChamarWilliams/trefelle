@@ -76,8 +76,6 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,Arial,s
 .compare-card:hover{border-color:var(--green);transform:translateY(-2px)}
 .compare-card b{display:block;font-size:13.5px}
 .compare-card-why{display:block;font-size:12px;color:#79866f;margin-top:4px}
-.compare-card-preview{display:block;margin-top:10px;background:none;border:0;padding:0;font:600 11px 'DM Mono',monospace;color:var(--green);cursor:pointer}
-.compare-card-preview:hover{text-decoration:underline}
 .compare-card-drag-clone{position:fixed;z-index:100;width:220px;pointer-events:none;box-shadow:0 16px 30px rgba(29,36,30,.2);transform:translate(-50%,-50%) rotate(-1deg)}
 .compare-tooltip{position:fixed;z-index:100;width:240px;background:var(--ink);color:#e7ece2;border-radius:8px;padding:12px 14px;font-size:12px;line-height:1.6;pointer-events:none}
 .compare-tooltip-row b{color:#fff}
@@ -85,20 +83,13 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,Arial,s
 .setup-field textarea{font:14px Inter,Arial,sans-serif;line-height:1.6;padding:15px 16px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);width:100%;min-height:90px;resize:vertical}
 .setup-field textarea:focus{outline:2px solid var(--green);outline-offset:1px}
 .setup-hint{font-size:13px;line-height:1.6;color:#576054;margin:0 0 16px}
-.quali-beat{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--line)}
-.quali-beat:last-of-type{border-bottom:0}
-.quali-time{flex-shrink:0;width:76px;font:11px 'DM Mono',monospace;color:#79866f;padding-top:2px}
-.quali-content{flex:1}
-.quali-content p{font-size:13.5px;line-height:1.65;color:#3a4038;margin:0 0 8px}
-.quali-task-prompt{font-weight:600;color:var(--ink)}
-.quali-editor-host{border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:8px}
-.quali-editor-host .CodeMirror{height:auto;min-height:110px;font:13px/1.6 'DM Mono',monospace;color:var(--ink);background:#fff}
-.quali-editor-host .CodeMirror-gutters{background:#fff;border-right:1px solid var(--mist)}
-.quali-editor-host .CodeMirror-linenumber{color:#a7ae9d}
-.quali-run-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-.quali-lang{font:600 10px 'DM Mono',monospace;color:#79866f;text-transform:uppercase;letter-spacing:.5px}
-.quali-run-btn{font:600 11px 'DM Mono',monospace;padding:6px 14px;border-radius:6px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer}
-.quali-run-btn:hover{border-color:var(--green)}
-.quali-run-btn:disabled{opacity:.5;cursor:not-allowed}
-.quali-run-out{background:var(--ink);color:#e7ece2;border-radius:8px;padding:12px 14px;font:12px/1.6 'DM Mono',monospace;white-space:pre-wrap;word-break:break-word;max-height:180px;overflow:auto;margin-bottom:8px}
+.role-card{border:1px solid var(--line);border-radius:12px;background:#fff;padding:20px 22px;margin-bottom:16px}
+.role-title{font:600 17px Newsreader,Georgia,serif;margin:0 0 4px}
+.role-blurb{font-size:13px;line-height:1.6;color:#576054;margin:0 0 16px}
+.role-detail-group{margin-bottom:14px}
+.role-detail-group:last-child{margin-bottom:0}
+.role-detail-label{font:10px 'DM Mono',monospace;letter-spacing:.8px;color:#77965d;text-transform:uppercase;margin:0 0 8px}
+.role-detail-list{display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:0;list-style:none}
+.role-detail-list li{font-size:12.5px;padding:6px 11px;background:var(--mist);border-radius:20px;color:var(--ink)}
+.role-loading{font-size:12px;color:#79866f}
 @media(max-width:520px){.setup-top{height:65px}.setup-option{padding:15px 16px}.field-head{padding:14px 15px}.field-stats{gap:18px}}

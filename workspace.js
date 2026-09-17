@@ -199,10 +199,10 @@
   // no back-and-forth conversation, so there's only ever one AI wait.
   var FIELDS_PROMPT_BASE = 'You are a career-fit assessor for Trefelle, a hands-on career-exploration platform for computer science, IT, and data-related fields. You are given one description of a person\'s background in a single message: their experience level, languages/tools used, past roles or internships, education, and anything they said interests them, plus optionally pasted resume/LinkedIn text. Based on this alone, recommend which specific field(s) genuinely fit them — you get exactly one read, so use everything given and make a real judgment rather than defaulting to the most generic-sounding option.\nThe scope is computer science, information technology, and data-related fields ONLY: backend/API development, frontend development, full-stack development, mobile development, data engineering, data science/analytics, machine learning/AI engineering, computer vision, cloud/DevOps engineering, site reliability engineering, cloud architecture, security/cybersecurity, network engineering, database administration, embedded systems/firmware, robotics software, blockchain/web3 development, AR/VR development, QA/test engineering, IT/systems administration, game development, product/UX design, solutions engineering, developer relations, and engineering management — plus closely related fields not listed here if they clearly fit better. Never recommend a field outside this scope (no mechanical, civil, electrical, aerospace, or other non-computing engineering disciplines), even if their background mentions one.\nAssume they may know little about a field\'s daily reality yet — judge fit from their stated experience, tools, and curiosity, not from whether they already use the field\'s insider vocabulary.\nRecommend as many fields as genuinely fit well — usually 2 to 4, never more than 6 — ranked best fit first. Do not pad the list with a poor fit just to reach a round number, and do not recommend only one unless everything else given is a clearly poor match.\nFor "level": "student" = no professional work in the field yet; "early" = professional role held, under ~2 years; "mid" = roughly 3-6 years of professional work; "senior" = 7+ years or demonstrated technical leadership. If their stated experience level already answers this, use it directly rather than re-deriving it.\nRespond with ONLY strict JSON, nothing else, no markdown fences, no prose outside the JSON, in exactly this shape: {"type":"done","level":"student|early|mid|senior","fields":[{"name":"Field name","why":"one sentence on why this fits them specifically, referencing something from their background","blurb":"one sentence describing what someone in this field actually does day to day","demand":"rough demand label","entryPay":"a single rough entry-level figure, e.g. \\"$75k\\"","tools":["2 to 3 real tools or technologies commonly used in this field"],"roles":[{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"}]}]}';
 
-  // Generates a short, interactive "day in the life" for one field the
-  // person is considering, before they commit to it — a handful of story
-  // beats, some of which are tiny hands-on exercises rather than just text.
-  var QUALIFICATIONS_PROMPT = 'You are building a short, honest "day in the life" simulation for someone considering a specific field, inside Trefelle, a career-exploration platform. Given the field name and a one-sentence description of what it involves, write 4 to 6 beats forming one realistic workday, in order. Most beats are short narrative ("beat") setting a scene or moment — plain language, no unexplained jargon. At least 2 beats must be a tiny interactive task ("task") where the person actually writes and RUNS a simplified version of real work from that moment — a one-to-five-line real, runnable snippet with a blank or TODO for them to fill in, in whichever of "python", "javascript", or "sql" best fits the field and this moment (use javascript if nothing else fits better — it needs no setup). A task beat gives "language", a "prompt" (what to do), a "starter" (the exact starting code — must actually run as-is even before their edit, e.g. print/console.log a placeholder or return a stub, never a syntax fragment), and a "hint" (a short nudge revealed on demand). If "language" is "sql", also include a "schema" string of CREATE TABLE/INSERT statements the query can run against. This is exploratory and ungraded, not a formal test — there is no expected output to check against, just real code the person can run and see work. Keep the whole thing skimmable.\nRespond with ONLY strict JSON, nothing else, no markdown fences, in exactly this shape: {"type":"done","beats":[{"type":"beat","time":"9:00 AM","text":"..."},{"type":"task","time":"10:30 AM","language":"python|javascript|sql","prompt":"...","starter":"...","schema":"(sql only, omit otherwise)","hint":"..."}]}';
+  // For each field+role the person is comparing, generates a concrete skills
+  // breakdown and role-bridging suggestions -- one shot, same shape for
+  // every role so the cards line up regardless of how many fields they picked.
+  var ROLE_DETAIL_PROMPT = 'You are given a JSON array of {"field":"...","role":"..."} pairs a person is considering, inside Trefelle, a career-exploration platform. For EACH pair, in the same order, provide a short, concrete skills breakdown: "skillsNeeded" (3-5 specific skills or tools someone needs to actually get hired into this exact role today), "skillsToLearn" (3-5 skills that would help them grow past entry-level in this specific role), "usefulSkills" (2-4 adjacent skills that aren\'t required but commonly help), and "futurePathways" (2-4 short, real role titles a person could realistically move into from here -- e.g. a backend engineer could bridge into platform engineering, engineering management, or security). Keep every item a short phrase, not a sentence. Never repeat the same item across the four lists for one role, and never repeat the role or field name itself as an item.\nRespond with ONLY strict JSON, nothing else, no markdown fences, in exactly this shape: {"type":"done","roles":[{"skillsNeeded":["...","..."],"skillsToLearn":["...","..."],"usefulSkills":["...","..."],"futurePathways":["...","..."]}]} with exactly one entry per input pair, in the same order.';
 
   var MAX_RESUME_BYTES = 5 * 1024 * 1024;
 
@@ -1056,7 +1056,7 @@
           function isComparing(f) { return answers.comparingFields.indexOf(f) > -1; }
 
           function addToComparing(f) {
-            if (isComparing(f) || answers.comparingFields.length >= 6) return;
+            if (isComparing(f)) return;
             answers.comparingFields.push(f);
             renderContent();
           }
@@ -1073,18 +1073,6 @@
               why.textContent = f.why;
               card.appendChild(why);
             }
-            var preview = document.createElement('button');
-            preview.type = 'button';
-            preview.className = 'compare-card-preview';
-            preview.textContent = 'Preview a day →';
-            preview.addEventListener('mousedown', function (e) { e.stopPropagation(); });
-            preview.addEventListener('touchstart', function (e) { e.stopPropagation(); }, { passive: true });
-            preview.addEventListener('click', function (e) {
-              e.stopPropagation();
-              answers.qualifyingField = f;
-              go('qualifications');
-            });
-            card.appendChild(preview);
             wireTooltip(card, f);
 
             // A card is both draggable and clickable: a short pointer path with
@@ -1187,142 +1175,6 @@
         renderContent();
       }
     },
-    qualifications: {
-      hideHeader: true,
-      render: function (el) {
-        var field = answers.qualifyingField;
-        if (!field) { go('field_results', true); return; }
-
-        var eyebrow = document.createElement('p');
-        eyebrow.className = 'step-eyebrow';
-        eyebrow.textContent = 'A DAY AS A ' + field.name.toUpperCase();
-        el.appendChild(eyebrow);
-        var h1 = document.createElement('h1');
-        h1.textContent = 'Try a sample day before you decide.';
-        el.appendChild(h1);
-        var status = document.createElement('p');
-        status.className = 'step-body';
-        status.textContent = 'Building a realistic day…';
-        el.appendChild(status);
-        var body = document.createElement('div');
-        el.appendChild(body);
-
-        var backActions = document.createElement('div');
-        backActions.className = 'setup-actions';
-        backActions.appendChild(button('Back to fields', 'setup-secondary', function () { go('field_results', true); }));
-
-        var messages = [
-          { role: 'system', content: QUALIFICATIONS_PROMPT },
-          { role: 'user', content: 'Field: ' + field.name + '. What they do: ' + field.blurb }
-        ];
-        callAI(messages, null).then(function (text) {
-          var data = parseAIJson(text);
-          if (!data || !data.beats || !data.beats.length) throw new Error('Couldn’t build a sample day.');
-          status.remove();
-          data.beats.forEach(function (beat) {
-            var row = document.createElement('div');
-            row.className = 'quali-beat';
-            var time = document.createElement('span');
-            time.className = 'quali-time';
-            time.textContent = beat.time || '';
-            row.appendChild(time);
-            var content = document.createElement('div');
-            content.className = 'quali-content';
-            if (beat.type === 'task') {
-              var lang = beat.language === 'python' || beat.language === 'sql' ? beat.language : 'javascript';
-              var prompt = document.createElement('p');
-              prompt.className = 'quali-task-prompt';
-              prompt.textContent = beat.prompt || '';
-              content.appendChild(prompt);
-
-              var editorHost = document.createElement('div');
-              editorHost.className = 'quali-editor-host';
-              content.appendChild(editorHost);
-              var cm = CodeMirror(editorHost, {
-                value: beat.starter || '',
-                mode: lang === 'python' ? 'python' : lang === 'sql' ? 'text/x-sql' : 'javascript',
-                lineNumbers: true,
-                indentUnit: 4,
-                tabSize: 4,
-                viewportMargin: Infinity,
-                extraKeys: {
-                  Tab: function (inst) { inst.replaceSelection('    '); },
-                  Enter: function (inst) { inst.replaceSelection('\n'); }
-                }
-              });
-              cm.refresh();
-
-              var runRow = document.createElement('div');
-              runRow.className = 'quali-run-row';
-              var langTag = document.createElement('span');
-              langTag.className = 'quali-lang';
-              langTag.textContent = lang;
-              var runBtn = document.createElement('button');
-              runBtn.type = 'button';
-              runBtn.className = 'quali-run-btn';
-              runBtn.textContent = 'Run';
-              runRow.appendChild(langTag);
-              runRow.appendChild(runBtn);
-              content.appendChild(runRow);
-
-              var runOut = document.createElement('pre');
-              runOut.className = 'quali-run-out';
-              runOut.hidden = true;
-              content.appendChild(runOut);
-
-              runBtn.addEventListener('click', function () {
-                runBtn.disabled = true;
-                runOut.hidden = false;
-                runOut.textContent = lang === 'python' && !window.TrefelleRunner.hasStartedPyodide() ? 'Loading Python (first run only)…' : 'Running…';
-                var code = cm.getValue();
-                var runPromise = lang === 'python' ? window.TrefelleRunner.runPythonRaw(code)
-                  : lang === 'sql' ? window.TrefelleRunner.runSqlRaw(code, beat.schema || '')
-                  : window.TrefelleRunner.runJSRaw(code);
-                runPromise.then(function (text) {
-                  runOut.textContent = text || '(no output)';
-                }).catch(function (err) {
-                  runOut.textContent = 'Error: ' + ((err && err.message) || err);
-                }).then(function () {
-                  runBtn.disabled = false;
-                });
-              });
-
-              if (beat.hint) {
-                var hintToggle = document.createElement('a');
-                hintToggle.href = '#';
-                hintToggle.className = 'setup-note-link';
-                hintToggle.textContent = 'Show hint';
-                var hintText = document.createElement('p');
-                hintText.className = 'setup-note';
-                hintText.textContent = beat.hint;
-                hintText.hidden = true;
-                hintToggle.addEventListener('click', function (e) {
-                  e.preventDefault();
-                  hintText.hidden = !hintText.hidden;
-                  hintToggle.textContent = hintText.hidden ? 'Show hint' : 'Hide hint';
-                });
-                content.appendChild(hintToggle);
-                content.appendChild(hintText);
-              }
-            } else {
-              var text2 = document.createElement('p');
-              text2.textContent = beat.text || '';
-              content.appendChild(text2);
-            }
-            row.appendChild(content);
-            body.appendChild(row);
-          });
-          body.appendChild(backActions);
-        }).catch(function (err) {
-          status.textContent = '';
-          var errP = document.createElement('p');
-          errP.className = 'setup-note error';
-          errP.textContent = (err && err.message) || 'Something went wrong building this sample day.';
-          body.appendChild(errP);
-          body.appendChild(backActions);
-        });
-      }
-    },
     field_custom: {
       eyebrow: 'YOUR FIELDS',
       question: 'What field are you thinking of?',
@@ -1336,49 +1188,96 @@
       next: 'field_results'
     },
     role_results: {
-      eyebrow: 'ROLE MATCH',
-      question: 'A few roles that fit your level.',
+      hideHeader: true,
+      wide: true,
       render: function (el) {
         var fields = answers.selectedFields && answers.selectedFields.length ? answers.selectedFields : [{ id: 'fullstack', name: 'Full-stack' }];
-        fields.forEach(function (f) {
+        var picks = fields.map(function (f) {
+          var roles = (f.roles && f.roles.length) ? f.roles : computeRoleRecommendations(f.id || 'fullstack', answers);
+          return { field: f, role: roles[0] };
+        });
+        answers.selectedRoles = picks.map(function (p) { return { field: p.field.name, role: p.role.title }; });
+        answers.role = picks[0].role.title;
+        answers.roleField = picks[0].field.name;
+
+        var eyebrow = document.createElement('p');
+        eyebrow.className = 'step-eyebrow';
+        eyebrow.textContent = 'ROLE MATCH';
+        el.appendChild(eyebrow);
+        var h1 = document.createElement('h1');
+        h1.textContent = 'One role per field, mapped out.';
+        el.appendChild(h1);
+
+        var cards = picks.map(function (p) {
+          var card = document.createElement('div');
+          card.className = 'role-card';
           var label = document.createElement('p');
           label.className = 'field-group-label';
-          label.textContent = f.name;
-          el.appendChild(label);
-
-          var list = document.createElement('div');
-          list.className = 'setup-options';
-          var roles = (f.roles && f.roles.length) ? f.roles : computeRoleRecommendations(f.id || 'fullstack', answers);
-          roles.forEach(function (role) {
-            var b = document.createElement('button');
-            b.type = 'button';
-            b.className = 'setup-option';
-            var textWrap = document.createElement('span');
-            var main = document.createElement('span');
-            main.textContent = role.title;
-            textWrap.appendChild(main);
-            var hint = document.createElement('small');
-            hint.textContent = role.blurb;
-            textWrap.appendChild(hint);
-            var arrow = document.createElement('span');
-            arrow.className = 'arrow';
-            arrow.textContent = '→';
-            b.appendChild(textWrap);
-            b.appendChild(arrow);
-            b.addEventListener('click', function () {
-              answers.role = role.title;
-              answers.roleField = f.name;
-              go('voice_ask');
-            });
-            list.appendChild(b);
-          });
-          el.appendChild(list);
+          label.textContent = p.field.name;
+          card.appendChild(label);
+          var title = document.createElement('p');
+          title.className = 'role-title';
+          title.textContent = p.role.title;
+          card.appendChild(title);
+          var blurb = document.createElement('p');
+          blurb.className = 'role-blurb';
+          blurb.textContent = p.role.blurb;
+          card.appendChild(blurb);
+          var loading = document.createElement('p');
+          loading.className = 'role-loading';
+          loading.textContent = 'Loading skills and pathways…';
+          card.appendChild(loading);
+          el.appendChild(card);
+          return { card: card, loading: loading };
         });
 
         var actions = document.createElement('div');
         actions.className = 'setup-actions';
         actions.appendChild(button('None of these — I’ll specify my own role', 'setup-secondary', function () { go('role_manual'); }));
+        actions.appendChild(button('Continue', 'setup-primary', function () { go('voice_ask'); }));
         el.appendChild(actions);
+
+        if (!aiAvailable(answers)) { cards.forEach(function (c) { c.loading.remove(); }); return; }
+
+        var groups = [
+          ['skillsNeeded', 'Skills needed now'],
+          ['skillsToLearn', 'Skills to grow into'],
+          ['usefulSkills', 'Useful adjacent skills'],
+          ['futurePathways', 'Future pathways']
+        ];
+        var messages = [
+          { role: 'system', content: ROLE_DETAIL_PROMPT },
+          { role: 'user', content: JSON.stringify(picks.map(function (p) { return { field: p.field.name, role: p.role.title }; })) }
+        ];
+        callAI(messages, null).then(function (text) {
+          var data = parseAIJson(text);
+          if (!data || !data.roles || data.roles.length !== picks.length) throw new Error('No detail returned.');
+          cards.forEach(function (c, i) {
+            c.loading.remove();
+            var detail = data.roles[i];
+            groups.forEach(function (g) {
+              var items = detail[g[0]];
+              if (!items || !items.length) return;
+              var group = document.createElement('div');
+              group.className = 'role-detail-group';
+              var label = document.createElement('p');
+              label.className = 'role-detail-label';
+              label.textContent = g[1];
+              group.appendChild(label);
+              var list = document.createElement('ul');
+              list.className = 'role-detail-list';
+              items.forEach(function (item) {
+                var li = document.createElement('li');
+                li.textContent = item;
+                list.appendChild(li);
+              });
+              group.appendChild(list);
+              c.card.appendChild(group);
+            });
+          });
+        }).catch(function () {
+          cards.forEach(function (c) { c.loading.remove(); });
+        });
       }
     },
     role_manual: {
@@ -1563,7 +1462,9 @@
     if (answers.selectedFields && answers.selectedFields.length) {
       rows.push(['Field', answers.selectedFields.map(function (f) { return f.name; }).join(', ')]);
     }
-    if (answers.role) {
+    if (answers.selectedRoles && answers.selectedRoles.length) {
+      rows.push(['Target roles', answers.selectedRoles.map(function (r) { return r.role; }).join(', ')]);
+    } else if (answers.role) {
       rows.push(['Target role', answers.role]);
     }
     rows.push(['Voice', answers.voice === 'yes' ? (answers.microphone === 'granted' ? 'Enabled' : 'Requested, not granted') : 'Text-only']);
