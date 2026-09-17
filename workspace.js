@@ -4,6 +4,14 @@
   var backBtn = document.getElementById('backBtn');
   var answers = {};
   var history = [];
+
+  // Fixed-position popovers (like the field-comparison hover tooltip) live
+  // outside `stage`, so a step transition's stage.innerHTML reset never
+  // reaches them -- every transition explicitly clears whatever's open.
+  var activeTooltip = null;
+  function hideActiveTooltip() {
+    if (activeTooltip) { activeTooltip.remove(); activeTooltip = null; }
+  }
   var currentId = null;
 
   function saveAnswers() {
@@ -19,6 +27,21 @@
     try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
   }
 
+  // Everything except the actual key material is safe to save to the
+  // account -- apiKey/keyStack hold real credentials and stay device-only.
+  function sanitizedAnswers() {
+    var copy = {};
+    Object.keys(answers).forEach(function (k) {
+      if (k === 'apiKey' || k === 'keyStack') return;
+      copy[k] = answers[k];
+    });
+    return copy;
+  }
+  function saveAccountProgress() {
+    if (!window.TrefelleProgress) return;
+    window.TrefelleProgress.saveProgress('done', sanitizedAnswers());
+  }
+
   var FIELD_CATALOG = [
     { id: 'backend', name: 'Backend / APIs', demand: 'Very high', entryPay: '$85k', tools: ['PostgreSQL', 'Docker', 'Node.js or Django'], blurb: 'You build the services, data models, and APIs that everything else depends on. Correctness and reliability matter more than pixels.' },
     { id: 'frontend', name: 'Frontend', demand: 'High', entryPay: '$75k', tools: ['React', 'TypeScript', 'Chrome DevTools'], blurb: 'You turn designs and data into interfaces people actually use — performance, accessibility, and state management are the daily craft.' },
@@ -32,7 +55,19 @@
     { id: 'qa', name: 'QA / Test Engineering', demand: 'Moderate', entryPay: '$70k', tools: ['Selenium or Playwright', 'Postman', 'Jira'], blurb: 'You make sure software actually works before it ships — writing automated tests and hunting for what breaks it.' },
     { id: 'it-sysadmin', name: 'IT / Systems Administration', demand: 'High', entryPay: '$55k', tools: ['Linux', 'Active Directory', 'PowerShell or Bash'], blurb: 'You keep an organization’s computers, networks, and accounts running — the first call when something’s broken.' },
     { id: 'game-dev', name: 'Game Development', demand: 'Moderate', entryPay: '$70k', tools: ['Unity or Unreal Engine', 'C# or C++', 'Git'], blurb: 'You build the interactive systems, physics, and logic that make a game actually playable.' },
-    { id: 'product-ux', name: 'Product / UX design', demand: 'Moderate', entryPay: '$75k', tools: ['Figma', 'Miro', 'User research tools'], blurb: 'You shape how the product feels to use — research, flows, and the handoff between design and engineering.' }
+    { id: 'product-ux', name: 'Product / UX design', demand: 'Moderate', entryPay: '$75k', tools: ['Figma', 'Miro', 'User research tools'], blurb: 'You shape how the product feels to use — research, flows, and the handoff between design and engineering.' },
+    { id: 'sre', name: 'Site Reliability Engineering', demand: 'Very high', entryPay: '$95k', tools: ['Kubernetes', 'Prometheus', 'Terraform'], blurb: 'You keep production systems fast and available, treating operations as a software engineering problem — automation over manual fixes.' },
+    { id: 'embedded', name: 'Embedded Systems / Firmware', demand: 'High', entryPay: '$80k', tools: ['C', 'RTOS', 'Oscilloscope / debugger'], blurb: 'You write the low-level software that runs directly on hardware — sensors, microcontrollers, and the devices around us.' },
+    { id: 'dba', name: 'Database Administration', demand: 'Moderate', entryPay: '$70k', tools: ['PostgreSQL', 'MySQL', 'pgAdmin'], blurb: 'You keep an organization’s databases fast, backed up, and available — tuning queries and planning for scale.' },
+    { id: 'network', name: 'Network Engineering', demand: 'High', entryPay: '$65k', tools: ['Cisco IOS', 'Wireshark', 'BGP / routing protocols'], blurb: 'You design and maintain the networks that connect everything — routers, firewalls, and the traffic between them.' },
+    { id: 'cloud-architect', name: 'Cloud Architecture', demand: 'High', entryPay: '$110k', tools: ['AWS / Azure / GCP', 'Terraform', 'Well-Architected frameworks'], blurb: 'You design the overall cloud systems a company runs on — cost, security, and scalability decisions, not day-to-day ops.' },
+    { id: 'computer-vision', name: 'Computer Vision Engineering', demand: 'High', entryPay: '$105k', tools: ['OpenCV', 'PyTorch', 'CUDA'], blurb: 'You build systems that interpret images and video — object detection, tracking, and visual understanding.' },
+    { id: 'blockchain', name: 'Blockchain / Web3 Development', demand: 'Moderate', entryPay: '$90k', tools: ['Solidity', 'Hardhat / Foundry', 'Ethers.js'], blurb: 'You build decentralized applications and smart contracts — a young field with its own tooling and security concerns.' },
+    { id: 'ar-vr', name: 'AR / VR Development', demand: 'Moderate', entryPay: '$80k', tools: ['Unity', 'Unreal Engine', 'ARKit / ARCore'], blurb: 'You build immersive experiences for headsets and mobile AR — spatial computing that’s still finding its footing.' },
+    { id: 'robotics', name: 'Robotics Software Engineering', demand: 'Moderate', entryPay: '$85k', tools: ['ROS', 'C++', 'Python'], blurb: 'You write the software that senses, plans, and controls physical robots — equal parts software and real-world physics.' },
+    { id: 'solutions-eng', name: 'Solutions Engineering', demand: 'High', entryPay: '$85k', tools: ['APIs / SDKs', 'Demo environments', 'CRM tools'], blurb: 'You’re the technical voice in the sales process — demoing, prototyping, and answering "can your product actually do X."' },
+    { id: 'devrel', name: 'Developer Relations', demand: 'Moderate', entryPay: '$75k', tools: ['Documentation tools', 'Sample apps', 'Community platforms'], blurb: 'You help other developers succeed with a product — writing docs, building demos, speaking, and gathering feedback.' },
+    { id: 'eng-management', name: 'Engineering Management', demand: 'High', entryPay: '$110k', tools: ['1:1s and planning tools', 'Code review', 'Roadmapping'], blurb: 'You lead a team of engineers — unblocking them, planning work, and staying technical enough to make good calls.' }
   ];
 
   var ROLE_TEMPLATES = {
@@ -101,6 +136,66 @@
       { title: 'Game Engine Programmer', blurb: 'Build and maintain the underlying engine tools and systems.' },
       { title: 'Technical Game Designer', blurb: 'Bridge design and code to prototype and tune how a game feels.' }
     ],
+    sre: [
+      { title: 'Site Reliability Engineer', blurb: 'Keep production systems up, fast, and observable, automating away repeat fixes.' },
+      { title: 'Reliability Engineer', blurb: 'Build the monitoring and incident-response systems that catch problems early.' },
+      { title: 'Infrastructure Engineer', blurb: 'Build and maintain the platform other engineers deploy on.' }
+    ],
+    embedded: [
+      { title: 'Embedded Software Engineer', blurb: 'Write the firmware that runs directly on hardware.' },
+      { title: 'Firmware Engineer', blurb: 'Build the low-level code that boots and controls a device.' },
+      { title: 'IoT Engineer', blurb: 'Connect physical devices to the internet and to each other.' }
+    ],
+    dba: [
+      { title: 'Database Administrator', blurb: 'Keep databases fast, backed up, and available.' },
+      { title: 'Database Engineer', blurb: 'Design schemas and tune queries for systems at scale.' },
+      { title: 'Data Reliability Engineer', blurb: 'Make sure the data pipeline itself never becomes the outage.' }
+    ],
+    network: [
+      { title: 'Network Engineer', blurb: 'Design and maintain the networks that connect everything.' },
+      { title: 'Network Administrator', blurb: 'Keep an organization’s network running day to day.' },
+      { title: 'Network Security Engineer', blurb: 'Defend the network layer against intrusion and misuse.' }
+    ],
+    'cloud-architect': [
+      { title: 'Cloud Architect', blurb: 'Design the overall cloud systems a company runs on.' },
+      { title: 'Solutions Architect', blurb: 'Design technical systems that meet a specific business need.' },
+      { title: 'Platform Architect', blurb: 'Design the shared platform other teams build their systems on.' }
+    ],
+    'computer-vision': [
+      { title: 'Computer Vision Engineer', blurb: 'Build systems that interpret images and video.' },
+      { title: 'Perception Engineer', blurb: 'Build the sensing systems that let machines understand their surroundings.' },
+      { title: 'ML Engineer, Vision', blurb: 'Take vision models from research to a shipped product.' }
+    ],
+    blockchain: [
+      { title: 'Blockchain Developer', blurb: 'Build decentralized applications and smart contracts.' },
+      { title: 'Smart Contract Engineer', blurb: 'Write and audit the contracts that run on-chain.' },
+      { title: 'Web3 Engineer', blurb: 'Build the frontend and infrastructure around decentralized apps.' }
+    ],
+    'ar-vr': [
+      { title: 'AR/VR Engineer', blurb: 'Build immersive experiences for headsets and mobile AR.' },
+      { title: 'Game Engine Programmer', blurb: 'Build and maintain the underlying engine tools and systems.' },
+      { title: 'Spatial Computing Engineer', blurb: 'Build software that understands and reacts to physical space.' }
+    ],
+    robotics: [
+      { title: 'Robotics Software Engineer', blurb: 'Write the software that senses, plans, and controls physical robots.' },
+      { title: 'Controls Engineer', blurb: 'Design the systems that keep a robot’s movement stable and precise.' },
+      { title: 'Autonomy Engineer', blurb: 'Build the decision-making systems behind self-directed robots or vehicles.' }
+    ],
+    'solutions-eng': [
+      { title: 'Solutions Engineer', blurb: 'Be the technical voice in the sales process — demos, prototypes, answers.' },
+      { title: 'Sales Engineer', blurb: 'Help prospective customers see exactly how a product solves their problem.' },
+      { title: 'Implementation Engineer', blurb: 'Get a new customer’s setup actually working after the sale closes.' }
+    ],
+    devrel: [
+      { title: 'Developer Advocate', blurb: 'Help other developers succeed with a product — docs, demos, talks.' },
+      { title: 'Technical Writer', blurb: 'Write the documentation developers actually rely on.' },
+      { title: 'Community Engineer', blurb: 'Build tools and content that support a developer community.' }
+    ],
+    'eng-management': [
+      { title: 'Engineering Manager', blurb: 'Lead a team of engineers — unblocking them and planning the work.' },
+      { title: 'Tech Lead', blurb: 'Set technical direction for a team while still writing code.' },
+      { title: 'Director of Engineering', blurb: 'Set direction across multiple teams and their managers.' }
+    ],
     custom: [
       { title: 'Explore this on your own', blurb: 'There’s no role ladder for a custom field yet — specify a role directly instead.' }
     ]
@@ -117,12 +212,12 @@
   // One-shot: the person fills in a short profile form once, this is sent as
   // a single message, and the model returns a JSON recommendation directly —
   // no back-and-forth conversation, so there's only ever one AI wait.
-  var FIELDS_PROMPT_BASE = 'You are a career-fit assessor for Trefelle, a hands-on career-exploration platform for computer science, IT, and data-related fields. You are given one description of a person\'s background in a single message: their experience level, languages/tools used, past roles or internships, education, and anything they said interests them, plus optionally pasted resume/LinkedIn text. Based on this alone, recommend which specific field(s) genuinely fit them — you get exactly one read, so use everything given and make a real judgment rather than defaulting to the most generic-sounding option.\nThe scope is computer science, information technology, and data-related fields ONLY: backend/API development, frontend development, full-stack development, mobile development, data engineering, data science/analytics, machine learning/AI engineering, cloud/DevOps engineering, security/cybersecurity, QA/test engineering, IT/systems administration, game development, and product/UX design — plus closely related fields not listed here if they clearly fit better. Never recommend a field outside this scope (no mechanical, civil, electrical, aerospace, or other non-computing engineering disciplines), even if their background mentions one.\nAssume they may know little about a field\'s daily reality yet — judge fit from their stated experience, tools, and curiosity, not from whether they already use the field\'s insider vocabulary.\nRecommend as many fields as genuinely fit well — usually 2 to 4, never more than 6 — ranked best fit first. Do not pad the list with a poor fit just to reach a round number, and do not recommend only one unless everything else given is a clearly poor match.\nFor "level": "student" = no professional work in the field yet; "early" = professional role held, under ~2 years; "mid" = roughly 3-6 years of professional work; "senior" = 7+ years or demonstrated technical leadership. If their stated experience level already answers this, use it directly rather than re-deriving it.\nRespond with ONLY strict JSON, nothing else, no markdown fences, no prose outside the JSON, in exactly this shape: {"type":"done","level":"student|early|mid|senior","fields":[{"name":"Field name","why":"one sentence on why this fits them specifically, referencing something from their background","blurb":"one sentence describing what someone in this field actually does day to day","demand":"rough demand label","entryPay":"a single rough entry-level figure, e.g. \\"$75k\\"","tools":["2 to 3 real tools or technologies commonly used in this field"],"roles":[{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"}]}]}';
+  var FIELDS_PROMPT_BASE = 'You are a career-fit assessor for Trefelle, a hands-on career-exploration platform for computer science, IT, and data-related fields. You are given one description of a person\'s background in a single message: their experience level, languages/tools used, past roles or internships, education, and anything they said interests them, plus optionally pasted resume/LinkedIn text. Based on this alone, recommend which specific field(s) genuinely fit them — you get exactly one read, so use everything given and make a real judgment rather than defaulting to the most generic-sounding option.\nThe scope is computer science, information technology, and data-related fields ONLY: backend/API development, frontend development, full-stack development, mobile development, data engineering, data science/analytics, machine learning/AI engineering, computer vision, cloud/DevOps engineering, site reliability engineering, cloud architecture, security/cybersecurity, network engineering, database administration, embedded systems/firmware, robotics software, blockchain/web3 development, AR/VR development, QA/test engineering, IT/systems administration, game development, product/UX design, solutions engineering, developer relations, and engineering management — plus closely related fields not listed here if they clearly fit better. Never recommend a field outside this scope (no mechanical, civil, electrical, aerospace, or other non-computing engineering disciplines), even if their background mentions one.\nAssume they may know little about a field\'s daily reality yet — judge fit from their stated experience, tools, and curiosity, not from whether they already use the field\'s insider vocabulary.\nRecommend as many fields as genuinely fit well — usually 2 to 4, never more than 6 — ranked best fit first. Do not pad the list with a poor fit just to reach a round number, and do not recommend only one unless everything else given is a clearly poor match.\nFor "level": "student" = no professional work in the field yet; "early" = professional role held, under ~2 years; "mid" = roughly 3-6 years of professional work; "senior" = 7+ years or demonstrated technical leadership. If their stated experience level already answers this, use it directly rather than re-deriving it.\nRespond with ONLY strict JSON, nothing else, no markdown fences, no prose outside the JSON, in exactly this shape: {"type":"done","level":"student|early|mid|senior","fields":[{"name":"Field name","why":"one sentence on why this fits them specifically, referencing something from their background","blurb":"one sentence describing what someone in this field actually does day to day","demand":"rough demand label","entryPay":"a single rough entry-level figure, e.g. \\"$75k\\"","tools":["2 to 3 real tools or technologies commonly used in this field"],"roles":[{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"},{"title":"role title","blurb":"one sentence"}]}]}';
 
-  // Generates a short, interactive "day in the life" for one field the
-  // person is considering, before they commit to it — a handful of story
-  // beats, some of which are tiny hands-on exercises rather than just text.
-  var QUALIFICATIONS_PROMPT = 'You are building a short, honest "day in the life" simulation for someone considering a specific field, inside Trefelle, a career-exploration platform. Given the field name and a one-sentence description of what it involves, write 4 to 6 beats forming one realistic workday, in order. Most beats are short narrative ("beat") setting a scene or moment — plain language, no unexplained jargon. At least 2 beats must be a tiny interactive task ("task") where the person actually does a simplified version of real work from that moment — a one-to-three-line snippet or short realistic technical decision to fill in or complete. A task beat gives a "prompt" (what to do), a "starter" (the starting point, with a blank or TODO for them to fill in), and a "hint" (a short nudge revealed on demand) — this is exploratory and ungraded, not a formal test. Keep the whole thing skimmable.\nRespond with ONLY strict JSON, nothing else, no markdown fences, in exactly this shape: {"type":"done","beats":[{"type":"beat","time":"9:00 AM","text":"..."},{"type":"task","time":"10:30 AM","prompt":"...","starter":"...","hint":"..."}]}';
+  // For each field+role the person is comparing, generates a concrete skills
+  // breakdown and role-bridging suggestions -- one shot, same shape for
+  // every role so the cards line up regardless of how many fields they picked.
+  var ROLE_DETAIL_PROMPT = 'You are given a JSON array of {"field":"...","role":"..."} pairs a person is considering, inside Trefelle, a career-exploration platform. For EACH pair, in the same order, provide a short, concrete skills breakdown: "skillsNeeded" (3-5 specific skills or tools someone needs to actually get hired into this exact role today), "skillsToLearn" (3-5 skills that would help them grow past entry-level in this specific role), "usefulSkills" (2-4 adjacent skills that aren\'t required but commonly help), and "futurePathways" (2-4 short, real role titles a person could realistically move into from here -- e.g. a backend engineer could bridge into platform engineering, engineering management, or security). Keep every item a short phrase, not a sentence. Never repeat the same item across the four lists for one role, and never repeat the role or field name itself as an item.\nRespond with ONLY strict JSON, nothing else, no markdown fences, in exactly this shape: {"type":"done","roles":[{"skillsNeeded":["...","..."],"skillsToLearn":["...","..."],"usefulSkills":["...","..."],"futurePathways":["...","..."]}]} with exactly one entry per input pair, in the same order.';
 
   var MAX_RESUME_BYTES = 5 * 1024 * 1024;
 
@@ -234,28 +329,6 @@
   }
 
   var steps = {
-    welcome_back: {
-      eyebrow: 'WELCOME BACK',
-      question: 'Continue with your saved setup?',
-      body: function () {
-        return summaryLine();
-      },
-      render: function (el) {
-        var actions = document.createElement('div');
-        actions.className = 'setup-actions';
-        actions.appendChild(button('Continue', 'setup-primary', function () {
-          history = [];
-          go('done', true);
-        }));
-        actions.appendChild(button('Start over', 'setup-secondary', function () {
-          answers = {};
-          clearAnswers();
-          history = [];
-          go('engine', true);
-        }));
-        el.appendChild(actions);
-      }
-    },
     engine: {
       eyebrow: 'AI SETUP',
       question: 'Connect an AI key.',
@@ -605,7 +678,7 @@
         var actions = document.createElement('div');
         actions.className = 'setup-actions';
         actions.appendChild(button('Start', 'setup-primary', function () { go('assess_profile_import'); }));
-        actions.appendChild(button('Skip for now', 'setup-secondary', function () { go('voice_ask'); }));
+        actions.appendChild(button('Skip for now', 'setup-secondary', function () { go('save_ask'); }));
         el.appendChild(actions);
       }
     },
@@ -788,7 +861,7 @@
           note.className = 'setup-note';
           note.textContent = 'No connected AI model yet — pick a field directly instead.';
           el.appendChild(note);
-          setTimeout(function () { go('field_manual', true); }, 900);
+          setTimeout(function () { go('field_results', true); }, 900);
           return;
         }
 
@@ -848,7 +921,7 @@
             var actions = document.createElement('div');
             actions.className = 'setup-actions';
             actions.appendChild(button('Try again', 'setup-primary', function () { go('assess_fields', true); }));
-            actions.appendChild(button('Pick a field directly instead', 'setup-secondary', function () { go('field_manual'); }));
+            actions.appendChild(button('Pick a field directly instead', 'setup-secondary', function () { go('field_results'); }));
             errorBox.appendChild(actions);
           });
         }
@@ -864,216 +937,235 @@
       }
     },
     field_results: {
-      eyebrow: 'YOUR FIELDS',
-      question: 'Based on your answers, these fit.',
-      render: function (el) {
-        var recs = answers.aiFieldRecs || [];
-        var selected = [];
-        var continueBtn;
-        var list = document.createElement('div');
-        list.className = 'field-list';
-
-        recs.forEach(function (f) {
-          var card = document.createElement('div');
-          card.className = 'field-card';
-
-          var head = document.createElement('div');
-          head.className = 'field-head';
-
-          var sel = document.createElement('span');
-          sel.className = 'field-select';
-
-          var textWrap = document.createElement('div');
-          textWrap.className = 'field-head-text';
-          var name = document.createElement('b');
-          name.textContent = f.name;
-          var why = document.createElement('span');
-          why.textContent = f.why;
-          textWrap.appendChild(name);
-          textWrap.appendChild(why);
-
-          var chevron = document.createElement('span');
-          chevron.className = 'field-chevron';
-          chevron.textContent = '⌄';
-
-          head.appendChild(sel);
-          head.appendChild(textWrap);
-          head.appendChild(chevron);
-
-          var details = document.createElement('div');
-          details.className = 'field-details';
-          var inner = document.createElement('div');
-          inner.className = 'field-details-inner';
-          var stats = document.createElement('div');
-          stats.className = 'field-stats';
-
-          function statBlock(label, value) {
-            var d = document.createElement('div');
-            var s = document.createElement('span');
-            s.textContent = label;
-            var v = document.createElement('b');
-            v.textContent = value;
-            d.appendChild(s);
-            d.appendChild(v);
-            return d;
-          }
-          stats.appendChild(statBlock('DEMAND', f.demand));
-          stats.appendChild(statBlock('ENTRY-LEVEL PAY', f.entryPay));
-          var desc = document.createElement('p');
-          desc.textContent = f.blurb;
-          inner.appendChild(stats);
-          inner.appendChild(desc);
-          if (f.tools && f.tools.length) {
-            var toolsP = document.createElement('p');
-            toolsP.className = 'field-tools';
-            toolsP.textContent = 'Tools: ' + f.tools.join(', ');
-            inner.appendChild(toolsP);
-          }
-          var tryBtn = button('Try a day in this role →', 'setup-secondary', function (e) {
-            e.stopPropagation();
-            answers.qualifyingField = f;
-            go('qualifications');
-          });
-          inner.appendChild(tryBtn);
-          details.appendChild(inner);
-
-          card.appendChild(head);
-          card.appendChild(details);
-
-          sel.addEventListener('click', function (e) {
-            e.stopPropagation();
-            var idx = selected.indexOf(f);
-            if (idx > -1) {
-              selected.splice(idx, 1);
-              card.classList.remove('selected');
-            } else {
-              if (selected.length >= 3) return;
-              selected.push(f);
-              card.classList.add('selected');
-            }
-            continueBtn.disabled = selected.length === 0;
-          });
-          textWrap.addEventListener('click', function () { card.classList.toggle('open'); });
-          chevron.addEventListener('click', function () { card.classList.toggle('open'); });
-
-          list.appendChild(card);
-        });
-        el.appendChild(list);
-
-        var note = document.createElement('p');
-        note.className = 'setup-hint';
-        note.textContent = 'Pick 1–3 fields — try a day in the role first if you’re not sure. Pay and demand are rough, US-market ballparks.';
-        el.appendChild(note);
-
-        var actions = document.createElement('div');
-        actions.className = 'setup-actions';
-        continueBtn = button('Continue', 'setup-primary', function () {
-          answers.selectedFields = selected.slice();
-          go('role_results');
-        });
-        continueBtn.disabled = true;
-        actions.appendChild(continueBtn);
-        actions.appendChild(button('None of these — choose my own field', 'setup-secondary', function () { go('field_manual'); }));
-        el.appendChild(actions);
-      }
-    },
-    qualifications: {
       hideHeader: true,
+      wide: true,
       render: function (el) {
-        var field = answers.qualifyingField;
-        if (!field) { go('field_results', true); return; }
+        answers.comparingFields = answers.comparingFields || [];
 
         var eyebrow = document.createElement('p');
         eyebrow.className = 'step-eyebrow';
-        eyebrow.textContent = 'A DAY AS A ' + field.name.toUpperCase();
+        eyebrow.textContent = 'YOUR FIELDS';
         el.appendChild(eyebrow);
         var h1 = document.createElement('h1');
-        h1.textContent = 'Try a sample day before you decide.';
+        h1.textContent = 'Compare fields before you commit.';
         el.appendChild(h1);
-        var status = document.createElement('p');
-        status.className = 'step-body';
-        status.textContent = 'Building a realistic day…';
-        el.appendChild(status);
-        var body = document.createElement('div');
-        el.appendChild(body);
+        var bodyP = document.createElement('p');
+        bodyP.className = 'step-body';
+        bodyP.textContent = 'Drag or click any role into the box to compare it — hover a card for pay and demand.';
+        el.appendChild(bodyP);
 
-        var backActions = document.createElement('div');
-        backActions.className = 'setup-actions';
-        backActions.appendChild(button('Back to fields', 'setup-secondary', function () { go('field_results', true); }));
-
-        var messages = [
-          { role: 'system', content: QUALIFICATIONS_PROMPT },
-          { role: 'user', content: 'Field: ' + field.name + '. What they do: ' + field.blurb }
-        ];
-        callAI(messages, null).then(function (text) {
-          var data = parseAIJson(text);
-          if (!data || !data.beats || !data.beats.length) throw new Error('Couldn’t build a sample day.');
-          status.remove();
-          data.beats.forEach(function (beat) {
-            var row = document.createElement('div');
-            row.className = 'quali-beat';
-            var time = document.createElement('span');
-            time.className = 'quali-time';
-            time.textContent = beat.time || '';
-            row.appendChild(time);
-            var content = document.createElement('div');
-            content.className = 'quali-content';
-            if (beat.type === 'task') {
-              var prompt = document.createElement('p');
-              prompt.className = 'quali-task-prompt';
-              prompt.textContent = beat.prompt || '';
-              content.appendChild(prompt);
-              var textarea = document.createElement('textarea');
-              textarea.className = 'quali-task-input';
-              textarea.spellcheck = false;
-              textarea.value = beat.starter || '';
-              content.appendChild(textarea);
-              if (beat.hint) {
-                var hintToggle = document.createElement('a');
-                hintToggle.href = '#';
-                hintToggle.className = 'setup-note-link';
-                hintToggle.textContent = 'Show hint';
-                var hintText = document.createElement('p');
-                hintText.className = 'setup-note';
-                hintText.textContent = beat.hint;
-                hintText.hidden = true;
-                hintToggle.addEventListener('click', function (e) {
-                  e.preventDefault();
-                  hintText.hidden = !hintText.hidden;
-                  hintToggle.textContent = hintText.hidden ? 'Show hint' : 'Hide hint';
-                });
-                content.appendChild(hintToggle);
-                content.appendChild(hintText);
-              }
-            } else {
-              var text2 = document.createElement('p');
-              text2.textContent = beat.text || '';
-              content.appendChild(text2);
-            }
-            row.appendChild(content);
-            body.appendChild(row);
-          });
-          body.appendChild(backActions);
-        }).catch(function (err) {
-          status.textContent = '';
-          var errP = document.createElement('p');
-          errP.className = 'setup-note error';
-          errP.textContent = (err && err.message) || 'Something went wrong building this sample day.';
-          body.appendChild(errP);
-          body.appendChild(backActions);
+        var searchTerm = '';
+        var searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.className = 'compare-search';
+        searchInput.placeholder = 'Search fields…';
+        // Lives outside the re-rendered container so typing never loses focus.
+        searchInput.addEventListener('input', function () {
+          searchTerm = searchInput.value.trim().toLowerCase();
+          renderContent();
         });
-      }
-    },
-    field_manual: {
-      eyebrow: 'YOUR FIELDS',
-      question: 'Pick a field directly.',
-      options: FIELD_CATALOG.map(function (f) {
-        return { label: f.name, hint: f.demand + ' demand · ' + f.entryPay + ' entry-level', value: f.id, next: 'role_results' };
-      }).concat([{ label: 'Type a field not listed', value: 'custom', next: 'field_custom' }]),
-      onSelect: function (value) {
-        if (value === 'custom') return;
-        var match = FIELD_CATALOG.filter(function (f) { return f.id === value; })[0];
-        answers.selectedFields = match ? [match] : [];
+        el.appendChild(searchInput);
+
+        var container = document.createElement('div');
+        el.appendChild(container);
+
+        function wireTooltip(node, f) {
+          node.addEventListener('mouseenter', function () {
+            hideActiveTooltip();
+            var tip = document.createElement('div');
+            tip.className = 'compare-tooltip';
+            var rows = [['Entry-level pay', f.entryPay || 'Varies'], ['Demand', f.demand || 'Not tracked']];
+            if (f.tools && f.tools.length) rows.push(['Tools', f.tools.join(', ')]);
+            rows.forEach(function (row) {
+              var r = document.createElement('div');
+              r.className = 'compare-tooltip-row';
+              var label = document.createElement('b');
+              label.textContent = row[0] + ': ';
+              var val = document.createElement('span');
+              val.textContent = row[1];
+              r.appendChild(label);
+              r.appendChild(val);
+              tip.appendChild(r);
+            });
+            var rect = node.getBoundingClientRect();
+            tip.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 260)) + 'px';
+            tip.style.top = (rect.bottom + 8) + 'px';
+            document.body.appendChild(tip);
+            activeTooltip = tip;
+          });
+          node.addEventListener('mouseleave', hideActiveTooltip);
+        }
+
+        function renderContent() {
+          container.innerHTML = '';
+          hideActiveTooltip();
+
+          var layout = document.createElement('div');
+          layout.className = 'compare-layout';
+
+          var dropCol = document.createElement('div');
+          dropCol.className = 'compare-drop-col';
+          var dropZone = document.createElement('div');
+          dropZone.className = 'compare-drop';
+          if (!answers.comparingFields.length) {
+            var placeholder = document.createElement('p');
+            placeholder.className = 'compare-placeholder';
+            placeholder.textContent = 'Drag roles here to compare them';
+            dropZone.appendChild(placeholder);
+          }
+          answers.comparingFields.forEach(function (f) {
+            var chip = document.createElement('div');
+            chip.className = 'compare-chip';
+            var span = document.createElement('span');
+            span.textContent = f.name;
+            var remove = document.createElement('button');
+            remove.type = 'button';
+            remove.className = 'compare-chip-remove';
+            remove.textContent = '×';
+            remove.addEventListener('click', function () {
+              answers.comparingFields = answers.comparingFields.filter(function (x) { return x !== f; });
+              renderContent();
+            });
+            chip.appendChild(span);
+            chip.appendChild(remove);
+            wireTooltip(chip, f);
+            dropZone.appendChild(chip);
+          });
+          dropCol.appendChild(dropZone);
+
+          var dropActions = document.createElement('div');
+          dropActions.className = 'setup-actions';
+          var continueBtn = button('Continue', 'setup-primary', function () {
+            answers.selectedFields = answers.comparingFields.slice();
+            go('role_results');
+          });
+          continueBtn.disabled = answers.comparingFields.length === 0;
+          dropActions.appendChild(continueBtn);
+          dropCol.appendChild(dropActions);
+
+          var sourceCol = document.createElement('div');
+          sourceCol.className = 'compare-source-col';
+
+          function isComparing(f) { return answers.comparingFields.indexOf(f) > -1; }
+
+          function addToComparing(f) {
+            if (isComparing(f)) return;
+            answers.comparingFields.push(f);
+            renderContent();
+          }
+
+          function buildSourceCard(f) {
+            var card = document.createElement('div');
+            card.className = 'compare-card';
+            var name = document.createElement('b');
+            name.textContent = f.name;
+            card.appendChild(name);
+            if (f.why) {
+              var why = document.createElement('span');
+              why.className = 'compare-card-why';
+              why.textContent = f.why;
+              card.appendChild(why);
+            }
+            wireTooltip(card, f);
+
+            // A card is both draggable and clickable: a short pointer path with
+            // no real movement counts as "click to add"; past a small threshold
+            // it becomes a drag, tracked with a floating clone of the card.
+            var startX, startY, dragging = false, clone = null;
+            function move(e) {
+              var pt = e.touches ? e.touches[0] : e;
+              if (!dragging && Math.hypot(pt.clientX - startX, pt.clientY - startY) > 6) {
+                dragging = true;
+                hideActiveTooltip();
+                clone = card.cloneNode(true);
+                clone.className = 'compare-card compare-card-drag-clone';
+                document.body.appendChild(clone);
+              }
+              if (dragging && clone) {
+                clone.style.left = pt.clientX + 'px';
+                clone.style.top = pt.clientY + 'px';
+                var r = dropZone.getBoundingClientRect();
+                var over = pt.clientX >= r.left && pt.clientX <= r.right && pt.clientY >= r.top && pt.clientY <= r.bottom;
+                dropZone.classList.toggle('drag-hover', over);
+              }
+            }
+            function up(e) {
+              document.removeEventListener('mousemove', move);
+              document.removeEventListener('mouseup', up);
+              document.removeEventListener('touchmove', move);
+              document.removeEventListener('touchend', up);
+              var pt = (e.changedTouches && e.changedTouches[0]) || e;
+              var wasDragging = dragging;
+              if (clone) clone.remove();
+              dropZone.classList.remove('drag-hover');
+              if (wasDragging) {
+                var r = dropZone.getBoundingClientRect();
+                var over = pt.clientX >= r.left && pt.clientX <= r.right && pt.clientY >= r.top && pt.clientY <= r.bottom;
+                if (over) addToComparing(f);
+              } else {
+                addToComparing(f);
+              }
+              dragging = false; clone = null;
+            }
+            function down(e) {
+              var pt = e.touches ? e.touches[0] : e;
+              startX = pt.clientX; startY = pt.clientY; dragging = false;
+              document.addEventListener('mousemove', move);
+              document.addEventListener('mouseup', up);
+              document.addEventListener('touchmove', move, { passive: true });
+              document.addEventListener('touchend', up);
+            }
+            card.addEventListener('mousedown', down);
+            card.addEventListener('touchstart', down, { passive: true });
+            return card;
+          }
+
+          function renderGroup(title, fields, boxed) {
+            var visible = fields.filter(function (f) { return !isComparing(f); });
+            if (!visible.length) return;
+            var wrap = document.createElement('div');
+            wrap.className = 'compare-group' + (boxed ? ' boxed' : '');
+            var label = document.createElement('p');
+            label.className = 'field-group-label';
+            label.textContent = title;
+            wrap.appendChild(label);
+            var listEl = document.createElement('div');
+            listEl.className = 'compare-card-list';
+            visible.forEach(function (f) { listEl.appendChild(buildSourceCard(f)); });
+            wrap.appendChild(listEl);
+            sourceCol.appendChild(wrap);
+          }
+
+          var recs = answers.aiFieldRecs || [];
+          var recIds = {};
+          recs.forEach(function (f) { recIds[f.id] = true; });
+          var others = FIELD_CATALOG.filter(function (f) {
+            if (recIds[f.id]) return false;
+            return !searchTerm || f.name.toLowerCase().indexOf(searchTerm) > -1;
+          });
+
+          renderGroup('Recommended for you', recs, true);
+          renderGroup('Other fields', others, false);
+          if (searchTerm && !others.length) {
+            var noMatch = document.createElement('p');
+            noMatch.className = 'setup-hint';
+            noMatch.textContent = 'No fields match "' + searchTerm + '".';
+            sourceCol.appendChild(noMatch);
+          }
+
+          var customLink = document.createElement('a');
+          customLink.href = '#';
+          customLink.className = 'setup-note-link';
+          customLink.textContent = '+ Type a field not listed';
+          customLink.addEventListener('click', function (e) { e.preventDefault(); go('field_custom'); });
+          sourceCol.appendChild(customLink);
+
+          layout.appendChild(dropCol);
+          layout.appendChild(sourceCol);
+          container.appendChild(layout);
+        }
+
+        renderContent();
       }
     },
     field_custom: {
@@ -1081,137 +1173,132 @@
       question: 'What field are you thinking of?',
       field: {
         placeholder: 'e.g. Game development, Robotics, Embedded systems', key: 'customField', type: 'text',
-        onSubmit: function (value) { answers.selectedFields = [{ id: 'custom', name: value || 'Your field', custom: true }]; }
+        onSubmit: function (value) {
+          answers.comparingFields = answers.comparingFields || [];
+          answers.comparingFields.push({ id: 'custom', name: value || 'Your field', custom: true });
+        }
       },
-      next: 'role_results'
+      next: 'field_results'
     },
     role_results: {
-      eyebrow: 'ROLE MATCH',
-      question: 'A few roles that fit your level.',
+      hideHeader: true,
+      wide: true,
       render: function (el) {
         var fields = answers.selectedFields && answers.selectedFields.length ? answers.selectedFields : [{ id: 'fullstack', name: 'Full-stack' }];
-        fields.forEach(function (f) {
+        var picks = fields.map(function (f) {
+          var roles = (f.roles && f.roles.length) ? f.roles : computeRoleRecommendations(f.id || 'fullstack', answers);
+          return { field: f, role: roles[0] };
+        });
+        answers.selectedRoles = picks.map(function (p) { return { field: p.field.name, role: p.role.title }; });
+        answers.role = picks[0].role.title;
+        answers.roleField = picks[0].field.name;
+
+        var eyebrow = document.createElement('p');
+        eyebrow.className = 'step-eyebrow';
+        eyebrow.textContent = 'ROLE MATCH';
+        el.appendChild(eyebrow);
+        var h1 = document.createElement('h1');
+        h1.textContent = 'One role per field, mapped out.';
+        el.appendChild(h1);
+
+        var cards = picks.map(function (p) {
+          var card = document.createElement('div');
+          card.className = 'role-card';
           var label = document.createElement('p');
           label.className = 'field-group-label';
-          label.textContent = f.name;
-          el.appendChild(label);
-
-          var list = document.createElement('div');
-          list.className = 'setup-options';
-          var roles = (f.roles && f.roles.length) ? f.roles : computeRoleRecommendations(f.id || 'fullstack', answers);
-          roles.forEach(function (role) {
-            var b = document.createElement('button');
-            b.type = 'button';
-            b.className = 'setup-option';
-            var textWrap = document.createElement('span');
-            var main = document.createElement('span');
-            main.textContent = role.title;
-            textWrap.appendChild(main);
-            var hint = document.createElement('small');
-            hint.textContent = role.blurb;
-            textWrap.appendChild(hint);
-            var arrow = document.createElement('span');
-            arrow.className = 'arrow';
-            arrow.textContent = '→';
-            b.appendChild(textWrap);
-            b.appendChild(arrow);
-            b.addEventListener('click', function () {
-              answers.role = role.title;
-              answers.roleField = f.name;
-              go('voice_ask');
-            });
-            list.appendChild(b);
-          });
-          el.appendChild(list);
+          label.textContent = p.field.name;
+          card.appendChild(label);
+          var title = document.createElement('p');
+          title.className = 'role-title';
+          title.textContent = p.role.title;
+          card.appendChild(title);
+          var blurb = document.createElement('p');
+          blurb.className = 'role-blurb';
+          blurb.textContent = p.role.blurb;
+          card.appendChild(blurb);
+          var loading = document.createElement('p');
+          loading.className = 'role-loading';
+          loading.textContent = 'Loading skills and pathways…';
+          card.appendChild(loading);
+          el.appendChild(card);
+          return { card: card, loading: loading };
         });
 
         var actions = document.createElement('div');
         actions.className = 'setup-actions';
         actions.appendChild(button('None of these — I’ll specify my own role', 'setup-secondary', function () { go('role_manual'); }));
+        actions.appendChild(button('Continue', 'setup-primary', function () { go('save_ask'); }));
         el.appendChild(actions);
+
+        if (!aiAvailable(answers)) { cards.forEach(function (c) { c.loading.remove(); }); return; }
+
+        var groups = [
+          ['skillsNeeded', 'Skills needed now'],
+          ['skillsToLearn', 'Skills to grow into'],
+          ['usefulSkills', 'Useful adjacent skills'],
+          ['futurePathways', 'Future pathways']
+        ];
+        var messages = [
+          { role: 'system', content: ROLE_DETAIL_PROMPT },
+          { role: 'user', content: JSON.stringify(picks.map(function (p) { return { field: p.field.name, role: p.role.title }; })) }
+        ];
+        callAI(messages, null).then(function (text) {
+          var data = parseAIJson(text);
+          if (!data || !data.roles || data.roles.length !== picks.length) throw new Error('No detail returned.');
+          cards.forEach(function (c, i) {
+            c.loading.remove();
+            var detail = data.roles[i];
+            groups.forEach(function (g) {
+              var items = detail[g[0]];
+              if (!items || !items.length) return;
+              var group = document.createElement('div');
+              group.className = 'role-detail-group';
+              var label = document.createElement('p');
+              label.className = 'role-detail-label';
+              label.textContent = g[1];
+              group.appendChild(label);
+              var list = document.createElement('ul');
+              list.className = 'role-detail-list';
+              items.forEach(function (item) {
+                var li = document.createElement('li');
+                li.textContent = item;
+                list.appendChild(li);
+              });
+              group.appendChild(list);
+              c.card.appendChild(group);
+            });
+          });
+        }).catch(function () {
+          cards.forEach(function (c) { c.loading.remove(); });
+        });
       }
     },
     role_manual: {
       eyebrow: 'ROLE MATCH',
       question: 'What role are you aiming for?',
       field: { placeholder: 'e.g. Backend Engineer, QA Analyst', hint: 'Whatever you type is saved as your target role.', key: 'role', type: 'text' },
-      next: 'voice_ask'
-    },
-    voice_ask: {
-      eyebrow: 'VOICE',
-      question: 'Want to talk with your mentor instead of typing?',
-      options: [
-        { label: 'Yes, enable microphone', value: 'yes', next: 'voice_permission' },
-        { label: 'No, keep it text-only', value: 'no', next: 'save_ask' }
-      ],
-      onSelect: function (value) { answers.voice = value; }
-    },
-    voice_permission: {
-      eyebrow: 'VOICE',
-      question: 'Allow microphone access.',
-      render: function (el) {
-        var note = document.createElement('p');
-        note.className = 'setup-note';
-        note.textContent = 'Trefelle only listens while you’re actively talking to your mentor.';
-        el.appendChild(note);
-        var actions = document.createElement('div');
-        actions.className = 'setup-actions';
-        var allowBtn = button('Allow microphone', 'setup-primary', function () {
-          allowBtn.disabled = true;
-          allowBtn.textContent = 'Requesting…';
-          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            answers.microphone = 'unsupported';
-            note.textContent = 'This browser can’t request microphone access.';
-            note.classList.add('error');
-            setTimeout(function () { go('save_ask'); }, 700);
-            return;
-          }
-          navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
-            stream.getTracks().forEach(function (t) { t.stop(); });
-            answers.microphone = 'granted';
-            go('voice_mode');
-          }).catch(function () {
-            answers.microphone = 'denied';
-            note.textContent = 'Microphone access was denied. You can enable it later in your browser settings.';
-            note.classList.add('error');
-            allowBtn.disabled = false;
-            allowBtn.textContent = 'Allow microphone';
-          });
-        });
-        actions.appendChild(allowBtn);
-        actions.appendChild(button('Not now', 'setup-secondary', function () {
-          answers.microphone = 'skipped';
-          go('save_ask');
-        }));
-        el.appendChild(actions);
-      }
-    },
-    voice_mode: {
-      eyebrow: 'VOICE',
-      question: 'How should listening work?',
-      options: [
-        { label: 'Push to talk', hint: 'Hold a key while you speak', value: 'push', next: 'save_ask' },
-        { label: 'Always listening', hint: 'While the mentor panel is open', value: 'always', next: 'save_ask' }
-      ],
-      onSelect: function (value) { answers.listenMode = value; }
+      next: 'save_ask'
     },
     save_ask: {
       eyebrow: 'SAVE & FINISH',
-      question: 'Save this setup on this device?',
+      question: 'Your setup is saved to your account.',
+      body: 'Your fields, roles, and assessment answers are saved to your Trefelle account automatically — nothing that should stay private, like your API key, ever leaves this device.',
       options: [
-        { label: 'Yes, remember it', value: 'yes', next: 'done' },
-        { label: 'No, ask me next time', value: 'no', next: 'done' }
+        { label: 'Also save it on this device', hint: 'Skips this whole flow next time you’re on this browser', value: 'yes', next: 'done' },
+        { label: 'No, just my account', value: 'no', next: 'done' }
       ],
       onSelect: function (value) {
         answers.remember = value;
         if (value === 'yes') { saveAnswers(); } else { clearAnswers(); }
-      }
+      },
+      render: function () { saveAccountProgress(); }
     },
     done: {
       eyebrow: 'ALL SET',
       question: 'Your mentor is ready.',
       body: function () { return summaryLine(); },
       render: function (el) {
+        saveAccountProgress();
         var actions = document.createElement('div');
         actions.className = 'setup-actions';
         actions.appendChild(button('Edit setup', 'setup-secondary', function () { go('engine'); }));
@@ -1313,11 +1400,13 @@
     if (answers.selectedFields && answers.selectedFields.length) {
       rows.push(['Field', answers.selectedFields.map(function (f) { return f.name; }).join(', ')]);
     }
-    if (answers.role) {
+    if (answers.selectedRoles && answers.selectedRoles.length) {
+      rows.push(['Target roles', answers.selectedRoles.map(function (r) { return r.role; }).join(', ')]);
+    } else if (answers.role) {
       rows.push(['Target role', answers.role]);
     }
-    rows.push(['Voice', answers.voice === 'yes' ? (answers.microphone === 'granted' ? 'Enabled' : 'Requested, not granted') : 'Text-only']);
-    rows.push(['Remember setup', answers.remember === 'yes' ? 'Yes' : 'No']);
+    rows.push(['Saved to account', 'Yes']);
+    rows.push(['Also saved on this device', answers.remember === 'yes' ? 'Yes' : 'No']);
     var wrap = document.createElement('div');
     wrap.className = 'summary-list';
     rows.forEach(function (row) {
@@ -1341,9 +1430,10 @@
 
   function renderStep(id) {
     var step = steps[id];
+    hideActiveTooltip();
     stage.innerHTML = '';
     var wrap = document.createElement('div');
-    wrap.className = 'step';
+    wrap.className = 'step' + (step.wide ? ' step-wide' : '');
 
     if (!step.hideHeader) {
       var eyebrow = document.createElement('p');
@@ -1550,11 +1640,13 @@
 
   backBtn.addEventListener('click', back);
 
+  // A saved setup with a key already on this device means the mentor can
+  // run right now -- no reason to make them click back through the wizard.
+  // (A save with no local key still needs the connect step, so that case
+  // falls through to the normal wizard instead of a dead-end redirect.)
   var saved = loadAnswers();
-  if (saved && saved.engine) {
-    answers = saved;
-    currentId = 'welcome_back';
-    renderStep('welcome_back');
+  if (saved && saved.keyStack && saved.keyStack.length) {
+    window.location.href = '/practice';
   } else {
     currentId = 'engine';
     renderStep('engine');
