@@ -4,6 +4,14 @@
   var backBtn = document.getElementById('backBtn');
   var answers = {};
   var history = [];
+
+  // Fixed-position popovers (like the field-comparison hover tooltip) live
+  // outside `stage`, so a step transition's stage.innerHTML reset never
+  // reaches them -- every transition explicitly clears whatever's open.
+  var activeTooltip = null;
+  function hideActiveTooltip() {
+    if (activeTooltip) { activeTooltip.remove(); activeTooltip = null; }
+  }
   var currentId = null;
 
   function saveAnswers() {
@@ -884,11 +892,9 @@
         var container = document.createElement('div');
         el.appendChild(container);
 
-        var tooltipEl = null;
-        function hideTooltip() { if (tooltipEl) { tooltipEl.remove(); tooltipEl = null; } }
         function wireTooltip(node, f) {
           node.addEventListener('mouseenter', function () {
-            hideTooltip();
+            hideActiveTooltip();
             var tip = document.createElement('div');
             tip.className = 'compare-tooltip';
             var rows = [['Entry-level pay', f.entryPay || 'Varies'], ['Demand', f.demand || 'Not tracked']];
@@ -908,14 +914,14 @@
             tip.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 260)) + 'px';
             tip.style.top = (rect.bottom + 8) + 'px';
             document.body.appendChild(tip);
-            tooltipEl = tip;
+            activeTooltip = tip;
           });
-          node.addEventListener('mouseleave', hideTooltip);
+          node.addEventListener('mouseleave', hideActiveTooltip);
         }
 
         function renderContent() {
           container.innerHTML = '';
-          hideTooltip();
+          hideActiveTooltip();
 
           var layout = document.createElement('div');
           layout.className = 'compare-layout';
@@ -1005,7 +1011,7 @@
               var pt = e.touches ? e.touches[0] : e;
               if (!dragging && Math.hypot(pt.clientX - startX, pt.clientY - startY) > 6) {
                 dragging = true;
-                hideTooltip();
+                hideActiveTooltip();
                 clone = card.cloneNode(true);
                 clone.className = 'compare-card compare-card-drag-clone';
                 document.body.appendChild(clone);
@@ -1443,6 +1449,7 @@
 
   function renderStep(id) {
     var step = steps[id];
+    hideActiveTooltip();
     stage.innerHTML = '';
     var wrap = document.createElement('div');
     wrap.className = 'step' + (step.wide ? ' step-wide' : '');
